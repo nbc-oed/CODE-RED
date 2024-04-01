@@ -13,6 +13,9 @@ import { Shelters } from './common/entities/shelters.entity';
 import { EmergencyData } from './common/entities/emergency-data.entity';
 import { DisasterData } from './common/entities/disaster-data.entity';
 import { NotificationMessages } from './common/entities/notification-messages.entity';
+import { SheltersController } from './shelters/shelters.controller';
+import { SheltersService } from './shelters/shelters.service';
+import { SheltersModule } from './shelters/shelters.module';
 
 const typeOrmModuleOptions = {
   useFactory: async (
@@ -58,8 +61,9 @@ const typeOrmModuleOptions = {
     }),
     TypeOrmModule.forRootAsync(typeOrmModuleOptions),
     CommonModule,
+    SheltersModule,
   ],
-  controllers: [],
-  providers: [],
+  controllers: [SheltersController],
+  providers: [SheltersService],
 })
 export class AppModule {}
