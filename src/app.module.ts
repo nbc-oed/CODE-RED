@@ -13,6 +13,7 @@ import { Shelters } from './common/entities/shelters.entity';
 import { EmergencyData } from './common/entities/emergency-data.entity';
 import { DisasterData } from './common/entities/disaster-data.entity';
 import { NotificationMessages } from './common/entities/notification-messages.entity';
+import { PostsModule } from './posts/posts.module';
 
 const typeOrmModuleOptions = {
   useFactory: async (
@@ -27,15 +28,15 @@ const typeOrmModuleOptions = {
     database: configService.get('DB_NAME'),
     synchronize: configService.get('DB_SYNC'), // 데이터베이스 스키마와 애플리케이션의 엔티티 클래스 간의 동기화를 제어, 일반적으로 false로 설정하여 동기화를 방지
     entities: [
-      Users, 
-      Posts, 
-      Follows, 
-      Scores, 
-      MaydayRecords, 
-      Shelters, 
-      EmergencyData, 
-      DisasterData, 
-      NotificationMessages
+      Users,
+      Posts,
+      Follows,
+      Scores,
+      MaydayRecords,
+      Shelters,
+      EmergencyData,
+      DisasterData,
+      NotificationMessages,
     ],
     logging: true, // 데이터베이스 쿼리를 로깅할지 여부를 제어, 이 옵션을 true로 설정하면 TypeORM이 실행된 쿼리를 콘솔에 로그로 출력
   }),
@@ -58,6 +59,7 @@ const typeOrmModuleOptions = {
     }),
     TypeOrmModule.forRootAsync(typeOrmModuleOptions),
     CommonModule,
+    PostsModule,
   ],
   controllers: [],
   providers: [],
