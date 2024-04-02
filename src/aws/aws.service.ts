@@ -33,6 +33,7 @@ export class AwsService {
       Bucket: bucket,
       Key: fileName,
       Body: file.buffer,
+      ACL: 'public-read',
       ContentType: `image/${ext}`,
     });
 
