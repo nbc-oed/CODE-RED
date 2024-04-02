@@ -12,6 +12,7 @@ import { Shelters } from './common/entities/shelters.entity';
 import { EmergencyData } from './common/entities/emergency-data.entity';
 import { DisasterData } from './common/entities/disaster-data.entity';
 import { NotificationMessages } from './common/entities/notification-messages.entity';
+import { AwsModule } from './aws/aws.module';
 import { validationSchema } from './common/config/env.config';
 
 const typeOrmModuleOptions = {
@@ -50,6 +51,7 @@ const typeOrmModuleOptions = {
     }),
     TypeOrmModule.forRootAsync(typeOrmModuleOptions),
     CommonModule,
+    AwsModule,
   ],
   controllers: [],
   providers: [],
