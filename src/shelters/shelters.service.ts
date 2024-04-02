@@ -18,7 +18,7 @@ export class SheltersService {
   async getShelters() {
     const seoulShelter = await this.configService.get('SHELTER_API');
     const response = await axios.get(
-      `http://openapi.seoul.go.kr:8088/${seoulShelter}/xml/TbEqkShelter/1/15/`,
+      `http://openapi.seoul.go.kr:8088/${seoulShelter}/xml/TbEqkShelter/1/37/`,
     );
     {
       const xmlData = response.data; // 공공데이터라 그런지 JSON이 아닌 XML 방식
@@ -55,13 +55,13 @@ export class SheltersService {
             }
           })
           const deleteShelters = findId.map(Shelters => Shelters.id);
-          const aa = Math.max(...deleteShelters); // 기존 db에 있는 id중 최대값
-          const bb = Math.max(...shelterInfo.map(shelter => shelter.id)); // 새로 불러온 api의 id중 최대값
-          if ( aa > bb ) {            // 기존 db에 있는 id 갯수가 새로 불러올 갯수 보다 클 경우, 그만큼 삭제
-            const spliceShelterNumber = aa - bb
+          const dbMaxNumber = Math.max(...deleteShelters); // 기존 db에 있는 id중 최대값
+          const apiMaxNumber = Math.max(...shelterInfo.map(shelter => shelter.id)); // 새로 불러온 api의 id중 최대값
+          if ( dbMaxNumber > apiMaxNumber ) {            // 기존 db에 있는 id 갯수가 새로 불러올 갯수 보다 클 경우, 그만큼 삭제
+            const spliceShelterNumber = dbMaxNumber - apiMaxNumber
           if (spliceShelterNumber > 0) {
             const sheltersToDelete = [];
-            for (let i = aa; i > bb; i--) {
+            for (let i = dbMaxNumber; i > apiMaxNumber; i--) {
               sheltersToDelete.push(i);
             }
             await this.sheltersRepository.delete(sheltersToDelete);   // 대피소 데이터가 20->10, 30->15 이런식으로 줄어들 경우 해당 안되는 데이터들(대피소 아이디는 값이 정해져있기 때문에) 삭제
