@@ -55,7 +55,7 @@ const typeOrmModuleOptions = {
     CommonModule,
     SheltersModule,
   ],
-  controllers: [SheltersController],
-  providers: [SheltersService],
+  controllers: [],
+  providers: [],
 })
 export class AppModule {}
