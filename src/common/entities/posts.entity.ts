@@ -17,6 +17,9 @@ export class Posts extends BaseModel {
   @Column({ type: 'varchar', nullable: true })
   post_image: string;
 
+  @Column({ type: 'int', nullable: false })
+  user_id: number;
+
   // user_id
   @ManyToOne(() => Users, (user) => user.posts, {
     onDelete: 'CASCADE',
