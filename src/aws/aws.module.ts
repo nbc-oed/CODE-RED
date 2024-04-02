@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common';
 import { AwsService } from './aws.service';
 import { ConfigModule } from '@nestjs/config';
+import { UtilsModule } from 'src/utils/utils.module';
 
 @Module({
-  imports: [ConfigModule],
+  imports: [ConfigModule, UtilsModule],
   providers: [AwsService],
   exports: [AwsService],
 })
