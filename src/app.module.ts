@@ -3,7 +3,6 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { CommonModule } from './common/common.module';
-import Joi from 'joi';
 import { Users } from './common/entities/users.entity';
 import { Posts } from './common/entities/posts.entity';
 import { Follows } from './common/entities/follows.entity';
@@ -14,6 +13,7 @@ import { EmergencyData } from './common/entities/emergency-data.entity';
 import { DisasterData } from './common/entities/disaster-data.entity';
 import { NotificationMessages } from './common/entities/notification-messages.entity';
 import { PostsModule } from './posts/posts.module';
+import { validationSchema } from './common/config/env.config';
 
 const typeOrmModuleOptions = {
   useFactory: async (
@@ -47,15 +47,7 @@ const typeOrmModuleOptions = {
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      validationSchema: Joi.object({
-        JWT_SECRET_KEY: Joi.string().required(),
-        DB_USERNAME: Joi.string().required(),
-        DB_PASSWORD: Joi.string().required(),
-        DB_HOST: Joi.string().required(),
-        DB_PORT: Joi.number().required(),
-        DB_NAME: Joi.string().required(),
-        DB_SYNC: Joi.boolean().required(),
-      }),
+      validationSchema: validationSchema,
     }),
     TypeOrmModule.forRootAsync(typeOrmModuleOptions),
     CommonModule,
