@@ -110,8 +110,13 @@ async function clickMorePageEnd(page) {
     const endpoint = await page.$(
       '.section_latest .section_more a[style="display: none;"]',
     );
-    if (endpoint) break;
 
+    const newsDiv = await page.$$(
+      '.section_latest .section_latest_article .section_article ',
+    );
+
+    if (newsDiv.length < 7) break;
+    if (endpoint) break;
     await moreButton.evaluate((b) => b.click());
   }
 }
