@@ -16,8 +16,8 @@ import { NotificationMessages } from "./notification-messages.entity";
     @Column({ type: 'varchar', nullable: false })
     password: string;
 
-    @Column({ type: 'int', nullable: false })
-    phone_number: number;
+    @Column({ type: 'varchar', nullable: false })
+    phone_number: string;
 
     @Column({ type: 'varchar', nullable: false })
     name: string;
@@ -28,7 +28,7 @@ import { NotificationMessages } from "./notification-messages.entity";
     @Column({ type: 'varchar', nullable: true })
     profile_image: string;
   
-    @Column({ type: "enum", enum: Roles, nullable: false })
+    @Column({ type: "enum", enum: Roles, nullable: false, default:Roles.User })
     role: Roles;
 
     @OneToMany(() => Posts, (post) => post.user, { onDelete: "CASCADE"})

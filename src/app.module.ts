@@ -13,6 +13,8 @@ import { EmergencyData } from './common/entities/emergency-data.entity';
 import { DisasterData } from './common/entities/disaster-data.entity';
 import { NotificationMessages } from './common/entities/notification-messages.entity';
 import { validationSchema } from './common/config/env.config';
+import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
 
 const typeOrmModuleOptions = {
   useFactory: async (
@@ -50,6 +52,8 @@ const typeOrmModuleOptions = {
     }),
     TypeOrmModule.forRootAsync(typeOrmModuleOptions),
     CommonModule,
+    UsersModule,
+    AuthModule
   ],
   controllers: [],
   providers: [],
