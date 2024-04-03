@@ -16,6 +16,7 @@ import { validationSchema } from './common/config/env.config';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 
+
 const typeOrmModuleOptions = {
   useFactory: async (
     configService: ConfigService,
@@ -46,6 +47,7 @@ const typeOrmModuleOptions = {
 
 @Module({
   imports: [
+
     ConfigModule.forRoot({
       isGlobal: true,
       validationSchema: validationSchema,
@@ -57,5 +59,6 @@ const typeOrmModuleOptions = {
   ],
   controllers: [],
   providers: [],
+
 })
 export class AppModule {}

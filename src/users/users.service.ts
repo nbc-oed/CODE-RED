@@ -83,20 +83,21 @@ async findOne(id: number) {
 // 수정
 
 async update(userId : number, user : Users, updateUserDto: UpdateUserDto) {
-  const users = await this.findid(userId);
+  const {name, nickname, profile_image} =  updateUserDto
+  const users = await this.findUserById(userId);
 
   if(!users){
     throw new NotFoundException("유저가 존재하지 않습니다.");
   }
-
+  
   if(userId !== user.id){
     throw new UnauthorizedException("정보가 일치하지 않습니다.");
   }
-
-  return await this.usersRepository.update(userId, updateUserDto);
+  // const test = await this.usersRepository.update(user.id, {name, nickname});
+  return {message:'유저 정보가 수정되었습니다.'}
 }
 
-async findid (id : number) {
+async findUserById (id : number) {
   return await this.usersRepository.findOne({ where : { id } });
 }
   
@@ -104,17 +105,18 @@ async findid (id : number) {
 // 삭제
 
 async remove(userId : number, user : Users) {
-  const users = await this.findid(userId);
+  const users = await this.findUserById(userId);
 
   if(!users){
     throw new NotFoundException("유저가 존재하지 않습니다.");
   }
 
-  if(userId !== user.id){
+  if(userId !== users.id){
     throw new UnauthorizedException("정보가 일치하지 않습니다.");
   }
 
-  return await this.usersRepository.delete(userId);
+  return {message:'아이디가 삭제되었습니다.'}
+  // return await this.usersRepository.delete(userId);
 }
 
 }

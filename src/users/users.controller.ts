@@ -6,7 +6,6 @@ import { Users } from 'src/common/entities/users.entity';
 import { UserInfo } from 'src/common/decorator/user.decorator';
 import { AuthGuard } from '@nestjs/passport';
 
-@UseGuards(AuthGuard('jwt'))
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
@@ -27,6 +26,7 @@ export class UsersController {
 
   // 유저 수정 
     @Patch(':id')
+    @UseGuards(AuthGuard('jwt'))
     async update(
       @Param('id') id : number,
       @UserInfo() user:Users,

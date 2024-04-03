@@ -4,12 +4,14 @@ import { AuthController } from './auth.controller';
 import { JwtModule } from '@nestjs/jwt';
 import { UsersModule } from 'src/users/users.module';
 import { ConfigService } from '@nestjs/config';
-import { UsersService } from 'src/users/users.service';
+import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Users } from 'src/common/entities/users.entity';
 
 @Module({
-  imports:[JwtModule.registerAsync({
+  imports:[
+    PassportModule.register({defaultStrategy:'jwt',session:false}),
+    JwtModule.registerAsync({
     useFactory:(config:ConfigService) => ({
       secret: config.get<string>('JWT_SECRET_KEY'),
     }),
