@@ -1,4 +1,4 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Post, Query } from '@nestjs/common';
 import { NewsService } from './news.service';
 
 @Controller('news')
@@ -8,5 +8,10 @@ export class NewsController {
   @Get()
   async getNews() {
     return await this.newsService.getNews();
+  }
+
+  @Post()
+  async saveNews() {
+    await this.newsService.saveNews();
   }
 }
