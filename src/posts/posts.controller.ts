@@ -9,11 +9,13 @@ import {
   UseInterceptors,
   UploadedFile,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from '@nestjs/passport';
+import { FindPostQueryDto } from './dto/find-post-query.dto';
 
 const user = {
   id: 1,
@@ -37,8 +39,12 @@ export class PostsController {
   }
 
   @Get()
-  async findAllPosts() {
-    return await this.postsService.findAllPosts();
+  async findAllPosts(@Query() query: FindPostQueryDto) {
+    return await this.postsService.findAllPosts(
+      +query.page,
+      +query.pageSize,
+      query.search,
+    );
   }
 
   @Get(':postId')

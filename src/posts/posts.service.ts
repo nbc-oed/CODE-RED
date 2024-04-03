@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -32,16 +36,42 @@ export class PostsService {
   }
 
   // TODO: GET methods need cashmanager
-  // TODO: pagination
-  async findAllPosts() {
-    return await this.postsRepo.find({
-      select: ['id', 'title', 'content', 'post_image', 'status', 'updated_at'],
-    });
+  async findAllPosts(page: number, pageSize: number, search: string) {
+    const queryBuilder = this.postsRepo
+      .createQueryBuilder('posts')
+      .select([
+        'posts.id',
+        'posts.title',
+        'posts.post_image',
+        'posts.status',
+        'posts.updated_at',
+      ])
+      .orderBy('updated_at', 'DESC')
+      .skip((page - 1) * pageSize)
+      .take(pageSize);
+
+    if (search) {
+      queryBuilder.andWhere('posts.title LIKE :search', {
+        search: `%${search}%`,
+      });
+    }
+
+    return await queryBuilder.getMany();
   }
 
   async findPost(postId: number) {
-    return await this.postsRepo.findOneBy({ id: postId });
-    // TODO?: join해서 user name or nickname 보여주기
+    const queryBuilder = this.postsRepo
+      .createQueryBuilder('post')
+      .innerJoin('post.user', 'user')
+      .select(['post', 'user.nickname'])
+      .andWhere('post.id=:id', { id: postId });
+
+    const post = await queryBuilder.getOne();
+    if (!post) {
+      throw new NotFoundException('존재하지 않는 게시글입니다.');
+    }
+
+    return post;
   }
 
   async updatePost(
