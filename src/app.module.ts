@@ -15,6 +15,7 @@ import { NotificationMessages } from './common/entities/notification-messages.en
 import { AwsModule } from './aws/aws.module';
 import { UtilsModule } from './utils/utils.module';
 import { validationSchema } from './common/config/env.config';
+import { NewsModule } from './news/news.module';
 
 const typeOrmModuleOptions = {
   useFactory: async (
@@ -54,6 +55,7 @@ const typeOrmModuleOptions = {
     CommonModule,
     AwsModule,
     UtilsModule,
+    NewsModule,
   ],
   controllers: [],
   providers: [],
