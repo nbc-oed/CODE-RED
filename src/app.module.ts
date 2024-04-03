@@ -17,7 +17,6 @@ import { UtilsModule } from './utils/utils.module';
 import { validationSchema } from './common/config/env.config';
 import { NewsModule } from './news/news.module';
 import { News } from './news/entities/news.entity';
-import { RealTimeInfomationModule } from './real-time-infomation/real-time-infomation.module';
 
 const typeOrmModuleOptions = {
   useFactory: async (
@@ -59,7 +58,6 @@ const typeOrmModuleOptions = {
     AwsModule,
     UtilsModule,
     NewsModule,
-    RealTimeInfomationModule,
   ],
   controllers: [],
   providers: [],
