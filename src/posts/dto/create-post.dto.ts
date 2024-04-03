@@ -1,3 +1,4 @@
+import { Transform } from 'class-transformer';
 import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { PostStatus } from 'src/common/types/post-status.type';
 
@@ -10,11 +11,8 @@ export class CreatePostDto {
   @IsNotEmpty()
   content: string;
 
-  @IsString()
-  @IsOptional()
-  image: string;
-
   @IsEnum(PostStatus)
   @IsOptional()
-  status: string = PostStatus.Available;
+  @Transform((param) => param.value.toUpperCase())
+  status: PostStatus = PostStatus.AVAILABLE;
 }
