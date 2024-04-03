@@ -18,8 +18,20 @@ export class NewsService {
     try {
       const newsCrawling = new Crawling();
       const results: any[] = await newsCrawling.crawling();
+      const newResults: any[] = [];
+      const savedNews = await this.newsRepository.find({
+        select: ['title'],
+      });
 
-      const insertNews = results.map((result) => ({
+      const savedTitles = savedNews.map((news) => news.title);
+
+      for (let i = 0; i < results.length; i++) {
+        if (!savedTitles.includes(results[i].title)) {
+          newResults.push(results[i]);
+        }
+      }
+
+      const insertNews = newResults.map((result) => ({
         title: result.title,
         url: result.url,
         media: result.newsCompany,
