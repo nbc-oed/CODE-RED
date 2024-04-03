@@ -42,9 +42,9 @@ export class NewsService {
         .insert()
         .values(insertNews)
         .execute();
-    } catch (e) {
+    } catch (err) {
+      console.log('Rollback 실행..');
       await queryRunner.rollbackTransaction();
-      console.error(e);
     } finally {
       await queryRunner.release();
     }
