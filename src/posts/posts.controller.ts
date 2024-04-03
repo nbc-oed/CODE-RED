@@ -6,41 +6,58 @@ import {
   Patch,
   Param,
   Delete,
+  UseInterceptors,
+  UploadedFile,
+  UseGuards,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { AuthGuard } from '@nestjs/passport';
+
+const user = {
+  id: 1,
+  email: 'email@email.com',
+  password: 'password',
+};
 
 // TODO: apply user guard, userInfo decorator
-// TODO: apply S3 interceptor to create, update methods
+// @UseGuards(AuthGuard('jwt'))
 @Controller('posts')
 export class PostsController {
   constructor(private readonly postsService: PostsService) {}
 
   @Post()
-  create(@Body() createPostDto: CreatePostDto) {
-    return this.postsService.create(1, createPostDto);
+  @UseInterceptors(FileInterceptor('image'))
+  async create(
+    @UploadedFile() file: Express.Multer.File,
+    @Body() createPostDto: CreatePostDto,
+  ) {
+    return await this.postsService.createPost(user.id, file, createPostDto);
   }
 
   @Get()
-  findAllPosts() {
-    return this.postsService.findAllPosts();
+  async findAllPosts() {
+    return await this.postsService.findAllPosts();
   }
 
   @Get(':postId')
-  findPost(@Param('postId') postId: string) {
-    return this.postsService.findPost(+postId);
+  async findPost(@Param('postId') postId: string) {
+    return await this.postsService.findPost(+postId);
   }
 
   @Patch(':postId')
+  @UseInterceptors(FileInterceptor('image'))
   updatePost(
     @Param('postId') postId: string,
+    @UploadedFile() file: Express.Multer.File,
     @Body() updatePostDto: Partial<CreatePostDto>,
   ) {
-    return this.postsService.updatePost(1, +postId, updatePostDto);
+    return this.postsService.updatePost(user.id, +postId, file, updatePostDto);
   }
 
   @Delete(':postId')
   removePost(@Param('postId') postId: string) {
-    return this.postsService.removePost(1, +postId);
+    return this.postsService.removePost(user.id, +postId);
   }
 }
