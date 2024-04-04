@@ -6,6 +6,8 @@ import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { CommonModule } from './common/common.module';
 import { AwsModule } from './aws/aws.module';
 import { UtilsModule } from './utils/utils.module';
+import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
 import { PostsModule } from './posts/posts.module';
 import { NewsModule } from './news/news.module';
 import { CacheModule } from '@nestjs/cache-manager';
@@ -71,6 +73,8 @@ const typeOrmModuleOptions = {
       isGlobal: true,
     }),
     CommonModule,
+    UsersModule,
+    AuthModule,
     AwsModule,
     UtilsModule,
     PostsModule,
