@@ -15,6 +15,8 @@ import { NotificationMessages } from './common/entities/notification-messages.en
 import { AwsModule } from './aws/aws.module';
 import { UtilsModule } from './utils/utils.module';
 import { validationSchema } from './common/config/env.config';
+import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
 import { NewsModule } from './news/news.module';
 import { News } from './news/entities/news.entity';
 
@@ -49,17 +51,21 @@ const typeOrmModuleOptions = {
 
 @Module({
   imports: [
+
     ConfigModule.forRoot({
       isGlobal: true,
       validationSchema: validationSchema,
     }),
     TypeOrmModule.forRootAsync(typeOrmModuleOptions),
     CommonModule,
+    UsersModule,
+    AuthModule
     AwsModule,
     UtilsModule,
     NewsModule,
   ],
   controllers: [],
   providers: [],
+
 })
 export class AppModule {}
