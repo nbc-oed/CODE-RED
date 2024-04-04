@@ -40,18 +40,6 @@ export class AuthService {
       throw new BadRequestException('패스워드가 확인과 일치하지 않습니다.');
     }
 
-    // 정규표현식을 이용한 phone_number 유효성 검사
-    //phone_number 010-0000-0000
-    const phoneNumberPattern = /^\d{3}-\d{3,4}-\d{4}$/;
-    const phoneNumber = createUserDto.phone_number;
-    const isValid = phoneNumberPattern.test(phoneNumber);
-
-    if (isValid !== true) {
-      throw new BadRequestException(
-        '올바른 전화번호 형식이 아닙니다. 형식에 맞춰 입력해주세요. ex) 010-0000-0000',
-      );
-    }
-
     // 유저 생성
     const newUser = this.usersRepository.create({
       email,
