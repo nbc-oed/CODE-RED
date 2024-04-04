@@ -4,6 +4,7 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
+import _ from 'lodash';
 
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -11,14 +12,16 @@ import { AwsService } from 'src/aws/aws.service';
 
 import { CreatePostDto } from './dto/create-post.dto';
 import { Posts } from 'src/common/entities/posts.entity';
-import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
+
+import { Cache } from 'cache-manager';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 
 @Injectable()
 export class PostsService {
   constructor(
     @InjectRepository(Posts) private readonly postsRepo: Repository<Posts>,
     private readonly awsService: AwsService,
-    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
   ) {}
 
   // TODO? 한 유저가 몇초 이내엔 글 연달아 못 쓰도록 제어
@@ -62,7 +65,9 @@ export class PostsService {
     let allPosts = await this.cacheManager.get(cashKey);
     if (!allPosts) {
       allPosts = await queryBuilder.getMany();
-      await this.cacheManager.set(cashKey, allPosts, 1000 * 60 * 5);
+      if (_.isEmpty(allPosts)) return;
+
+      await this.cacheManager.set(cashKey, allPosts, { ttl: 1000 });
     }
 
     return allPosts;
@@ -79,10 +84,10 @@ export class PostsService {
     let post = await this.cacheManager.get(cashKey);
     if (!post) {
       post = await queryBuilder.getOne();
-      if (!post) {
+      if (_.isEmpty(post)) {
         throw new NotFoundException('존재하지 않는 게시글입니다.');
       }
-      await this.cacheManager.set(cashKey, post, 1000 * 60 * 5);
+      await this.cacheManager.set(cashKey, post, { ttl: 1000 });
     }
 
     return post;
