@@ -19,5 +19,6 @@ export class AuthController {
       loginDto.password,
     );
     res.cookie('authorization', `Bearer ${user.access_token}`);
+    res.end();
   }
 }
