@@ -43,9 +43,9 @@ describe('NewsController', () => {
   });
 
   it('should success saveNews', async () => {
-    const news = await newsController.getNews();
+    const news = await newsController.saveNews();
 
-    expect(newsServiceMock.getNews).toHaveBeenCalledTimes(1);
+    expect(newsServiceMock.saveNews).toHaveBeenCalledTimes(1);
     expect(news).not.toBeDefined();
   });
 });
