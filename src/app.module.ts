@@ -16,6 +16,8 @@ import { AwsModule } from './aws/aws.module';
 import { UtilsModule } from './utils/utils.module';
 import { PostsModule } from './posts/posts.module';
 import { validationSchema } from './common/config/env.config';
+import { CacheModule } from '@nestjs/cache-manager';
+// import * as redisStore from 'cache-manager-redis-store';
 
 const typeOrmModuleOptions = {
   useFactory: async (
@@ -52,6 +54,17 @@ const typeOrmModuleOptions = {
       validationSchema: validationSchema,
     }),
     TypeOrmModule.forRootAsync(typeOrmModuleOptions),
+    CacheModule.register({ isGlobal: true }),
+    // CacheModule.registerAsync({
+    //   imports: [ConfigModule],
+    //   useFactory: async () => ({
+    //     store: redisStore,
+    //     host: process.env.REDIS_HOST,
+    //     port: process.env.REDIS_PORT,
+    //     password: process.env.REDIS_PASSWORD,
+    //   }),
+    //   isGlobal: true,
+    // }),
     CommonModule,
     AwsModule,
     UtilsModule,

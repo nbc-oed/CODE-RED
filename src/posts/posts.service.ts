@@ -1,4 +1,5 @@
 import {
+  Inject,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -10,12 +11,14 @@ import { AwsService } from 'src/aws/aws.service';
 
 import { CreatePostDto } from './dto/create-post.dto';
 import { Posts } from 'src/common/entities/posts.entity';
+import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 
 @Injectable()
 export class PostsService {
   constructor(
     @InjectRepository(Posts) private readonly postsRepo: Repository<Posts>,
     private readonly awsService: AwsService,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
   // TODO? 한 유저가 몇초 이내엔 글 연달아 못 쓰도록 제어
@@ -35,7 +38,6 @@ export class PostsService {
     return createdPost;
   }
 
-  // TODO: GET methods need cashmanager
   async findAllPosts(page: number, pageSize: number, search: string) {
     const queryBuilder = this.postsRepo
       .createQueryBuilder('posts')
@@ -56,7 +58,14 @@ export class PostsService {
       });
     }
 
-    return await queryBuilder.getMany();
+    const cashKey = `allPosts${page}${pageSize}${search}`;
+    let allPosts = await this.cacheManager.get(cashKey);
+    if (!allPosts) {
+      allPosts = await queryBuilder.getMany();
+      await this.cacheManager.set(cashKey, allPosts, 1000 * 60 * 5);
+    }
+
+    return allPosts;
   }
 
   async findPost(postId: number) {
@@ -66,9 +75,14 @@ export class PostsService {
       .select(['post', 'user.nickname'])
       .andWhere('post.id=:id', { id: postId });
 
-    const post = await queryBuilder.getOne();
+    const cashKey = `post${postId}`;
+    let post = await this.cacheManager.get(cashKey);
     if (!post) {
-      throw new NotFoundException('존재하지 않는 게시글입니다.');
+      post = await queryBuilder.getOne();
+      if (!post) {
+        throw new NotFoundException('존재하지 않는 게시글입니다.');
+      }
+      await this.cacheManager.set(cashKey, post, 1000 * 60 * 5);
     }
 
     return post;
