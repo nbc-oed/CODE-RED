@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Crawling } from './crawling/news-crawling';
+import { Crawling } from '../crawling/news-crawling.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { News } from './entities/news.entity';
 import { DataSource, Repository } from 'typeorm';
@@ -9,6 +9,7 @@ export class NewsService {
   constructor(
     @InjectRepository(News) private readonly newsRepository: Repository<News>,
     private readonly dataSource: DataSource,
+    private readonly crawling: Crawling,
   ) {}
 
   async saveNews() {
@@ -16,8 +17,7 @@ export class NewsService {
     await queryRunner.connect();
     await queryRunner.startTransaction('READ COMMITTED');
     try {
-      const newsCrawling = new Crawling();
-      const results: any[] = await newsCrawling.crawling();
+      const results: any[] = await this.crawling.crawling();
       const newResults: any[] = [];
       const savedNews = await this.newsRepository.find({
         select: ['title'],
@@ -36,6 +36,8 @@ export class NewsService {
         url: result.url,
         media: result.newsCompany,
       }));
+
+      console.log(insertNews);
 
       await this.newsRepository
         .createQueryBuilder()
