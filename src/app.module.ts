@@ -12,10 +12,13 @@ import { Shelters } from './common/entities/shelters.entity';
 import { EmergencyData } from './common/entities/emergency-data.entity';
 import { DisasterData } from './common/entities/disaster-data.entity';
 import { NotificationMessages } from './common/entities/notification-messages.entity';
+import { AwsModule } from './aws/aws.module';
+import { UtilsModule } from './utils/utils.module';
 import { validationSchema } from './common/config/env.config';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
-
+import { NewsModule } from './news/news.module';
+import { News } from './news/entities/news.entity';
 
 const typeOrmModuleOptions = {
   useFactory: async (
@@ -39,6 +42,7 @@ const typeOrmModuleOptions = {
       EmergencyData,
       DisasterData,
       NotificationMessages,
+      News,
     ],
     logging: true, // 데이터베이스 쿼리를 로깅할지 여부를 제어, 이 옵션을 true로 설정하면 TypeORM이 실행된 쿼리를 콘솔에 로그로 출력
   }),
@@ -56,6 +60,9 @@ const typeOrmModuleOptions = {
     CommonModule,
     UsersModule,
     AuthModule
+    AwsModule,
+    UtilsModule,
+    NewsModule,
   ],
   controllers: [],
   providers: [],
