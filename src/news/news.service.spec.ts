@@ -21,18 +21,16 @@ describe('NewsService', () => {
 
   beforeEach(async () => {
     newsRepositoryMock = {
-      find: jest.fn(), // find 메서드 모킹 추가
+      find: jest.fn(),
       createQueryBuilder: jest.fn().mockReturnThis(),
     };
 
-    // Mock insert, values, execute methods
     jest.spyOn(newsRepositoryMock, 'createQueryBuilder').mockReturnValue({
       insert: jest.fn().mockReturnThis(),
       values: jest.fn().mockReturnThis(),
       execute: jest.fn(),
-    } as any); // Suppress TypeScript error
+    } as any);
 
-    // Mock Crawling
     mockCrawling = jest.fn().mockResolvedValue([
       {
         url: 'newsUrl1',
@@ -51,7 +49,7 @@ describe('NewsService', () => {
         NewsService,
         {
           provide: getRepositoryToken(News),
-          useValue: newsRepositoryMock, // 이 부분 수정
+          useValue: newsRepositoryMock,
         },
         { provide: Crawling, useValue: { crawling: mockCrawling } },
         { provide: DataSource, useValue: mockDataSource },
@@ -74,13 +72,10 @@ describe('NewsService', () => {
     } as any);
     await newsService.saveNews();
 
-    // Ensure Crawling is called
     expect(mockCrawling).toHaveBeenCalledTimes(1);
 
-    // Ensure the proper database operations are performed
     expect(newsRepositoryMock.find).toHaveBeenCalledTimes(1);
 
-    // Check if createQueryBuilder, insert, and values are called
     const createQueryBuilderMock = newsRepositoryMock.createQueryBuilder();
     expect(createQueryBuilderMock.insert).toHaveBeenCalledTimes(1);
 
