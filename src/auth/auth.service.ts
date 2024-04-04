@@ -27,7 +27,9 @@ export class AuthService {
   async signUp(createUserDto: CreateUserDto) {
     const { email, password, passwordConfirm, name, nickname, phone_number } =
       createUserDto;
-    const hashPassword = await bcrypt.hash(password, 10);
+    const saltRounds = this.configService.get<number>('PASSWORD_SALT_ROUNDS');
+    const salt = await bcrypt.genSalt(saltRounds);
+    const hashPassword = await bcrypt.hash(password, salt);
     const user = await this.usersService.getUserByEmail(email);
 
     // 이메일 중복 확인
