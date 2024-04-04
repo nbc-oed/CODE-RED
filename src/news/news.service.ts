@@ -37,8 +37,6 @@ export class NewsService {
         media: result.newsCompany,
       }));
 
-      console.log(insertNews);
-
       await this.newsRepository
         .createQueryBuilder()
         .insert()
