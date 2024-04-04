@@ -6,12 +6,7 @@ import { Crawling } from '../crawling/news-crawling.service';
 import { DataSource, Repository } from 'typeorm';
 
 const mockDataSource = {
-  createQueryRunner: jest.fn(() => ({
-    connect: jest.fn(),
-    startTransaction: jest.fn(),
-    rollbackTransaction: jest.fn(),
-    release: jest.fn(),
-  })),
+  createQueryRunner: jest.fn().mockReturnThis(),
 };
 
 describe('NewsService', () => {
@@ -64,6 +59,12 @@ describe('NewsService', () => {
       insert: jest.fn().mockReturnThis(),
       values: jest.fn().mockReturnThis(),
       execute: jest.fn(),
+    } as any);
+    jest.spyOn(mockDataSource, 'createQueryRunner').mockReturnValue({
+      connect: jest.fn().mockReturnThis(),
+      startTransaction: jest.fn().mockReturnThis(),
+      rollbackTransaction: jest.fn().mockReturnThis(),
+      release: jest.fn().mockReturnThis(),
     } as any);
 
     /* 가짜 크롤링 리턴값 설정
@@ -158,5 +159,71 @@ describe('NewsService', () => {
       { title: 'newsTitle1', url: 'newsUrl1', media: 'newsMedia1' },
       { title: 'newsTitle2', url: 'newsUrl2', media: 'newsMedia2' },
     ]);
+    expect(mockDataSource.createQueryRunner().release).toHaveBeenCalledTimes(1);
+  });
+
+  it('should fail crawling and save', async () => {
+    // 모의로 설정된 find 메서드가 빈 배열을 반환하도록 변경하여 트랜잭션을 실패하도록 설정
+    newsRepositoryMock.find.mockRejectedValue(new Error('에러'));
+    await newsService.saveNews();
+    // 롤백이 실행되는지 확인
+    expect(
+      mockDataSource.createQueryRunner().rollbackTransaction,
+    ).toHaveBeenCalledTimes(1);
+    expect(mockDataSource.createQueryRunner().release).toHaveBeenCalledTimes(1);
+  });
+
+  it('should success getNews', async () => {
+    const returnFindValue = [
+      {
+        id: 1,
+        title: '강남 길거리서 여성 추행도 모자라 남친도 폭행…"술 취해서"',
+        url: 'https://n.news.naver.com/mnews/article/421/0007458150',
+        media: '뉴스1',
+        created_at: '2024-04-04T00:02:13.482Z',
+      },
+      {
+        id: 2,
+        title: "지하철서 둔기로 시민 위협한 50대 남성…'특수협박' 현행범 체포",
+        url: 'https://n.news.naver.com/mnews/article/421/0007459644',
+        media: '뉴스1',
+        created_at: '2024-04-04T00:02:13.482Z',
+      },
+      {
+        id: 3,
+        title: "봄철 '졸음운전' 주의보... 음주운전 사고 치사율의 두 배",
+        url: 'https://n.news.naver.com/mnews/article/469/0000794309',
+        media: '한국일보',
+        created_at: '2024-04-04T00:02:13.482Z',
+      },
+      {
+        id: 4,
+        title:
+          '택시기사 폭행, 결국 분신…운수회사 대표 1년6개월 징역형에 檢 항소',
+        url: 'https://n.news.naver.com/mnews/article/008/0005021599',
+        media: '머니투데이',
+        created_at: '2024-04-04T00:02:13.482Z',
+      },
+      {
+        id: 5,
+        title: '졸음운전 일 평균 5.9건…"나들이 많은 봄철, 교통사고 유의해야"',
+        url: 'https://n.news.naver.com/mnews/article/018/0005706870',
+        media: '이데일리',
+        created_at: '2024-04-04T00:02:13.482Z',
+      },
+    ];
+
+    newsRepositoryMock.find.mockResolvedValue(returnFindValue);
+
+    await newsService.getNews();
+
+    expect(newsRepositoryMock.find).toHaveBeenCalledTimes(1);
+    expect(newsRepositoryMock.find).toHaveBeenCalledWith({
+      select: ['id', 'title', 'url', 'media', 'created_at'],
+      order: {
+        created_at: 'DESC',
+      },
+      take: 5,
+    });
   });
 });
