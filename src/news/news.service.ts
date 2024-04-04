@@ -53,6 +53,10 @@ export class NewsService {
   async getNews() {
     return await this.newsRepository.find({
       select: ['id', 'title', 'url', 'media', 'created_at'],
+      order: {
+        created_at: 'DESC',
+      },
+      take: 5,
     });
   }
 }
