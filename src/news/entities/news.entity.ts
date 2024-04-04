@@ -19,6 +19,6 @@ export class News {
   @Column({ type: 'varchar', nullable: false })
   media: string;
 
-  @CreateDateColumn({ type: 'date', nullable: false })
+  @CreateDateColumn({ type: 'timestamp', nullable: false })
   created_at: Date;
 }
