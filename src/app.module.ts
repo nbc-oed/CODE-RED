@@ -17,6 +17,7 @@ import { UtilsModule } from './utils/utils.module';
 import { validationSchema } from './common/config/env.config';
 import { NewsModule } from './news/news.module';
 import { News } from './news/entities/news.entity';
+import { CrawlingModule } from './crawling/crawling.module';
 
 const typeOrmModuleOptions = {
   useFactory: async (
@@ -58,6 +59,7 @@ const typeOrmModuleOptions = {
     AwsModule,
     UtilsModule,
     NewsModule,
+    CrawlingModule,
   ],
   controllers: [],
   providers: [],
