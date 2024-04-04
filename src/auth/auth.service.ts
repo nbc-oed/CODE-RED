@@ -13,7 +13,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
 import { ConfigService } from '@nestjs/config';
-
 @Injectable()
 export class AuthService {
   constructor(
@@ -28,8 +27,7 @@ export class AuthService {
     const { email, password, passwordConfirm, name, nickname, phone_number } =
       createUserDto;
     const saltRounds = this.configService.get<number>('PASSWORD_SALT_ROUNDS');
-    const salt = await bcrypt.genSalt(saltRounds);
-    const hashPassword = await bcrypt.hash(password, salt);
+    const hashPassword = await bcrypt.hash(password, +saltRounds);
     const user = await this.usersService.getUserByEmail(email);
 
     // 이메일 중복 확인
