@@ -51,7 +51,6 @@ const typeOrmModuleOptions = {
 
 @Module({
   imports: [
-
     ConfigModule.forRoot({
       isGlobal: true,
       validationSchema: validationSchema,
@@ -59,13 +58,12 @@ const typeOrmModuleOptions = {
     TypeOrmModule.forRootAsync(typeOrmModuleOptions),
     CommonModule,
     UsersModule,
-    AuthModule
+    AuthModule,
     AwsModule,
     UtilsModule,
     NewsModule,
   ],
   controllers: [],
   providers: [],
-
 })
 export class AppModule {}
