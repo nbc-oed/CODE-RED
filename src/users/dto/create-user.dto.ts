@@ -5,6 +5,7 @@ import {
   IsOptional,
   IsString,
   Matches,
+  MinLength,
 } from 'class-validator';
 
 export class CreateUserDto {
@@ -13,6 +14,11 @@ export class CreateUserDto {
   email: string;
 
   @IsString()
+  @Matches(/^[a-zA-Z0-9||d!@#$]{8,16}$/, {
+    // 영어 소문자, 대문자, !@#$ 로만 구성되며, 8~16자 길이 제한
+    message:
+      '비밀번호는 영어, 숫자, !@#$ 만 포함이 가능하며 8~16자리여야 합니다.',
+  })
   @IsNotEmpty({ message: '패스워드를 입력해주세요.' })
   password: string;
 
