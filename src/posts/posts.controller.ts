@@ -11,20 +11,17 @@ import {
   UseGuards,
   Query,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { AuthGuard } from '@nestjs/passport';
 import { FindPostQueryDto } from './dto/find-post-query.dto';
 
-const user = {
-  id: 1,
-  email: 'email@email.com',
-  password: 'password',
-};
+import { AuthGuard } from '@nestjs/passport';
+import { UserInfo } from 'src/common/decorator/user.decorator';
+import { Users } from 'src/common/entities/users.entity';
 
-// TODO: apply user guard, userInfo decorator
-// @UseGuards(AuthGuard('jwt'))
+@UseGuards(AuthGuard('jwt'))
 @Controller('posts')
 export class PostsController {
   constructor(private readonly postsService: PostsService) {}
@@ -32,6 +29,7 @@ export class PostsController {
   @Post()
   @UseInterceptors(FileInterceptor('image'))
   async create(
+    @UserInfo() user: Users,
     @UploadedFile() file: Express.Multer.File,
     @Body() createPostDto: CreatePostDto,
   ) {
@@ -56,6 +54,7 @@ export class PostsController {
   @UseInterceptors(FileInterceptor('image'))
   updatePost(
     @Param('postId') postId: string,
+    @UserInfo() user: Users,
     @UploadedFile() file: Express.Multer.File,
     @Body() updatePostDto: Partial<CreatePostDto>,
   ) {
@@ -63,7 +62,7 @@ export class PostsController {
   }
 
   @Delete(':postId')
-  removePost(@Param('postId') postId: string) {
+  removePost(@UserInfo() user: Users, @Param('postId') postId: string) {
     return this.postsService.removePost(user.id, +postId);
   }
 }
