@@ -2,7 +2,16 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
+
 import { CommonModule } from './common/common.module';
+import { AwsModule } from './aws/aws.module';
+import { UtilsModule } from './utils/utils.module';
+import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
+import { PostsModule } from './posts/posts.module';
+import { NewsModule } from './news/news.module';
+import { CacheModule } from '@nestjs/cache-manager';
+
 import { Users } from './common/entities/users.entity';
 import { Posts } from './common/entities/posts.entity';
 import { Follows } from './common/entities/follows.entity';
@@ -12,13 +21,10 @@ import { Shelters } from './common/entities/shelters.entity';
 import { EmergencyData } from './common/entities/emergency-data.entity';
 import { DisasterData } from './common/entities/disaster-data.entity';
 import { NotificationMessages } from './common/entities/notification-messages.entity';
-import { AwsModule } from './aws/aws.module';
-import { UtilsModule } from './utils/utils.module';
-import { validationSchema } from './common/config/env.config';
-import { UsersModule } from './users/users.module';
-import { AuthModule } from './auth/auth.module';
-import { NewsModule } from './news/news.module';
 import { News } from './news/entities/news.entity';
+
+import { validationSchema } from './common/config/env.config';
+import * as redisStore from 'cache-manager-redis-store';
 
 const typeOrmModuleOptions = {
   useFactory: async (
@@ -51,21 +57,30 @@ const typeOrmModuleOptions = {
 
 @Module({
   imports: [
-
     ConfigModule.forRoot({
       isGlobal: true,
       validationSchema: validationSchema,
     }),
     TypeOrmModule.forRootAsync(typeOrmModuleOptions),
+    CacheModule.registerAsync({
+      imports: [ConfigModule],
+      useFactory: async () => ({
+        store: redisStore,
+        host: process.env.REDIS_HOST,
+        port: process.env.REDIS_PORT,
+        password: process.env.REDIS_PASSWORD,
+      }),
+      isGlobal: true,
+    }),
     CommonModule,
     UsersModule,
-    AuthModule
+    AuthModule,
     AwsModule,
     UtilsModule,
+    PostsModule,
     NewsModule,
   ],
   controllers: [],
   providers: [],
-
 })
 export class AppModule {}

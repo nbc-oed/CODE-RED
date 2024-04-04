@@ -1,6 +1,5 @@
 export enum PostStatus {
-    Available = "Available",
-    Reserved = "Reserved",
-    Completed = "Completed"
+  AVAILABLE = 'AVAILABLE',
+  RESERVED = 'RESERVED',
+  COMPLETED = 'COMPLETED',
 }
-  
