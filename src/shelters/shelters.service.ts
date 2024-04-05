@@ -80,7 +80,7 @@ export class SheltersService {
     let headers = {                                       // 요청 헤더 설정
           Authorization: this.configService.get('KAKAO_MAP_REST_API_KEY') // REST API 키
       };
-    const response = await axios.get(`https://dapi.kakao.com/v2/local/search/address.json?query=${search}`, {headers})
+    const response = await axios.get(`http://dapi.kakao.com/v2/local/search/keyword.json?query=${search}`, {headers})
     const mapData = response.data
     return mapData
   }
