@@ -22,6 +22,7 @@ import { EmergencyData } from './common/entities/emergency-data.entity';
 import { DisasterData } from './common/entities/disaster-data.entity';
 import { NotificationMessages } from './common/entities/notification-messages.entity';
 import { News } from './news/entities/news.entity';
+import { CrawlingModule } from './crawling/crawling.module';
 
 import { validationSchema } from './common/config/env.config';
 import * as redisStore from 'cache-manager-redis-store';
@@ -79,6 +80,7 @@ const typeOrmModuleOptions = {
     UtilsModule,
     PostsModule,
     NewsModule,
+    CrawlingModule,
   ],
   controllers: [],
   providers: [],
