@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import axios from 'axios';
-import { response } from 'express';
 import { Shelters } from 'src/common/entities/shelters.entity';
 import { Repository } from 'typeorm';
 import convert from 'xml-js'; // convert 메서드는 직접 import해서 억지로 끌어와야함
@@ -75,5 +74,14 @@ export class SheltersService {
       }
       return shelterInfo
     }
+  }
+
+  async getSheltersMap(search : string) {
+    let headers = {                                       // 요청 헤더 설정
+          Authorization: this.configService.get('KAKAO_MAP_REST_API_KEY') // REST API 키
+      };
+    const response = await axios.get(`https://dapi.kakao.com/v2/local/search/address.json?query=${search}`, {headers})
+    const mapData = response.data
+    return mapData
   }
 }

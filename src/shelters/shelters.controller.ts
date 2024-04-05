@@ -1,13 +1,20 @@
-import { Controller, Get, Post } from '@nestjs/common';
+import { Controller, Get, Post, Query, Search } from '@nestjs/common';
 import { SheltersService } from './shelters.service';
 
 @Controller('shelters')
 export class SheltersController {
     constructor (private sheltersService : SheltersService) {}
 
-    @Get()
+    @Get('data')
     async getShelters () {
         const shelters = await this.sheltersService.getShelters()
         return { message : "데이터 저장 완료" }
+    }
+
+    @Get('searchMap')
+    async getSheltersMap (@Query('search') search : string) {
+        console.log("-----------------",search)
+        const mapData = await this.sheltersService.getSheltersMap(search)
+        return mapData
     }
 }
