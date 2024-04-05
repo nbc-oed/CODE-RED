@@ -13,6 +13,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
 import { ConfigService } from '@nestjs/config';
+import { AwsService } from 'src/aws/aws.service';
 @Injectable()
 export class AuthService {
   constructor(
@@ -21,14 +22,16 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly usersService: UsersService,
     private readonly configService: ConfigService,
+    private readonly awsService: AwsService,
   ) {}
 
-  async signUp(createUserDto: CreateUserDto) {
+  async signUp(file: Express.Multer.File, createUserDto: CreateUserDto) {
     const { email, password, passwordConfirm, name, nickname, phone_number } =
       createUserDto;
     const saltRounds = this.configService.get<number>('PASSWORD_SALT_ROUNDS');
     const hashPassword = await bcrypt.hash(password, +saltRounds);
     const user = await this.usersService.getUserByEmail(email);
+    const uploadedFile = file && (await this.awsService.uploadImage(file));
 
     // 이메일 중복 확인
     if (user) {
@@ -47,6 +50,7 @@ export class AuthService {
       name,
       nickname,
       phone_number,
+      profile_image: uploadedFile,
     });
 
     return this.usersRepository.save(newUser);
