@@ -17,13 +17,14 @@ import { Users } from 'src/common/entities/users.entity';
 import { UserInfo } from 'src/common/decorator/user.decorator';
 import { AuthGuard } from '@nestjs/passport';
 import { FileInterceptor } from '@nestjs/platform-express';
-
+import { JwtAuthGuard } from 'src/auth/guard/jwt.guard';
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   // 모든 유저 조회
   @Get()
+  @UseGuards(JwtAuthGuard)
   getUsers() {
     return this.usersService.getAllUsers();
   }
@@ -36,7 +37,7 @@ export class UsersController {
 
   // 유저 수정
   @Patch(':id')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(JwtAuthGuard)
   @UseInterceptors(FileInterceptor('image'))
   async update(
     @Param('id') id: number,
@@ -49,6 +50,7 @@ export class UsersController {
 
   //유저 삭제
   @Delete(':id')
+  @UseGuards(JwtAuthGuard)
   async remove(@Param('id') id: number, @UserInfo() user: Users) {
     return await this.usersService.remove(id, user);
   }
