@@ -10,6 +10,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { Users } from 'src/common/entities/users.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { AwsService } from 'src/aws/aws.service';
 
 @Injectable()
 export class UsersService {
@@ -20,6 +21,7 @@ export class UsersService {
   constructor(
     @InjectRepository(Users)
     private readonly usersRepository: Repository<Users>,
+    private readonly awsService: AwsService,
   ) {}
 
   async getUserByEmail(email: string) {
@@ -58,9 +60,15 @@ export class UsersService {
 
   // 수정
 
-  async update(userId: number, user: Users, updateUserDto: UpdateUserDto) {
-    const { name, nickname, profile_image } = updateUserDto;
+  async update(
+    userId: number,
+    user: Users,
+    updateUserDto: UpdateUserDto,
+    file: Express.Multer.File,
+  ) {
+    const { name, nickname } = updateUserDto;
     const users = await this.findUserById(userId);
+    const uploadedFile = file && (await this.awsService.uploadImage(file));
 
     if (!users) {
       throw new NotFoundException('유저가 존재하지 않습니다.');
@@ -69,7 +77,13 @@ export class UsersService {
     if (userId !== user.id) {
       throw new UnauthorizedException('정보가 일치하지 않습니다.');
     }
-    const test = await this.usersRepository.update(user.id, { name, nickname });
+    const updateUser = await this.usersRepository.update(user.id, {
+      name,
+      nickname,
+      profile_image: uploadedFile,
+    });
+
+    return updateUser;
   }
 
   async findUserById(id: number) {

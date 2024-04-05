@@ -7,17 +7,21 @@ import { ConfigService } from '@nestjs/config';
 import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Users } from 'src/common/entities/users.entity';
+import { AwsModule } from 'src/aws/aws.module';
 
 @Module({
-  imports:[
-    PassportModule.register({defaultStrategy:'jwt',session:false}),
+  imports: [
+    PassportModule.register({ defaultStrategy: 'jwt', session: false }),
     JwtModule.registerAsync({
-    useFactory:(config:ConfigService) => ({
-      secret: config.get<string>('JWT_SECRET_KEY'),
+      useFactory: (config: ConfigService) => ({
+        secret: config.get<string>('JWT_SECRET_KEY'),
+      }),
+      inject: [ConfigService],
     }),
-    inject:[ConfigService]
-  }),UsersModule,
-  TypeOrmModule.forFeature([Users])],
+    UsersModule,
+    TypeOrmModule.forFeature([Users]),
+    AwsModule,
+  ],
   controllers: [AuthController],
   providers: [AuthService],
 })
