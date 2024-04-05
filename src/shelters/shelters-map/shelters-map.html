@@ -1,45 +1,78 @@
 <html lang="en">
-<head>
-  <meta charset="UTF-8"> <!-- viewport는 웹 페이지가 표시하는 영역이라는데 뭔 소린지 모르겠음..-->
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">    <!-- initial-scale=1.0 페이지 불러올때 초기확대 정도(가 1.0이다.)-->
-  <title>Kakao 지도 API 테스트</title>
-  <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=45e973ac009f5ac6bf6e02707d6f4e30&libraries=services"></script>
-  <script>                 // 이 스크립트 태그가 head에 위치 하는 이유: head속 script는 주로 페이지 로딩된 후 페이지 설정, 초기화 작업, 외부 리소스 로딩 등을 맡기 때문. body속 script 태그 보다 늦게 실행됨--> 
-    document.addEventListener('DOMContentLoaded', function() {                // document.addEventListener : 'DOMContentLoaded'이벤트를 처리하기 위한 메서드
-    let mapContainer = document.getElementById('map');                      // document.getElementById : id가 map인 요소 검색
-    let mapOption = {
-      center: new kakao.maps.LatLng(37.502391, 127.044501),                 // center : 지도 초기 중심 위치 설정하는 속성. 디폴트값 스파르타 본사로 설정함
-      level: 3                                                              // 지도 확대 수준
-    };
+  <head>
+    <meta charset="UTF-8" />
+    <!-- viewport는 웹 페이지가 표시하는 영역이라는데 뭔 소린지 모르겠음..-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- initial-scale=1.0 페이지 불러올때 초기확대 정도(가 1.0이다.)-->
+    <title>Kakao 지도 API 테스트</title>
+    <script
+      type="text/javascript"
+      src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=45e973ac009f5ac6bf6e02707d6f4e30&libraries=services"
+    ></script>
+    <script>                                  // 이 스크립트 태그가 head에 위치 하는 이유: head속 script는 주로 페이지 로딩된 후 페이지 설정, 초기화 작업, 외부 리소스 로딩 등을 맡기 때문. body속 script 태그 보다 늦게 실행됨
+      document.addEventListener('DOMContentLoaded', function () {           // document.addEventListener : 'DOMContentLoaded'이벤트를 처리하기 위한 메서드
+        //let infowindow = new kakao.maps.InfoWindow({ zIndex: 1 });        // infowindow 객체 생성 : 마커 클릭시 장소명 표출
+        let mapContainer = document.getElementById('map');                // document.getElementById : id가 map인 요소 검색
+        let mapOption = {
+          center: new kakao.maps.LatLng(37.502391, 127.044501),           // center : 지도 초기 중심 위치 설정하는 속성. 디폴트값 스파르타 본사로 설정함
+          level: 3,       // 지도 확대 수준
+        };
 
-    // map 이라는 id를 가진 요소에 '새로운' 지도를 만들어서 표시. 즉, 새로고침할때마다 초기화됨
-    let map = new kakao.maps.Map(mapContainer, mapOption);// kakao.maps.Map : kakao 지도 API에서 제공하는 지도 객체 생성 메서드. 지도 표시 DOM객체인 mapContainer와 지도 옵션 객체인 mapOption을 매개변수로 받음
-                      
-          document.getElementById('searchButton').addEventListener('click', function () {
-          let searchInput = document.getElementById('searchInput').value
-          fetch(`http://localhost:3000/shelters/searchMap?search=${searchInput}`)
-          .then(function (response) { return response.json(); })
-          .then(function (data) {
-            let positions = data.documents[0].address;        // 검색된 주소 정보 할당
-            let marker = new kakao.maps.Marker({              // 카카오 지도 api에서 제공하는 마커 객체 생성 메서드.
-              map: map,                                       // 마커를 어떤 지도에 표시할지 지정. 방금 위에서 생성된 지도(객체)위에 마커를 표시함
-              position: new kakao.maps.LatLng(positions.y, positions.x) // 카카오 지도 api에서 제공하는 위도,경도가 들어있는 객체 생성 메서드. positions의 y와 x좌표를 이용해서 만듦
-            });                                               // 즉, 마커의 위치는 y와 x좌표를 통해서 결정됨
-            let bounds = new kakao.maps.LatLngBounds();       // 카카오 지도 api에서 제공하는 지도 영역을 표시하는 객체 생성 메서드
-            bounds.extend(new kakao.maps.LatLng(positions.y, positions.x));   // LatLng객체에 position y,x값을 부여하고, LatLng는 그대로 LatLngBounds에 추가됨
-            map.setBounds(bounds);                            // LatLngBounds를 품은 bounds의 좌표값을 중심으로 검색시 보여지는 지도 영역(시야(?)) 설정
-          })  // 특정 위치를 중심으로 지도 영역 조절
-          .catch(function (error) {
-            console.error('에러 발생:', error);
+        // map 이라는 id를 가진 요소에 '새로운' 지도를 만들어서 표시. 즉, 새로고침할때마다 초기화됨
+        let map = new kakao.maps.Map(mapContainer, mapOption); // kakao.maps.Map : 지도 객체 생성 메서드. 지도 표시 DOM객체인 mapContainer와 지도 옵션 객체인 mapOption을 매개변수로 받음
+        
+        // let ps = new kakao.maps.services.Places();              // 장소 검색 객체 생성
+        // console.log("------------------------",ps)
+
+        // document.getElementById('searchButton').addEventListener('click', function () {
+        //   let search = document.getElementById('searchInput').value;
+        //   console.log("aaaaaaaaa", ps.keywordSearch)
+        //   ps.keywordSearch(search, handlePlacesSearchResult);
+        //   });  
+
+        // function handlePlacesSearchResult(data, status, pagination) {
+        //   if (status === kakao.maps.services.Status.OK) {
+        //     let bounds = new kakao.maps.LatLngBounds();
+        //     for (let i = 0; i < data.length; i++) {
+        //       displayMarker(data[i]);
+        //       bounds.extend(new kakao.maps.LatLng(data[i].y, data[i].x));
+        //     }
+        //     map.setBounds(bounds);
+        //   }
+        // }
+        let markers = []      // 마커를 담을 배열 생성
+
+        document.getElementById('searchButton').addEventListener('click', function () {
+            let searchInput = document.getElementById('searchInput').value;
+            fetch(`http://localhost:3000/shelters/searchMap?search=${searchInput}`,)
+              .then(function (response) {return response.json();})
+              .then(function (data) {
+                for (let i = 0; i < markers.length; i++) {            // 기존에 생성된 마커들 모두 제거
+                  markers[i].setMap(null)
+                }
+                markers = []                       // 마커 배열 초기화
+                for (let i = 0; i < data.documents.length; i++) {                             // 검색 결과에 따른 마커 생성
+                  let positions = { x: data.documents[i].x, y: data.documents[i].y };         // 검색된 주소 정보 할당
+                  let marker = new kakao.maps.Marker({                                        // 마커 객체 생성 메서드
+                  map,             // 마커를 어떤 지도에 표시할지 지정. 방금 위에서 생성된 지도(객체)위에 마커를 표시함
+                  position: new kakao.maps.LatLng(positions.y, positions.x), // 위도,경도가 들어있는 객체 생성 메서드. positions의 y와 x좌표를 이용해서 만듦
+                });
+                markers.push(marker)                                                          // 즉, 마커의 위치는 y와 x좌표를 통해서 결정됨
+                let bounds = new kakao.maps.LatLngBounds();                              // 지도 영역을 표시하는 객체 생성 메서드
+                bounds.extend(new kakao.maps.LatLng(positions.y, positions.x));       // LatLng객체에 position y,x값을 부여하고, LatLng는 그대로 LatLngBounds에 추가됨
+                map.setBounds(bounds);                                                // LatLngBounds를 품은 bounds의 좌표값을 중심으로 검색시 보여지는 지도 영역(시야(?)) 설정
+                }                                    
+              })                                                                        // 특정 위치를 중심으로 지도 영역 조절
+              .catch(function (error) {
+                console.error('에러 발생:', error);
+              });
           });
-    })
-      
-    });
-  </script> 
-</head>
-<body>
-  <input type="text" id="searchInput">
-  <button id="searchButton">검색</button>
-  <div id="map" style="width:500px; height:400px;"></div>
-</body>
+      });
+    </script>
+  </head>
+  <body>
+    <input type="text" id="searchInput" />
+    <button id="searchButton">검색</button>
+    <div id="map" style="width: 500px; height: 400px"></div>
+  </body>
 </html>
