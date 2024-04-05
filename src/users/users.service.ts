@@ -41,14 +41,7 @@ export class UsersService {
   async findOne(id: number) {
     const users = await this.usersRepository.findOne({
       where: { id },
-      select: [
-        'id',
-        'email',
-        'phone_number',
-        'name',
-        'nickname',
-        'profile_image',
-      ],
+      select: ['id', 'email', 'name', 'nickname', 'profile_image'],
     });
 
     if (!users) {
@@ -61,20 +54,20 @@ export class UsersService {
   // 수정
 
   async update(
-    userId: number,
+    id: number,
     user: Users,
     updateUserDto: UpdateUserDto,
     file: Express.Multer.File,
   ) {
     const { name, nickname } = updateUserDto;
-    const users = await this.findUserById(userId);
+    // const users = await this.findUserById(user.id);
     const uploadedFile = file && (await this.awsService.uploadImage(file));
 
-    if (!users) {
+    if (!user) {
       throw new NotFoundException('유저가 존재하지 않습니다.');
     }
 
-    if (userId !== user.id) {
+    if (id !== user.id) {
       throw new UnauthorizedException('정보가 일치하지 않습니다.');
     }
     const updateUser = await this.usersRepository.update(user.id, {
