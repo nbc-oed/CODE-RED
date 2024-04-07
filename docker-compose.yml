@@ -1,5 +1,5 @@
 # compose 파일 버전
-version: "3"
+version: '3'
 services:
   # 서비스 명
   codered_postgresql:
@@ -11,7 +11,7 @@ services:
     container_name: postgres
     # 접근 포트 설정 (컨테이너 외부:컨테이너 내부)
     ports:
-      - "5432:5432"
+      - '5432:5432'
     # 환경 변수 설정
     environment:
       # PostgreSQL 계정 및 패스워드 설정 옵션
@@ -25,11 +25,17 @@ services:
       - compose-networks
 
   codered_redis:
-    image: redis
-    restart: always
-    container_name: CODERED_REDIS
+    image: redis:latest
+    hostname: codered_redis
+    container_name: codered_redis
     ports:
-      - "6379:6379"
+      - 6379:6379
+    volumes:
+      - ./redis/data:/data
+    labels:
+      - 'name=redis'
+      - 'mode=standalone'
+    restart: always
     command: redis-server --requirepass redispassword
     networks:
       - compose-networks
