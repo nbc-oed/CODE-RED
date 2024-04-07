@@ -28,6 +28,7 @@
             fetch(`http://localhost:3000/shelters/searchMap?search=${searchInput}`,)
               .then(function (response) {return response.json();})
               .then(function (data) {
+                let bounds = new kakao.maps.LatLngBounds()
                 for (let i = 0; i < markers.length; i++) {            // 기존에 생성된 마커들 모두 제거
                   markers[i].setMap(null)
                 }
@@ -39,7 +40,6 @@
                   position: new kakao.maps.LatLng(positions.y, positions.x), // 위도,경도가 들어있는 객체 생성 메서드. positions의 y와 x좌표를 이용해서 만듦
                 });
                 markers.push(marker)                                                          // 즉, 마커의 위치는 y와 x좌표를 통해서 결정됨
-                let bounds = new kakao.maps.LatLngBounds();                              // 지도 영역을 표시하는 객체 생성 메서드
                 bounds.extend(new kakao.maps.LatLng(positions.y, positions.x));       // LatLng객체에 position y,x값을 부여하고, LatLng는 그대로 LatLngBounds에 추가됨
                 map.setBounds(bounds);                                                // LatLngBounds를 품은 bounds의 좌표값을 중심으로 검색시 보여지는 지도 영역(시야(?)) 설정
                 }                                    
