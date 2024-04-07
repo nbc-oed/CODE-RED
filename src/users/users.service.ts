@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ForbiddenException,
+  Inject,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -10,6 +11,9 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { Users } from 'src/common/entities/users.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { LocationDto } from './dto/user-location.dto';
+import { RedisService } from 'src/notifications/redis/redis.service';
+import { GeoLocationService } from '../notifications/locations/locations.service';
 
 @Injectable()
 export class UsersService {
@@ -20,6 +24,10 @@ export class UsersService {
   constructor(
     @InjectRepository(Users)
     private readonly usersRepository: Repository<Users>,
+    @Inject(RedisService)
+    private redisService: RedisService,
+    @Inject(GeoLocationService)
+    private geoLocationService: GeoLocationService,
   ) {}
 
   async getUserByEmail(email: string) {
@@ -90,5 +98,22 @@ export class UsersService {
     }
 
     return await this.usersRepository.delete(userId);
+  }
+
+  //사용자 위치정보 수집 API
+  async updateUserLocation(locationDto: LocationDto) {
+    // Redis에 사용자 id, 위도/경도 정보 저장
+    this.redisService.client.set(
+      `user:${locationDto.userId}:location`,
+      JSON.stringify(locationDto),
+    );
+    // Reverse-Geocoding으로 사용자가 위치한 지역명 추출 및 Redis Stream 생성
+    const area = await this.geoLocationService.getAreaFromCoordinates(
+      locationDto.userId,
+      locationDto.latitude,
+      locationDto.longitude,
+    );
+    await this.redisService.client.set(`user:${locationDto.userId}:area`, area);
+    return area;
   }
 }

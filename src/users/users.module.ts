@@ -7,29 +7,31 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from 'src/auth/guard/jwt.strategy';
 import { ConfigService } from '@nestjs/config';
+import { NotificationsModule } from 'src/notifications/notifications.module';
 
 @Module({
-  imports:[
-        /** */
-        // PassportModule.register({defaultStrategy:'jwt'}),
-        // JwtModule.register({
-        //   secret:'JWT_SECRET_KEY',
-        //   signOptions:{expiresIn: '1h'}
-        // }),
-        /** */
-        JwtModule.registerAsync({
-          useFactory:(config:ConfigService)=> ({
-            secret: config.get<string>('JWT_SECRET_KEY'),
-          }),
-          inject:[ConfigService]
-        }),
-        /** */
-    TypeOrmModule.forFeature([Users]),
-  ],
-  exports:[UsersService,JwtStrategy],
-  controllers: [UsersController],
-  providers: [UsersService,JwtStrategy],
+  imports: [
     /** */
+    // PassportModule.register({defaultStrategy:'jwt'}),
+    // JwtModule.register({
+    //   secret:'JWT_SECRET_KEY',
+    //   signOptions:{expiresIn: '1h'}
+    // }),
+    /** */
+    JwtModule.registerAsync({
+      useFactory: (config: ConfigService) => ({
+        secret: config.get<string>('JWT_SECRET_KEY'),
+      }),
+      inject: [ConfigService],
+    }),
+    /** */
+    TypeOrmModule.forFeature([Users]),
+    NotificationsModule,
+  ],
+  exports: [UsersService, JwtStrategy],
+  controllers: [UsersController],
+  providers: [UsersService, JwtStrategy],
+  /** */
   // exports: [JwtStrategy, PassportModule]
   /** */
 })
