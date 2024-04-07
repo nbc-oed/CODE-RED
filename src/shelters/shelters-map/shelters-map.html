@@ -11,7 +11,7 @@
     ></script>
     <script>                                  // 이 스크립트 태그가 head에 위치 하는 이유: head속 script는 주로 페이지 로딩된 후 페이지 설정, 초기화 작업, 외부 리소스 로딩 등을 맡기 때문. body속 script 태그 보다 늦게 실행됨
       document.addEventListener('DOMContentLoaded', function () {           // document.addEventListener : 'DOMContentLoaded'이벤트를 처리하기 위한 메서드
-        //let infowindow = new kakao.maps.InfoWindow({ zIndex: 1 });        // infowindow 객체 생성 : 마커 클릭시 장소명 표출
+        
         let mapContainer = document.getElementById('map');                // document.getElementById : id가 map인 요소 검색
         let mapOption = {
           center: new kakao.maps.LatLng(37.502391, 127.044501),           // center : 지도 초기 중심 위치 설정하는 속성. 디폴트값 스파르타 본사로 설정함
@@ -21,25 +21,6 @@
         // map 이라는 id를 가진 요소에 '새로운' 지도를 만들어서 표시. 즉, 새로고침할때마다 초기화됨
         let map = new kakao.maps.Map(mapContainer, mapOption); // kakao.maps.Map : 지도 객체 생성 메서드. 지도 표시 DOM객체인 mapContainer와 지도 옵션 객체인 mapOption을 매개변수로 받음
         
-        // let ps = new kakao.maps.services.Places();              // 장소 검색 객체 생성
-        // console.log("------------------------",ps)
-
-        // document.getElementById('searchButton').addEventListener('click', function () {
-        //   let search = document.getElementById('searchInput').value;
-        //   console.log("aaaaaaaaa", ps.keywordSearch)
-        //   ps.keywordSearch(search, handlePlacesSearchResult);
-        //   });  
-
-        // function handlePlacesSearchResult(data, status, pagination) {
-        //   if (status === kakao.maps.services.Status.OK) {
-        //     let bounds = new kakao.maps.LatLngBounds();
-        //     for (let i = 0; i < data.length; i++) {
-        //       displayMarker(data[i]);
-        //       bounds.extend(new kakao.maps.LatLng(data[i].y, data[i].x));
-        //     }
-        //     map.setBounds(bounds);
-        //   }
-        // }
         let markers = []      // 마커를 담을 배열 생성
 
         document.getElementById('searchButton').addEventListener('click', function () {
