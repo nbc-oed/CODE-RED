@@ -1,6 +1,10 @@
+import { BaseModel } from 'src/common/entities/base-model.entity';
+import { Users } from 'src/common/entities/users.entity';
 import {
   Column,
   Entity,
+  JoinColumn,
+  OneToOne,
   Point,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -11,18 +15,22 @@ export class Location {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'int', nullable: false })
-  userId: number;
+  @Column({ name: 'user_id', type: 'int', nullable: false })
+  user_id: number;
 
-  @Column({ type: 'double', nullable: false })
+  @Column({ type: 'float', nullable: false })
   latitude: number;
 
-  @Column({ type: 'double', nullable: false })
+  @Column({ type: 'float', nullable: false })
   longitude: number;
 
-  @Column({ type: 'point', nullable: false })
+  @Column({ type: 'geometry', nullable: false })
   location: Point;
 
   @UpdateDateColumn()
-  timeStamp: Date;
+  timestamp: Date;
+
+  @OneToOne(() => Users, (user) => user.location)
+  @JoinColumn({ name: 'user_id' })
+  user: Users;
 }
