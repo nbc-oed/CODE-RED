@@ -13,8 +13,7 @@ export class SheltersController {
 
     @Get('searchMap')
     async getSheltersMap (@Query('search') search : string) {
-        console.log("-----------------",search)
-        const mapData = await this.sheltersService.getSheltersMap(search)
-        return mapData
+        const findShelterData = await this.sheltersService.getSheltersMap(search)
+        return findShelterData
     }
 }

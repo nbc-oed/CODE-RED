@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import axios from 'axios';
 import { Shelters } from 'src/common/entities/shelters.entity';
-import { Repository } from 'typeorm';
+import { Like, Repository } from 'typeorm';
 import convert from 'xml-js'; // convert 메서드는 직접 import해서 억지로 끌어와야함
 
 @Injectable()
@@ -21,8 +21,8 @@ export class SheltersService {
     );
     {
       const xmlData = response.data; // 공공데이터라 그런지 JSON이 아닌 XML 방식
-      const xmlToJsonData = convert.xml2json(xmlData, { // 받아온 xml 방식의 데이터를 json으로 변환, compact : true는 더욱 압축된 json 형식이고 space는 단순히 json 출력시 들여쓰기 칸 수
-        compact: true,
+      const xmlToJsonData = convert.xml2json(xmlData, { // 받아온 xml 방식의 데이터를 json으로 변환,
+        compact: true,  // compact : true는 더욱 압축된 json 형식이고 space는 단순히 json 출력시 들여쓰기 칸 수
         spaces: 4,
       }); 
       const shelterDataJsonVer = JSON.parse(xmlToJsonData); // json 문자열을 자바스크립트 객체로 변환
@@ -41,7 +41,7 @@ export class SheltersService {
       });
       for (const shelters of shelterInfo) { // 처음엔 단순 if문을 사용했으나, 배열을 풀어줌으로서 여러개의 객체들에 접근 가능하게 하기 위해 for문 사용
         const findShelterData = await this.sheltersRepository.find({
-        where :{
+        where : {
           id: shelters.id,
         }  
         });
@@ -68,8 +68,7 @@ export class SheltersService {
           }
           else {  // 같거나 작다면 업데이트(save) // 성공했지만 id가 뒤죽박죽 되어버림;; => shelter_id 추가로 임시 조치 완료
             await this.sheltersRepository.save(shelters); // 여기서도 update를 쓰면 새롭게 추가되는 데이터들이 저장이 안됨
-          }
-          
+          }    
         }
       }
       return shelterInfo
@@ -77,11 +76,21 @@ export class SheltersService {
   }
 
   async getSheltersMap(search : string) {
-    let headers = {                                       // 요청 헤더 설정
-          Authorization: this.configService.get('KAKAO_MAP_REST_API_KEY') // REST API 키
-      };
-    const response = await axios.get(`http://dapi.kakao.com/v2/local/search/keyword.json?query=${search}`, {headers})
-    const mapData = response.data
-    return mapData
+    const findShelterData = await this.sheltersRepository.find({
+      where : {
+        address : Like(`%${search}%`)
+      },
+      select : {
+        id : true,
+        shelter_id : true,
+        address : true,
+        facility_name : true,
+        facility_area : true,
+        longitude : true,
+        latitude :  true,
+        department_number :true
+      }
+    })
+    return findShelterData
   }
 }

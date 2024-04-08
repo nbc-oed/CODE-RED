@@ -33,17 +33,23 @@
                   markers[i].setMap(null)
                 }
                 markers = []                       // 마커 배열 초기화
-                for (let i = 0; i < data.documents.length; i++) {                             // 검색 결과에 따른 마커 생성
-                  let positions = { x: data.documents[i].x, y: data.documents[i].y };         // 검색된 주소 정보 할당
+                for (let i = 0; i < data.length; i++) {                             // 검색 결과에 따른 마커 생성
+                  let positions = { x: data[i].longitude, y: data[i].latitude };         // 검색된 주소 좌표 할당
                   let marker = new kakao.maps.Marker({                                        // 마커 객체 생성 메서드
                   map,             // 마커를 어떤 지도에 표시할지 지정. 방금 위에서 생성된 지도(객체)위에 마커를 표시함
                   position: new kakao.maps.LatLng(positions.y, positions.x), // 위도,경도가 들어있는 객체 생성 메서드. positions의 y와 x좌표를 이용해서 만듦
                 });
-                markers.push(marker)                                                          // 즉, 마커의 위치는 y와 x좌표를 통해서 결정됨
+                markers.push(marker)
+                let customOverlay = new kakao.maps.CustomOverlay({
+                  map: marker.map,
+                  position: marker.position,
+                  content: data[i].place_name 
+                });
+                customOverlay.setMap(map);
                 bounds.extend(new kakao.maps.LatLng(positions.y, positions.x));       // LatLng객체에 position y,x값을 부여하고, LatLng는 그대로 LatLngBounds에 추가됨
                 map.setBounds(bounds);                                                // LatLngBounds를 품은 bounds의 좌표값을 중심으로 검색시 보여지는 지도 영역(시야(?)) 설정
-                }                                    
-              })                                                                        // 특정 위치를 중심으로 지도 영역 조절
+                }                                                                     // 특정 위치를 중심으로 지도 영역 조절
+              })                                                                        
               .catch(function (error) {
                 console.error('에러 발생:', error);
               });
