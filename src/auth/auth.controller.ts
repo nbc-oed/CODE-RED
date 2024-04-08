@@ -14,11 +14,13 @@ import { CreateUserDto } from 'src/users/dto/create-user.dto';
 import { LoginDto } from 'src/users/dto/login.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { KakaoLogin } from './auth.service';
+import { ConfigService } from '@nestjs/config';
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly kakaoLogin: KakaoLogin,
+    private readonly configService: ConfigService,
   ) {}
 
   @Post('/sign-up')
@@ -67,7 +69,9 @@ export class AuthController {
   @Header('Content-Type', 'text/html')
   kakaoLoginLogic(@Res() res): void {
     const _hostName = 'https://kauth.kakao.com';
-    const _restApiKey = '33238d01ba9e7bc498a1b741325ea67f'; // @@ .env 에서 왜 못가져오지?
+    const KAKAO_REST_API_KEY =
+      this.configService.get<string>('KAKAO_REST_API_KEY'); // .env에서 JWT_SECRET_KEY 가져오기
+    const _restApiKey = KAKAO_REST_API_KEY; // @@ .env 에서 왜 못가져오지?
     // 카카오 로그인 RedirectURI 등록
     const _redirectUrl = 'http://127.0.0.1:3000/auth/kakaoLoginLogicRedirect'; // * 입력필요 @@
     const url = `${_hostName}/oauth/authorize?client_id=${_restApiKey}&redirect_uri=${_redirectUrl}&response_type=code`;
@@ -80,7 +84,9 @@ export class AuthController {
   @Header('Content-Type', 'text/html')
   kakaoLoginLogicRedirect(@Query() qs, @Res() res): void {
     console.log(qs.code);
-    const _restApiKey = '33238d01ba9e7bc498a1b741325ea67f'; // @@ .env 에서 왜 못가져오지?
+    const KAKAO_REST_API_KEY =
+      this.configService.get<string>('KAKAO_REST_API_KEY'); // .env에서 JWT_SECRET_KEY 가져오기
+    const _restApiKey = KAKAO_REST_API_KEY; // @@ .env 에서 왜 못가져오지?
     const _redirect_uri = 'http://127.0.0.1:3000/auth/kakaoLoginLogicRedirect';
     const _hostName = `https://kauth.kakao.com/oauth/token?grant_type=authorization_code&client_id=${_restApiKey}&redirect_uri=${_redirect_uri}&code=${qs.code}`;
     const _headers = {
