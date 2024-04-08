@@ -14,6 +14,8 @@ import { Repository } from 'typeorm';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
 import { ConfigService } from '@nestjs/config';
 import { AwsService } from 'src/aws/aws.service';
+import { HttpService } from '@nestjs/axios';
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -23,6 +25,7 @@ export class AuthService {
     private readonly usersService: UsersService,
     private readonly configService: ConfigService,
     private readonly awsService: AwsService,
+    private readonly httpService: HttpService,
   ) {}
 
   async signUp(file: Express.Multer.File, createUserDto: CreateUserDto) {
@@ -110,5 +113,43 @@ export class AuthService {
   verifyToken(token: string) {
     const JWT_SECRET_KEY = this.configService.get<string>('JWT_SECRET_KEY'); // .env에서 JWT_SECRET_KEY 가져오기
     return this.jwtService.verify(token, { secret: JWT_SECRET_KEY });
+  }
+}
+
+// 카카오 로그인
+@Injectable()
+export class KakaoLogin {
+  check: boolean;
+  accessToken: string;
+  private http: HttpService;
+  constructor() {
+    this.check = false;
+    this.http = new HttpService();
+    this.accessToken = '';
+  }
+  loginCheck(): void {
+    this.check = !this.check;
+    return;
+  }
+  async login(url: string, headers: any): Promise<any> {
+    return await this.http.post(url, '', { headers }).toPromise();
+  }
+  setToken(token: string): boolean {
+    this.accessToken = token;
+    return true;
+  }
+  async logout(): Promise<any> {
+    const _url = 'https://kapi.kakao.com/v1/user/logout';
+    const _header = {
+      Authorization: `bearer ${this.accessToken}`,
+    };
+    return await this.http.post(_url, '', { headers: _header }).toPromise();
+  }
+  async deleteLog(): Promise<any> {
+    const _url = 'https://kapi.kakao.com/v1/user/unlink';
+    const _header = {
+      Authorization: `bearer ${this.accessToken}`,
+    };
+    return await this.http.post(_url, '', { headers: _header }).toPromise();
   }
 }
