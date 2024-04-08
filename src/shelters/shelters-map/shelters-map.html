@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <!-- initial-scale=1.0 페이지 불러올때 초기확대 정도(가 1.0이다.)-->
     <title>Kakao 지도 API 테스트</title>
+    <style>
+      .label {margin-bottom: 96px;}
+      .label * {display: inline-block;vertical-align: top;}
+      .label .left {background: url("https://t1.daumcdn.net/localimg/localimages/07/2011/map/storeview/tip_l.png") no-repeat;display: inline-block;height: 24px;overflow: hidden;vertical-align: top;width: 7px;}
+      .label .center {background: url(https://t1.daumcdn.net/localimg/localimages/07/2011/map/storeview/tip_bg.png) repeat-x;display: inline-block;height: 24px;font-size: 12px;line-height: 24px;}
+      .label .right {background: url("https://t1.daumcdn.net/localimg/localimages/07/2011/map/storeview/tip_r.png") -1px 0  no-repeat;display: inline-block;height: 24px;overflow: hidden;width: 6px;}
+      </style>
     <script
       type="text/javascript"
       src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=45e973ac009f5ac6bf6e02707d6f4e30&libraries=services"
@@ -40,10 +47,10 @@
                   position: new kakao.maps.LatLng(positions.y, positions.x), // 위도,경도가 들어있는 객체 생성 메서드. positions의 y와 x좌표를 이용해서 만듦
                 });
                 markers.push(marker)
+                let content = `<div class ="label"><span class="left"></span><span class="center">${data[i].facility_name}</span><span class="right"></span></div>`;
                 let customOverlay = new kakao.maps.CustomOverlay({
-                  map: marker.map,
-                  position: marker.position,
-                  content: data[i].place_name 
+                  position: marker.getPosition(),
+                  content, 
                 });
                 customOverlay.setMap(map);
                 bounds.extend(new kakao.maps.LatLng(positions.y, positions.x));       // LatLng객체에 position y,x값을 부여하고, LatLng는 그대로 LatLngBounds에 추가됨
