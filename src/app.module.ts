@@ -26,6 +26,7 @@ import { News } from './news/entities/news.entity';
 import { validationSchema } from './common/config/env.config';
 import { NotificationsModule } from './notifications/notifications.module';
 import * as redisStore from 'cache-manager-redis-store';
+import { ScheduleModule } from '@nestjs/schedule';
 
 const typeOrmModuleOptions = {
   useFactory: async (
