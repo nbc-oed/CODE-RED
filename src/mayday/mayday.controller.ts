@@ -25,4 +25,12 @@ export class MaydayController {
   ) {
     await this.maydayService.saveMyLocation(createLocationDto, user.id);
   }
+
+  // 내 위치 기반 유저 찾기
+  @Get('findHelper')
+  async findHelper(@UserInfo() user: Users) {
+    const helper = await this.maydayService.findHelper(user.id);
+
+    return { message: `1km안에 나를 도와줄수 있는 사람 ${helper}` };
+  }
 }
