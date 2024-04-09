@@ -30,7 +30,7 @@ export class Location {
   @UpdateDateColumn()
   timestamp: Date;
 
-  @OneToOne(() => Users, (user) => user.location)
+  @OneToOne(() => Users, (user) => user.location, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
   user: Users;
 }

@@ -62,6 +62,8 @@ export class Users extends BaseModel {
   })
   messages: NotificationMessages[];
 
-  @OneToOne(() => Location, (location) => location.user)
+  @OneToOne(() => Location, (location) => location.user, {
+    onDelete: 'CASCADE',
+  })
   location: Location;
 }
