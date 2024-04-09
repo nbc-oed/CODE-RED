@@ -11,7 +11,7 @@ export class MaydayRecords extends BaseModel {
   @Column({ type: 'time', nullable: true })
   arrival_time: number;
 
-  @Column({ type: 'boolean', nullable: false })
+  @Column({ type: 'boolean', default: 'false', nullable: false })
   is_completed: boolean;
 
   // score
