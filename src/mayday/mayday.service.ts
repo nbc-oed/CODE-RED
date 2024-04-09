@@ -3,12 +3,15 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Location } from './entities/location.entity';
 import { Repository } from 'typeorm';
 import { LocationDto } from './dto/location.dto';
+import { MaydayRecords } from './entities/mayday-records.entity';
 
 @Injectable()
 export class MaydayService {
   constructor(
     @InjectRepository(Location)
     private readonly locationRepository: Repository<Location>,
+    @InjectRepository(MaydayRecords)
+    private readonly maydayRecordsRepository: Repository<MaydayRecords>,
   ) {}
 
   // 내위치 정보 저장
@@ -43,6 +46,7 @@ export class MaydayService {
     }
   }
 
+  // 내 위치 기반 유저 찾기
   async findHelper(userId: number) {
     const user = await this.findUserId(userId);
 
@@ -51,31 +55,6 @@ export class MaydayService {
     console.log(latitude, longitude);
 
     try {
-      // const helpers = await this.locationRepository
-      //   .createQueryBuilder()
-      //   .select('*')
-      //   .addSelect(
-      //     `ST_DISTANCE(POINT(:longitude, :latitude), location) AS distance`,
-      //   )
-      //   .from((subQuery) => {
-      //     return subQuery
-      //       .select('*')
-      //       .from('location', 'helper') // 서브쿼리에서 location 테이블을 "helper" 별칭으로 사용합니다.
-      //       .where(
-      //         `ST_DISTANCE(POINT(:longitude, :latitude), location) <= :distanceThreshold`,
-      //         {
-      //           longitude: longitude,
-      //           latitude: latitude,
-      //           distanceThreshold: 1000,
-      //         },
-      //       )
-      //       .andWhere(
-      //         `ST_DISTANCE(POINT(:longitude, :latitude), location) > 0`,
-      //       );
-      //   }, 'helper')
-      //   .orderBy('distance')
-      //   .getRawMany();
-
       const distanceThreshold = 1000;
       const queryBuilder = this.locationRepository
         .createQueryBuilder('location')
@@ -100,8 +79,6 @@ export class MaydayService {
       const helpers = helpersArray.filter(
         (helper) => helper.distance_meters > 0,
       );
-      console.log(helpers);
-
       return helpers.length;
     } catch (err) {
       console.error('An error occurred while finding helpers:', err);
@@ -109,8 +86,29 @@ export class MaydayService {
     }
   }
 
-  async acceptRescue(userId: number, locationDto: LocationDto) {
+  // 구조 요청 보내기
+  async sos(userId: number) {
+    /*
+      구조 요청 보내기 로직 추가해야함.
+    */
+
+    await this.maydayRecordsRepository.insert({ user_id: userId });
+
+    /*
+      프론트 쪽임.
+      세션이나 헤더 같은곳에 구조자의 id가 들어가야 할것 같음.
+    */
+  }
+
+  // 알림 받은 유저 정보 저장 및 거리 계산
+  async acceptRescue(
+    userId: number,
+    helperId: number,
+    locationDto: LocationDto,
+  ) {
     const { latitude, longitude } = locationDto;
+    console.log(userId, helperId);
+
     const user = await this.findUserId(userId);
     const distanceMeter = await this.shortestDistance(
       latitude,
@@ -120,9 +118,21 @@ export class MaydayService {
     );
 
     const distance = distanceMeter.shortest_distance / 1000;
+
+    const latestRecord = await this.maydayRecordsRepository.findOne({
+      where: { user_id: userId },
+      order: { created_at: 'DESC' },
+    });
+
+    await this.maydayRecordsRepository.update(
+      { id: latestRecord.id },
+      { helper_id: helperId, distance: distance },
+    );
+
     return Number(distance.toFixed(1));
   }
 
+  // 거리 계산
   async shortestDistance(lat1, lon1, lat2, lon2) {
     const distance = await this.locationRepository
       .createQueryBuilder()
@@ -143,6 +153,7 @@ export class MaydayService {
     return distance;
   }
 
+  // 유저 아이디로 찾기
   async findUserId(userId: number) {
     const user = await this.locationRepository
       .createQueryBuilder()

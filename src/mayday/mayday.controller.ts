@@ -34,16 +34,20 @@ export class MaydayController {
     return { message: `1km안에 나를 도와줄수 있는 사람 ${helper}` };
   }
 
+  // 구조 요청 보내기
+  @Post('sos')
+  async sos(@UserInfo() user: Users) {
+    await this.maydayService.sos(user.id);
+  }
+
   // 알림 받은 유저 정보 저장 및 거리 계산
+  /* 세션같은걸로 유저 아이디 받아와야함 userId = 1 */
   @Post('accept-rescue')
   async acceptRescue(
-    @UserInfo() user: Users,
+    @UserInfo() helper: Users,
     @Body() locationDto: LocationDto,
   ) {
-    const distance = await this.maydayService.acceptRescue(
-      user.id,
-      locationDto,
-    );
+    const distance = await this.maydayService.acceptRescue(1, 34, locationDto);
 
     return { message: `유저와 헬퍼의 최단 거리 ${distance}Km` };
   }
