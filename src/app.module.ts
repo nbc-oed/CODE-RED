@@ -6,6 +6,7 @@ import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { CommonModule } from './common/common.module';
 import { AwsModule } from './aws/aws.module';
 import { UtilsModule } from './utils/utils.module';
+import { EventsModule } from './events/events.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { PostsModule } from './posts/posts.module';
@@ -81,6 +82,7 @@ const typeOrmModuleOptions = {
     PostsModule,
     NewsModule,
     CrawlingModule,
+    EventsModule,
   ],
   controllers: [],
   providers: [],
