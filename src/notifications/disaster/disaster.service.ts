@@ -95,7 +95,7 @@ export class DisasterService {
             messageDate === currentDateString
           );
         });
-      console.log('result----------------------', result);
+      //console.log('result----------------------', result);
 
       return result;
     } catch (error) {
