@@ -16,6 +16,9 @@ import { validationSchema } from './common/config/env.config';
 import { SheltersController } from './shelters/shelters.controller';
 import { SheltersService } from './shelters/shelters.service';
 import { SheltersModule } from './shelters/shelters.module';
+import { DestinationRiskController } from './destination-risk/destination-risk.controller';
+import { DestinationRiskService } from './destination-risk/destination-risk.service';
+import { DestinationRiskModule } from './destination-risk/destination-risk.module';
 
 const typeOrmModuleOptions = {
   useFactory: async (
@@ -54,8 +57,9 @@ const typeOrmModuleOptions = {
     TypeOrmModule.forRootAsync(typeOrmModuleOptions),
     CommonModule,
     SheltersModule,
+    DestinationRiskModule,
   ],
-  controllers: [],
-  providers: [],
+  controllers: [DestinationRiskController],
+  providers: [DestinationRiskService],
 })
 export class AppModule {}
