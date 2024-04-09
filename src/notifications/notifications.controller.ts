@@ -34,7 +34,7 @@ export class NotificationsController {
  *
  *  4. @RedisStream메세지추가API addDisasterMessageToStream
  *     stream의 이름인 지역명과 공공데이터를 수신한 지역명이 일치한다면, 해당 스트림의 사용자에게 메세지가 담긴 재난 문자를 발송한다.
- *
+ *      <알림 매칭 로직>
  *
  *  5. @사용자알림처리API sendNotificationToUsers
  *     생성된 특정 StreamId의 메세지를 읽고, 각 지역의 컨슈머 그룹을 순회하면서, 해당 지역의 사용자에게 해당하는 메시지를 전송한다. 사용자가 확인했다면, xack 처리를 해준다.
