@@ -16,7 +16,7 @@ import { Users } from './common/entities/users.entity';
 import { Posts } from './common/entities/posts.entity';
 import { Follows } from './common/entities/follows.entity';
 import { Scores } from './common/entities/scores.entity';
-import { MaydayRecords } from './common/entities/mayday-records.entity';
+import { MaydayRecords } from './mayday/entities/mayday-records.entity';
 import { Shelters } from './common/entities/shelters.entity';
 import { EmergencyData } from './common/entities/emergency-data.entity';
 import { DisasterData } from './common/entities/disaster-data.entity';
@@ -25,7 +25,9 @@ import { News } from './news/entities/news.entity';
 import { CrawlingModule } from './crawling/crawling.module';
 
 import { validationSchema } from './common/config/env.config';
+import { MaydayModule } from './mayday/mayday.module';
 import * as redisStore from 'cache-manager-redis-store';
+import { Location } from './mayday/entities/location.entity';
 
 const typeOrmModuleOptions = {
   useFactory: async (
@@ -50,6 +52,7 @@ const typeOrmModuleOptions = {
       DisasterData,
       NotificationMessages,
       News,
+      Location,
     ],
     logging: true, // 데이터베이스 쿼리를 로깅할지 여부를 제어, 이 옵션을 true로 설정하면 TypeORM이 실행된 쿼리를 콘솔에 로그로 출력
   }),
@@ -81,6 +84,7 @@ const typeOrmModuleOptions = {
     PostsModule,
     NewsModule,
     CrawlingModule,
+    MaydayModule,
   ],
   controllers: [],
   providers: [],
