@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Location } from './entities/location.entity';
 import { Repository } from 'typeorm';
-import { CreateLocationDto } from './dto/create-location.dto';
+import { LocationDto } from './dto/location.dto';
 
 @Injectable()
 export class MaydayService {
@@ -12,8 +12,8 @@ export class MaydayService {
   ) {}
 
   // 내위치 정보 저장
-  async saveMyLocation(createLocationDto: CreateLocationDto, userId: number) {
-    const { latitude, longitude } = createLocationDto;
+  async saveMyLocation(location: LocationDto, userId: number) {
+    const { latitude, longitude } = location;
 
     const user = await this.findUserId(userId);
 
@@ -107,6 +107,40 @@ export class MaydayService {
       console.error('An error occurred while finding helpers:', err);
       return 'Failed';
     }
+  }
+
+  async acceptRescue(userId: number, locationDto: LocationDto) {
+    const { latitude, longitude } = locationDto;
+    const user = await this.findUserId(userId);
+    const distanceMeter = await this.shortestDistance(
+      latitude,
+      longitude,
+      user.latitude,
+      user.longitude,
+    );
+
+    const distance = distanceMeter.shortest_distance / 1000;
+    return Number(distance.toFixed(1));
+  }
+
+  async shortestDistance(lat1, lon1, lat2, lon2) {
+    const distance = await this.locationRepository
+      .createQueryBuilder()
+      .select(
+        `
+    ST_Distance(
+      ST_SetSRID(ST_MakePoint(:lon1, :lat1), 4326)::geography,
+      ST_SetSRID(ST_MakePoint(:lon2, :lat2), 4326)::geography
+    ) AS shortest_distance
+  `,
+      )
+      .setParameter('lon1', lon1)
+      .setParameter('lat1', lat1)
+      .setParameter('lon2', lon2)
+      .setParameter('lat2', lat2)
+      .getRawOne();
+
+    return distance;
   }
 
   async findUserId(userId: number) {
