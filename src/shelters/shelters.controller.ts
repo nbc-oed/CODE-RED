@@ -7,7 +7,7 @@ export class SheltersController {
 
     @Get('data')
     async getShelters () {
-        const shelters = await this.sheltersService.getShelters()
+        await this.sheltersService.getShelters()
         return { message : "데이터 저장 완료" }
     }
 

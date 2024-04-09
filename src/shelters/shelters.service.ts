@@ -17,7 +17,7 @@ export class SheltersService {
   async getShelters() {
     const seoulShelter = await this.configService.get('SHELTER_API');
     const response = await axios.get(
-      `http://openapi.seoul.go.kr:8088/${seoulShelter}/xml/TbEqkShelter/1/37/`,
+      `http://openapi.seoul.go.kr:8088/${seoulShelter}/xml/TbEqkShelter/1001/1552/`,  // 1/1000 , 1001~1552 등 데이터 숫자에 따라 변동 가능. 한번에 1000개까지만 가능.
     );
     {
       const xmlData = response.data; // 공공데이터라 그런지 JSON이 아닌 XML 방식
@@ -75,11 +75,13 @@ export class SheltersService {
     }
   }
 
+
   async getSheltersMap(search : string) {
     const findShelterData = await this.sheltersRepository.find({
-      where : {
-        address : Like(`%${search}%`)
-      },
+      where : [
+        {address : Like(`%${search}%`)},
+        {facility_name : Like(`%${search}%`)}
+      ],
       select : {
         id : true,
         shelter_id : true,

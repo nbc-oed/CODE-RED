@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <!-- initial-scale=1.0 페이지 불러올때 초기확대 정도(가 1.0이다.)-->
     <title>Kakao 지도 API 테스트</title>
-    <title>Kakao 지도 API 테스트</title>
     <link rel="stylesheet" type="text/css" href="/reset.css">
     <link rel="stylesheet" type="text/css" href="./shelters-map-style.css">
     <script
@@ -40,12 +39,14 @@
         .then(function (response) {return response.json();})
         .then(function (data) {
           let bounds = new kakao.maps.LatLngBounds()
-
+          
+          // 마커 관리
           for (let i = 0; i < markers.length; i++) {            // 기존에 생성된 마커들 모두 제거
             markers[i].setMap(null)
           }
           markers = []                       // 마커 배열 초기화
 
+          // 커스텀 오버레이 관리
           detailOverlays.forEach(function(overlay) {      // 기존 detailCustomOverlay 제거
               overlay.setMap(null);
           });
@@ -60,6 +61,7 @@
 
           markers.push(marker)
 
+          // 커스텀 오버레이에 들어갈 컨텐츠 채워 넣기
           let content = `<div class ="label"><span class="left"></span><span class="center">${item.facility_name}</span><span class="right"></span></div>`;
           let detailContent = `
           <div class ="detail-content">
@@ -80,6 +82,7 @@
             yAnchor: 1.5
           })
 
+          // 커스텀 오버레이에 대한 이벤트 설정
           kakao.maps.event.addListener(marker, 'mouseover', function() {
             customOverlay.setMap(map);
           })
@@ -87,7 +90,7 @@
             customOverlay.setMap(null);
           })
           kakao.maps.event.addListener(marker, 'click', function() {
-            customOverlay.setMap(null);                           // 클릭 이벤트가 발생하면 customOverlay를 숨깁니다.
+            customOverlay.setMap(null);                           // 클릭 이벤트가 발생하면 customOverlay를 숨김
             detailOverlays.forEach(function(overlay) {            // 다른 overlay 숨김
                       overlay.setMap(null);
             });
