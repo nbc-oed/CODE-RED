@@ -1,51 +1,83 @@
-import { Injectable } from '@nestjs/common';
+import _ from 'lodash';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { RedisService } from './redis/redis.service';
+import { Cache } from '@nestjs/cache-manager';
+import { InjectRepository } from '@nestjs/typeorm';
+import { NotificationMessages } from 'src/common/entities/notification-messages.entity';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class NotificationsService {
-  constructor(private redisService: RedisService) {}
+  constructor(
+    @InjectRepository(NotificationMessages)
+    private notificationMessageRepository: Repository<NotificationMessages>,
+    private redisService: RedisService,
+    private cacheManager: Cache,
+  ) {}
 
-  async sendNotificationsForRegion(region: string) {
-    const streamKey = `stream:${region}`;
-    const groupName = 'consumerGroup';
-    const consumerName = 'notifications';
+  async getUserNotifications(userId: number) {
+    const cacheKey = `user-notifications:${userId}`;
+    let notifications = await this.cacheManager.get(cacheKey);
+    // 캐시에 데이터가 있으면 바로 반환
+    if (notifications) {
+      console.log('Cache Hit!! -- 캐시에서 알림 목록 반환');
+      return notifications;
+    }
 
-    // Redis 스트림에서 새로운 메시지 읽기
-    const messages = await this.redisService.client.xreadgroup(
-      'GROUP',
-      groupName,
-      consumerName,
-      'STREAMS',
-      streamKey, // TODO 배열이 안들어감.
-      '>',
-      0,
-    );
+    // 캐시에 데이터가 없는 경우, Redis에서 알림 목록을 조회
+    notifications = await this.retrieveAndCacheNotifications(userId, cacheKey);
+    return notifications;
+  }
 
-    if (messages) {
-      for (const message of messages) {
-        const users = await this.getUsersForRegion(region); // 지역별 사용자 조회
-        for (const user of users) {
-          // 실제 알림 전송 로직 (예: 이메일, SMS 등)
-          this.sendNotificationToUser(user, message);
-        }
+  private async retrieveAndCacheNotifications(
+    userId: number,
+    cacheKey: string,
+  ): Promise<any[]> {
+    // Redis에 저장된 사용자의 지역명 조회
+    const areaKey = `user:${userId}:area`;
+    const area = await this.redisService.client.get(areaKey);
+    console.log('Redis에 저장된 사용자 위치 정보:', area);
 
-        // 메시지 확인 처리
-        // await this.redisService.client.xack(streamKey, groupName, message.id);
-      }
+    if (!area) {
+      throw new NotFoundException(
+        '사용자 위치 정보가 없습니다. 위치 정보를 업데이트해주세요.',
+      );
+    }
+
+    // 해당 지역의 재난 문자 데이터 읽기
+    const disasterStreamKey = `stream:${area}`;
+    const disasterMessages = await this.getDisasterMessages(disasterStreamKey);
+    console.log(`사용자 해당 지역 '${area}'의 재난 문자:`, disasterMessages);
+
+    // 조회된 알림을 캐시에 저장
+    await this.cacheManager.set(cacheKey, disasterMessages, { ttl: 3600 }); // 1시간 동안 캐시 유지
+    return disasterMessages;
+  }
+
+  // Redis 스트림에서 재난 문자 데이터 메시지 읽기
+  async getDisasterMessages(streamKey: string): Promise<any[]> {
+    try {
+      const messages = await this.redisService.client.xrange(
+        streamKey,
+        '-',
+        '+',
+      );
+      return messages.map(([id, fields]) => {
+        const data = this.parseFields(fields);
+        return { id, data };
+      });
+    } catch (error) {
+      console.error('재난 문자 데이터 스트림 읽기/파싱 실패:', error);
+      throw error;
     }
   }
 
-  private async getUsersForRegion(region: string) {
-    // 지역에 해당하는 사용자 목록을 조회하는 로직
-    return [
-      { userId: 1, email: 'user1@example.com' },
-      { userId: 2, email: 'user2@example.com' },
-    ];
-  }
-
-  private async sendNotificationToUser(user: any, message: any) {
-    // 사용자에게 실제 알림을 전송하는 로직
-    // 예: 이메일, SMS, 푸시 알림 등
-    console.log(`Sending notification to ${user.email}: ${message.message}`);
+  private parseFields(fields: string[]): any {
+    // 배열을 객체로 변환
+    let data = {};
+    for (let i = 0; i < fields.length; i += 2) {
+      data[fields[i]] = fields[i + 1];
+    }
+    return data;
   }
 }

@@ -8,11 +8,12 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DisasterData } from 'src/common/entities/disaster-data.entity';
 import { HttpModule } from '@nestjs/axios';
+import { NotificationMessages } from 'src/common/entities/notification-messages.entity';
 
 @Module({
   imports: [
     ScheduleModule.forRoot(),
-    TypeOrmModule.forFeature([DisasterData]),
+    TypeOrmModule.forFeature([DisasterData, NotificationMessages]),
     HttpModule,
   ],
   controllers: [NotificationsController],
