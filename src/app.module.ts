@@ -22,6 +22,7 @@ import { EmergencyData } from './common/entities/emergency-data.entity';
 import { DisasterData } from './common/entities/disaster-data.entity';
 import { NotificationMessages } from './common/entities/notification-messages.entity';
 import { News } from './news/entities/news.entity';
+import { CrawlingModule } from './crawling/crawling.module';
 
 import { validationSchema } from './common/config/env.config';
 import { NotificationsModule } from './notifications/notifications.module';
@@ -82,7 +83,11 @@ const typeOrmModuleOptions = {
     UtilsModule,
     PostsModule,
     NewsModule,
+<<<<<<< HEAD
     NotificationsModule,
+=======
+    CrawlingModule,
+>>>>>>> b9dc19f36fe19b7d4f0cd509f973af48a2576c60
   ],
   controllers: [],
   providers: [],
