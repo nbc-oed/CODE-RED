@@ -13,6 +13,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
 import { ConfigService } from '@nestjs/config';
+import { AwsService } from 'src/aws/aws.service';
+import { HttpService } from '@nestjs/axios';
 
 @Injectable()
 export class AuthService {
@@ -22,13 +24,17 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly usersService: UsersService,
     private readonly configService: ConfigService,
+    private readonly awsService: AwsService,
+    private readonly httpService: HttpService,
   ) {}
 
-  async signUp(createUserDto: CreateUserDto) {
+  async signUp(file: Express.Multer.File, createUserDto: CreateUserDto) {
     const { email, password, passwordConfirm, name, nickname, phone_number } =
       createUserDto;
-    const hashPassword = await bcrypt.hash(password, 10);
+    const saltRounds = this.configService.get<number>('PASSWORD_SALT_ROUNDS');
+    const hashPassword = await bcrypt.hash(password, +saltRounds);
     const user = await this.usersService.getUserByEmail(email);
+    const uploadedFile = file && (await this.awsService.uploadImage(file));
 
     // 이메일 중복 확인
     if (user) {
@@ -40,18 +46,6 @@ export class AuthService {
       throw new BadRequestException('패스워드가 확인과 일치하지 않습니다.');
     }
 
-    // 정규표현식을 이용한 phone_number 유효성 검사
-    //phone_number 010-0000-0000
-    const phoneNumberPattern = /^\d{3}-\d{3,4}-\d{4}$/;
-    const phoneNumber = createUserDto.phone_number;
-    const isValid = phoneNumberPattern.test(phoneNumber);
-
-    if (isValid !== true) {
-      throw new BadRequestException(
-        '올바른 전화번호 형식이 아닙니다. 형식에 맞춰 입력해주세요. ex) 010-0000-0000',
-      );
-    }
-
     // 유저 생성
     const newUser = this.usersRepository.create({
       email,
@@ -59,6 +53,7 @@ export class AuthService {
       name,
       nickname,
       phone_number,
+      profile_image: uploadedFile,
     });
 
     return this.usersRepository.save(newUser);
@@ -78,7 +73,7 @@ export class AuthService {
       throw new UnauthorizedException('비밀번호를 확인해주세요.');
     }
 
-    const payload = { email, sub: user.id };
+    const payload = { email, id: user.id };
     return {
       access_token: this.jwtService.sign(payload),
     };
@@ -118,5 +113,43 @@ export class AuthService {
   verifyToken(token: string) {
     const JWT_SECRET_KEY = this.configService.get<string>('JWT_SECRET_KEY'); // .env에서 JWT_SECRET_KEY 가져오기
     return this.jwtService.verify(token, { secret: JWT_SECRET_KEY });
+  }
+}
+
+// 카카오 로그인
+@Injectable()
+export class KakaoLogin {
+  check: boolean;
+  accessToken: string;
+  private http: HttpService;
+  constructor() {
+    this.check = false;
+    this.http = new HttpService();
+    this.accessToken = '';
+  }
+  loginCheck(): void {
+    this.check = !this.check;
+    return;
+  }
+  async login(url: string, headers: any): Promise<any> {
+    return await this.http.post(url, '', { headers }).toPromise();
+  }
+  setToken(token: string): boolean {
+    this.accessToken = token;
+    return true;
+  }
+  async logout(): Promise<any> {
+    const _url = 'https://kapi.kakao.com/v1/user/logout';
+    const _header = {
+      Authorization: `bearer ${this.accessToken}`,
+    };
+    return await this.http.post(_url, '', { headers: _header }).toPromise();
+  }
+  async deleteLog(): Promise<any> {
+    const _url = 'https://kapi.kakao.com/v1/user/unlink';
+    const _header = {
+      Authorization: `bearer ${this.accessToken}`,
+    };
+    return await this.http.post(_url, '', { headers: _header }).toPromise();
   }
 }

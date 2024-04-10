@@ -7,6 +7,8 @@ import {
   Param,
   Delete,
   UseGuards,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -14,6 +16,8 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { Users } from 'src/common/entities/users.entity';
 import { AuthGuard } from '@nestjs/passport';
 import { UserInfo } from 'src/common/decorator/user.decorator';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { JwtAuthGuard } from 'src/auth/guard/jwt.guard';
 
 @Controller('users')
 export class UsersController {
@@ -21,6 +25,7 @@ export class UsersController {
 
   // 모든 유저 조회
   @Get()
+  @UseGuards(JwtAuthGuard)
   getUsers() {
     return this.usersService.getAllUsers();
   }
@@ -33,17 +38,20 @@ export class UsersController {
 
   // 유저 수정
   @Patch(':id')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(FileInterceptor('image'))
   async update(
     @Param('id') id: number,
     @UserInfo() user: Users,
     @Body() updateUserDto: UpdateUserDto,
+    @UploadedFile() file: Express.Multer.File,
   ) {
-    return await this.usersService.update(id, user, updateUserDto);
+    return await this.usersService.update(id, user, updateUserDto, file);
   }
 
   //유저 삭제
   @Delete(':id')
+  @UseGuards(JwtAuthGuard)
   async remove(@Param('id') id: number, @UserInfo() user: Users) {
     return await this.usersService.remove(id, user);
   }
