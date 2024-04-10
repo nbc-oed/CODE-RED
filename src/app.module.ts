@@ -83,11 +83,8 @@ const typeOrmModuleOptions = {
     UtilsModule,
     PostsModule,
     NewsModule,
-<<<<<<< HEAD
     NotificationsModule,
-=======
     CrawlingModule,
->>>>>>> b9dc19f36fe19b7d4f0cd509f973af48a2576c60
   ],
   controllers: [],
   providers: [],

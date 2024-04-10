@@ -102,6 +102,8 @@ export class UsersService {
 
   //사용자 위치정보 수집 API
   async updateUserLocation(locationDto: LocationDto) {
+    // TODO: 지민's 코드 재사용 -> DB에 저장된 사용자 위치정보 조회 -> 위도/경도
+
     // Redis에 사용자 id, 위도/경도 정보 저장
     this.redisService.client.set(
       `user:${locationDto.userId}:location`,
