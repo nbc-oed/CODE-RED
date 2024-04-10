@@ -41,7 +41,12 @@ export class MaydayController {
   }
 
   // 알림 받은 유저 정보 저장 및 거리 계산
-  /* 세션같은걸로 유저 아이디 받아와야함 userId = 1 */
+  /* 알림 보낼때 세션같은걸로 유저 아이디 받아와야함 userId = 1 */
+  /* 이곳은 helper가 수락 버튼을 누르면 작동되는 곳
+    user = 도움 요청하는 사람 = userID 1
+    helper = 도움 주는 사람 = helperID 34
+    locationDto = 도움 주는 사람의 현재 위치 정보 가져오기(확실하게 하기 위하여)
+  */
   @Post('accept-rescue')
   async acceptRescue(
     @UserInfo() helper: Users,
