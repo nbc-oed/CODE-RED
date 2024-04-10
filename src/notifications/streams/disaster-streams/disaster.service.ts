@@ -7,32 +7,48 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import axios from 'axios';
 import convert from 'xml-js';
-import { HttpService } from '@nestjs/axios';
 
 @Injectable()
 export class DisasterService {
+  private lastFetchedTime: Date;
+
   constructor(
     @InjectRepository(DisasterData)
     private disasterRepository: Repository<DisasterData>,
-    private httpService: HttpService,
     private configService: ConfigService,
     private redisService: RedisService,
-  ) {}
+  ) {
+    this.lastFetchedTime = new Date();
+  }
 
   /**
    * Producer - 공공데이터 재난 문자 모니터링 (지속적으로 데이터 수집 -> Disaster-Streams 적재)
+   *
+   * 추가 변경사항
+   * - any 타입 -> 명확한 타입 사용으로 개선.
+   * - saveDisasterData 메서드 추가
+   * - 중복 데이터 저장 이슈 해결. but Cron 30초 주기에 따라 계속되는 DB 작업의 성능 이슈가 발생할 것으로 예상됨.
+   * - fetch 주기를 10분으로 조정하고, 해당 이슈를 '배치 처리'로 해결해보려고함.
+   *
+   * TODO:
+   * - 왜 DB에 저장해야하는지?
+   *    : 주기적으로 DB에 저장하는 것으로 장기적인 데이터 보관 및 통계분석 작업이 가능해진다?
+   * - 다른 대체 저장 수단은 없는지?
+   *    : AWS S3를 백업 저장소처럼 사용?
    */
 
-  @Cron(CronExpression.EVERY_30_SECONDS) // 매 3분마다 실행 '* */3 * * * *
+  @Cron(CronExpression.EVERY_30_SECONDS)
   async handleCron() {
-    console.log('CRONㅡ스타트');
-    const disasterData = await this.fetchDisasterData();
-    //await this.disasterRepository.save(disasterData);
-    await this.sendDisasterInfoToStreams(disasterData);
+    const disasterDataList = await this.fetchDisasterData();
+    for (const disasterData of disasterDataList) {
+      await this.sendDisasterInfoToStreams(disasterData);
+    }
+    await this.saveDisasterDataBatch(disasterDataList);
+    this.lastFetchedTime = new Date();
   }
 
-  private async fetchDisasterData() {
-    // 공공 데이터 API로부터 재난 문자 데이터를 가져오는 로직 구현
+  // 1-1. 공공 데이터 API로부터 재난 문자 데이터를 가져오는 로직
+  private async fetchDisasterData(): Promise<DisasterData[]> {
     const apiKey = this.configService.get<string>('DISASTER_API_KEY');
     try {
       const response = await axios.get(
@@ -40,6 +56,7 @@ export class DisasterService {
         {
           params: {
             serviceKey: apiKey,
+            fromTime: this.lastFetchedTime.toISOString(),
           },
         },
       );
@@ -65,34 +82,29 @@ export class DisasterService {
         return;
       }
 
-      const resultInRow = disasterDataJson['DisasterMsg2']['row'];
+      let resultInRow = disasterDataJson['DisasterMsg2']['row'];
+      if (!Array.isArray(resultInRow)) {
+        resultInRow = [resultInRow];
+      }
 
-      // 재난 문자 생성일 날짜 형식 변환
+      // 데이터 필터링 - 날짜/키워드/지역명
       const currentDate = new Date();
       const currentDateString = currentDate
         .toISOString()
         .split('T')[0]
         .replace(/-/g, '/');
 
-      const result = resultInRow
-        .map((element) => {
-          // 지역명 필터링
-          const categories = element.location_name._text
+      const result: DisasterData[] = resultInRow
+        .map((element) => ({
+          locationName: element.location_name._text
             .split(',')
-            .map((name) => name.trim());
-
-          return {
-            id: parseInt(element.location_id._text),
-            large_category: categories,
-            message: element.msg._text,
-            send_platform: element.send_platform._text,
-            send_datetime: element.create_date._text,
-          };
-        })
+            .map((name) => name.trim()),
+          message: element.msg._text,
+          send_platform: element.send_platform._text,
+          send_datetime: element.create_date._text,
+        }))
         .filter((item) => {
-          // 특정 키워드 배제 필터링
           const keywords = ['실종', '배회', '찾습니다'];
-          // 함수 실행 시점 기준으로 필터링
           const messageDate = item.send_datetime.split(' ')[0];
           return (
             !keywords.some((keyword) => item.message.includes(keyword)) &&
@@ -104,34 +116,32 @@ export class DisasterService {
       return result;
     } catch (error) {
       console.log('axios 에러', error);
+      return [];
     }
   }
 
-  async sendDisasterInfoToStreams(disasterData: any) {
-    // 이중 for문으로 지역명 형식 통일
-    for (const data of disasterData) {
-      for (const area of data.large_category) {
-        const disasterStreamKey = `disasterStream:${area}`;
+  // 1-2. 재난 문자 데이터를 Redis Stream에서 관리
+  async sendDisasterInfoToStreams(disasterData: DisasterData) {
+    for (const area of disasterData.locationName) {
+      const disasterStreamKey = `disasterStream:${area}`;
 
-        try {
-          // 지역명 Stream의 존재여부에 따라 수신한 데이터 추가하고 타임스탬프를 업데이트하는 로직
-          const streamExists =
-            await this.redisService.client.exists(disasterStreamKey);
-          if (streamExists) {
-            // 존재한다면, 가장 최신의 데이터를 추가
-            await this.addLatestDataToExistingStream(data, area);
-          } else {
-            // 존재하지 않는다면, 자동으로 데이터를 추가
-            await this.addDataToStream(data, area);
-          }
-        } catch (error) {
-          // NOKEY 에러가 발생할 경우, 더미 데이터를 추가한 다음부터 수신한 데이터 추가
-          if (error.message.includes('NOKEY')) {
-            await this.initializeStream(disasterStreamKey);
-            await this.addDataToStream(data, area);
-          } else {
-            throw error;
-          }
+      try {
+        const streamExists =
+          await this.redisService.client.exists(disasterStreamKey);
+        if (streamExists) {
+          // 존재한다면, 가장 최신의 데이터를 추가
+          await this.addLatestDataToExistingStream(disasterData, area);
+        } else {
+          // 존재하지 않는다면, 자동으로 데이터를 추가
+          await this.addDataToStream(disasterData, area);
+        }
+      } catch (error) {
+        // NOKEY 에러가 발생할 경우, 더미 데이터를 추가한 다음부터 수신한 데이터 추가
+        if (error.message.includes('NOKEY')) {
+          await this.initializeStream(disasterStreamKey);
+          await this.addDataToStream(disasterData, area);
+        } else {
+          throw error;
         }
       }
     }
@@ -141,15 +151,18 @@ export class DisasterService {
     await this.redisService.client.xadd(streamKey, '*', 'init', '1');
   }
 
-  async addDataToStream(data: any, area: string) {
+  async addDataToStream(disasterData: DisasterData, area: string) {
     const disasterStreamKey = `disasterStream:${area}`;
     await this.redisService.client.xadd(
       disasterStreamKey,
       '*',
       'message',
-      JSON.stringify(data),
+      JSON.stringify(disasterData),
     );
-    await this.updateLastTimestamp(disasterStreamKey, data.send_datetime);
+    await this.updateLastTimestamp(
+      disasterStreamKey,
+      new Date(disasterData.send_datetime).toISOString(),
+    );
   }
 
   async updateLastTimestamp(streamKey: string, timestamp: string) {
@@ -157,22 +170,49 @@ export class DisasterService {
     await this.redisService.client.set(lastTimestampKey, timestamp);
   }
 
-  async addLatestDataToExistingStream(data: any, area: string) {
+  async addLatestDataToExistingStream(
+    disasterData: DisasterData,
+    area: string,
+  ) {
     const disasterStreamKey = `disasterStream:${area}`;
     const lastTimestampKey = `${disasterStreamKey}:lastTimestamp`;
     const lastTimestamp = await this.redisService.client.get(lastTimestampKey);
 
     if (
       !lastTimestamp ||
-      new Date(data.send_datetime) > new Date(lastTimestamp)
+      new Date(disasterData.send_datetime) > new Date(lastTimestamp)
     ) {
       await this.redisService.client.xadd(
         disasterStreamKey,
         '*',
         'message',
-        JSON.stringify(data),
+        JSON.stringify(disasterData),
       );
-      await this.redisService.client.set(lastTimestampKey, data.send_datetime);
+      await this.redisService.client.set(
+        lastTimestampKey,
+        new Date(disasterData.send_datetime).toISOString(),
+      );
+    }
+  }
+
+  // 1-3. fetchDisasterData를 통해 가져온 데이터들을 백업하기 위해 DB에 저장
+  private async saveDisasterDataBatch(disasterDataList: DisasterData[]) {
+    for (const disasterData of disasterDataList) {
+      const existingData = await this.disasterRepository.findOne({
+        where: {
+          message: disasterData.message,
+          send_datetime: new Date(disasterData.send_datetime),
+        },
+      });
+
+      if (!existingData) {
+        const newDisasterData = this.disasterRepository.create(disasterData);
+        try {
+          await this.disasterRepository.save(newDisasterData);
+        } catch (error) {
+          console.error('DisasterData 저장 에러', error);
+        }
+      }
     }
   }
 }
