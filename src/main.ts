@@ -1,10 +1,14 @@
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { Logger, ValidationPipe } from '@nestjs/common';
+
+import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { join } from 'path';
+import * as exphbs from 'express-handlebars';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const config = new DocumentBuilder()
     .setTitle('CODE:RED')
     .setDescription('CODE:RED')
@@ -23,11 +27,26 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
+  app.useStaticAssets(join(__dirname, '..', 'public'));
+  app.setBaseViewsDir(join(__dirname, '..', 'views'));
+
+  const helpers = {
+    eq: (val1, val2) => val1 === val2,
+    lengthOfList: (list = []) => list.length,
+  };
+
+  const hbsInstance = exphbs.create({
+    defaultLayout: 'main',
+    layoutsDir: join(__dirname, '..', 'views/layouts'),
+    partialsDir: join(__dirname, '..', 'views/partials'),
+    helpers,
+  });
+
+  app.engine('handlebars', hbsInstance.engine);
+  app.setViewEngine('handlebars');
   app.useGlobalPipes(
-    // DTO를 사용하는 것의 핵심은 DTO 객체 안에서 클라이언트의 전달 값에 대한 유효성 검사가 자동으로 되어야 하는 것
     new ValidationPipe({
-      // DTO가 이러한 역할을 할 수 있도록 돕는 것이 바로 ValidationPipe
-      transform: true, // 컨트롤러에서 유저의 입력값을 자동으로 DTO 객체로 변환해주는 옵션
+      transform: true,
     }),
   );
   const PORT = 3000;
