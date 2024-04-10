@@ -13,7 +13,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { LocationDto } from './dto/user-location.dto';
 import { RedisService } from 'src/notifications/redis/redis.service';
-import { GeoLocationService } from '../notifications/locations/locations.service';
+import { GeoLocationService } from '../notifications/streams/user-location-streams/user-location.service';
 
 @Injectable()
 export class UsersService {

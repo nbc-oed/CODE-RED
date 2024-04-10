@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { RedisService } from '../redis/redis.service';
+import { RedisService } from '../../redis/redis.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { DisasterData } from 'src/common/entities/disaster-data.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -18,6 +18,10 @@ export class DisasterService {
     private configService: ConfigService,
     private redisService: RedisService,
   ) {}
+
+  /**
+   * Producer - 공공데이터 재난 문자 모니터링 (지속적으로 데이터 수집 -> Disaster-Streams 적재)
+   */
 
   @Cron(CronExpression.EVERY_30_SECONDS) // 매 3분마다 실행 '* */3 * * * *
   async handleCron() {
@@ -107,11 +111,12 @@ export class DisasterService {
     // 이중 for문으로 지역명 형식 통일
     for (const data of disasterData) {
       for (const area of data.large_category) {
-        const streamKey = `stream:${area}`;
+        const disasterStreamKey = `disasterStream:${area}`;
 
         try {
           // 지역명 Stream의 존재여부에 따라 수신한 데이터 추가하고 타임스탬프를 업데이트하는 로직
-          const streamExists = await this.redisService.client.exists(streamKey);
+          const streamExists =
+            await this.redisService.client.exists(disasterStreamKey);
           if (streamExists) {
             // 존재한다면, 가장 최신의 데이터를 추가
             await this.addLatestDataToExistingStream(data, area);
@@ -122,7 +127,7 @@ export class DisasterService {
         } catch (error) {
           // NOKEY 에러가 발생할 경우, 더미 데이터를 추가한 다음부터 수신한 데이터 추가
           if (error.message.includes('NOKEY')) {
-            await this.initializeStream(streamKey);
+            await this.initializeStream(disasterStreamKey);
             await this.addDataToStream(data, area);
           } else {
             throw error;
@@ -137,14 +142,14 @@ export class DisasterService {
   }
 
   async addDataToStream(data: any, area: string) {
-    const streamKey = `stream:${area}`;
+    const disasterStreamKey = `disasterStream:${area}`;
     await this.redisService.client.xadd(
-      streamKey,
+      disasterStreamKey,
       '*',
       'message',
       JSON.stringify(data),
     );
-    await this.updateLastTimestamp(streamKey, data.send_datetime);
+    await this.updateLastTimestamp(disasterStreamKey, data.send_datetime);
   }
 
   async updateLastTimestamp(streamKey: string, timestamp: string) {
@@ -153,8 +158,8 @@ export class DisasterService {
   }
 
   async addLatestDataToExistingStream(data: any, area: string) {
-    const streamKey = `stream:${area}`;
-    const lastTimestampKey = `${streamKey}:lastTimestamp`;
+    const disasterStreamKey = `disasterStream:${area}`;
+    const lastTimestampKey = `${disasterStreamKey}:lastTimestamp`;
     const lastTimestamp = await this.redisService.client.get(lastTimestampKey);
 
     if (
@@ -162,7 +167,7 @@ export class DisasterService {
       new Date(data.send_datetime) > new Date(lastTimestamp)
     ) {
       await this.redisService.client.xadd(
-        streamKey,
+        disasterStreamKey,
         '*',
         'message',
         JSON.stringify(data),
