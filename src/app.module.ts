@@ -2,7 +2,16 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
+
 import { CommonModule } from './common/common.module';
+import { AwsModule } from './aws/aws.module';
+import { UtilsModule } from './utils/utils.module';
+import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
+import { PostsModule } from './posts/posts.module';
+import { NewsModule } from './news/news.module';
+import { CacheModule } from '@nestjs/cache-manager';
+
 import { Users } from './common/entities/users.entity';
 import { Posts } from './common/entities/posts.entity';
 import { Follows } from './common/entities/follows.entity';
@@ -12,9 +21,11 @@ import { Shelters } from './common/entities/shelters.entity';
 import { EmergencyData } from './common/entities/emergency-data.entity';
 import { DisasterData } from './common/entities/disaster-data.entity';
 import { NotificationMessages } from './common/entities/notification-messages.entity';
+import { News } from './news/entities/news.entity';
+import { CrawlingModule } from './crawling/crawling.module';
+
 import { validationSchema } from './common/config/env.config';
-import { SheltersController } from './shelters/shelters.controller';
-import { SheltersService } from './shelters/shelters.service';
+import * as redisStore from 'cache-manager-redis-store';
 import { SheltersModule } from './shelters/shelters.module';
 import { DestinationRiskController } from './destination-risk/destination-risk.controller';
 import { DestinationRiskService } from './destination-risk/destination-risk.service';
@@ -42,6 +53,7 @@ const typeOrmModuleOptions = {
       EmergencyData,
       DisasterData,
       NotificationMessages,
+      News,
     ],
     logging: true, // 데이터베이스 쿼리를 로깅할지 여부를 제어, 이 옵션을 true로 설정하면 TypeORM이 실행된 쿼리를 콘솔에 로그로 출력
   }),
@@ -55,7 +67,24 @@ const typeOrmModuleOptions = {
       validationSchema: validationSchema,
     }),
     TypeOrmModule.forRootAsync(typeOrmModuleOptions),
+    CacheModule.registerAsync({
+      imports: [ConfigModule],
+      useFactory: async () => ({
+        store: redisStore,
+        host: process.env.REDIS_HOST,
+        port: process.env.REDIS_PORT,
+        password: process.env.REDIS_PASSWORD,
+      }),
+      isGlobal: true,
+    }),
     CommonModule,
+    UsersModule,
+    AuthModule,
+    AwsModule,
+    UtilsModule,
+    PostsModule,
+    NewsModule,
+    CrawlingModule,
     SheltersModule,
     DestinationRiskModule,
   ],
