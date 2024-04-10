@@ -1,0 +1,139 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- viewport는 웹 페이지가 표시하는 영역이라는데 뭔 소린지 모르겠음..-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- initial-scale=1.0 페이지 불러올때 초기확대 정도(가 1.0이다.)-->
+    <title>Kakao 지도 API 테스트</title>
+    <link rel="stylesheet" type="text/css" href="/reset.css" />
+    <link rel="stylesheet" type="text/css" href="./shelters-map-style.css" />
+    <script
+      type="text/javascript"
+      src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=45e973ac009f5ac6bf6e02707d6f4e30&libraries=services"
+    ></script>
+    <script>
+      // 이 스크립트 태그가 head에 위치 하는 이유: head속 script는 주로 페이지 로딩된 후 페이지 설정, 초기화 작업, 외부 리소스 로딩 등을 맡기 때문. body속 script 태그 보다 늦게 실행됨
+      // document.addEventListener : 'DOMContentLoaded'이벤트를 처리하기 위한 메서드
+      document.addEventListener('DOMContentLoaded', function () {
+
+        let mapContainer = document.getElementById('map');
+        
+        // 지도 생성에 들어갈 옵션 설정. center:지도 초기 중심 좌표 설정하는 속성, level:지도 확대수준. 낮을수록 zoom-in
+        let mapOption = {
+          center: new kakao.maps.LatLng(37.502391, 127.044501),
+          level: 3,
+        };
+
+        let map = new kakao.maps.Map(mapContainer, mapOption); // kakao.maps.Map : 지도 객체 생성 메서드. 지도 표시 DOM객체인 mapContainer와 지도 옵션 객체인 mapOption을 매개변수로 받음
+        
+        // 마커를 담을 배열 생성
+        let markers = []; 
+        // detailCustomOverlay를 저장할 배열 생성
+        let detailOverlays = []; 
+
+        // 지도 클릭 시 모든 detailCustomOverlay 숨김 처리
+        kakao.maps.event.addListener(map, 'click', function () {
+          detailOverlays.forEach(function (overlay) {
+            overlay.setMap(null);
+          });
+        });
+
+        document
+          .getElementById('searchButton')
+          .addEventListener('click', function () {
+            let searchInput = document.getElementById('searchInput').value;
+            fetch(
+              `http://localhost:3000/shelters/searchMap?search=${searchInput}`,
+            )
+              .then(function (response) {
+                return response.json();
+              })
+              .then(function (data) {
+                let bounds = new kakao.maps.LatLngBounds();
+
+                // 기존 마커 제거 및 배열 초기화. setMap(null):기존에 생성된 마커들 모두 제거
+                for (let i = 0; i < markers.length; i++) {
+                  markers[i].setMap(null);
+                }
+                markers = [];
+
+                // 기존 디테일 커스텀 오버레이 제거 및 배열 초기화
+                detailOverlays.forEach(function (overlay) {
+                  overlay.setMap(null);
+                });
+                detailOverlays = [];
+
+                // 검색 결과에 따른 마커 생성. 
+                data.forEach(function (item) {
+                  // 검색된 주소 좌표 할당
+                  let positions = { x: item.longitude, y: item.latitude };
+                  // kakao.maps.Marker: 마커 생성 메서드(객체), .LatLng:좌표를 품은 객체 생성 메서드(해당 코드에선 검색 결과의 좌표를 할당)
+                  let marker = new kakao.maps.Marker({
+                    map,
+                    position: new kakao.maps.LatLng(positions.y, positions.x),
+                  });
+
+                  markers.push(marker);
+
+                  // 커스텀 오버레이에 들어갈 컨텐츠 채워 넣기
+                  let content = `<div class ="label"><span class="left"></span><span class="center">${item.facility_name}</span><span class="right"></span></div>`;
+                  let detailContent = `
+                  <div class ="detail-content">
+                    <div class = "facility-name">${item.facility_name}</div>
+                    <div class = "address">${item.address}</div>
+                    <div class = "facility-area">면적:${item.facility_area}</div>
+                    <div class = "department-number">${item.department_number}</div>
+                  </div>`;
+
+                  // 커스텀 오버레이 생성
+                  let customOverlay = new kakao.maps.CustomOverlay({
+                    position: marker.getPosition(),
+                    content,
+                  });
+                  let detailCustomOverlay = new kakao.maps.CustomOverlay({
+                    position: marker.getPosition(),
+                    content: detailContent,
+                    yAnchor: 1.5,
+                  });
+
+                  // 커스텀 오버레이에 대한 이벤트 설정
+                  kakao.maps.event.addListener(
+                    marker,
+                    'mouseover',
+                    function () {
+                      customOverlay.setMap(map);
+                    },
+                  );
+                  kakao.maps.event.addListener(marker, 'mouseout', function () {
+                    customOverlay.setMap(null);
+                  });
+                  kakao.maps.event.addListener(marker, 'click', function () {
+                    // 클릭 이벤트가 발생하면 customOverlay를 숨김
+                    customOverlay.setMap(null); 
+                    detailOverlays.forEach(function (overlay) {
+                      // 다른 overlay 숨김
+                      overlay.setMap(null);
+                    });
+                    detailCustomOverlay.setMap(map);
+                  });
+                  // 생성된 detailCustomOverlay를 배열에 추가
+                  detailOverlays.push(detailCustomOverlay); 
+                  bounds.extend(
+                    new kakao.maps.LatLng(positions.y, positions.x),
+                  );
+                  map.setBounds(bounds);
+                });
+              })
+              .catch(function (error) {
+                console.error('에러 발생:', error);
+              });
+          });
+      });
+    </script>
+  </head>
+  <body>
+    <input type="text" id="searchInput" />
+    <button id="searchButton">검색</button>
+    <div id="map" style="width: 500px; height: 400px"></div>
+  </body>
+</html>
