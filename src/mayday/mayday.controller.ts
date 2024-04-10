@@ -12,7 +12,7 @@ export class MaydayController {
 
   // 지울것
   @Get()
-  @Render('index')
+  @Render('main/index')
   main() {
     return { title: '내 위치 정보 저장' };
   }

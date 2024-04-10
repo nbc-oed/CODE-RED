@@ -9,8 +9,6 @@ document.querySelector('.btn').addEventListener('click', () => {
         latitude,
         longitude,
       }),
-    }).then(() => {
-      console.log('정보 가져오기 성공');
     });
   }
 
@@ -28,7 +26,9 @@ document.querySelector('.btn').addEventListener('click', () => {
 
     let userLat = crd.latitude;
     let userLng = crd.longitude;
-
+    console.log(`
+    위도:${userLat}
+    경도:${userLng}`); // 로그인 될때 까지 사용해야함.
     await saveLocation(userLat, userLng);
   }
 
