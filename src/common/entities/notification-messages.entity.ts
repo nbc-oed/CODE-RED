@@ -18,13 +18,13 @@ export class NotificationMessages {
   id: number;
 
   @Column({ type: 'text', nullable: false })
-  message: string;
+  region: string;
 
-  @Column({ type: 'timestamptz', nullable: false })
+  @Column({ type: 'text', nullable: false })
+  content: string;
+
+  @Column({ type: 'timestamp', nullable: false })
   send_datetime: Date;
-
-  @Column({ type: 'enum', enum: NotificationCategory, nullable: false })
-  category: NotificationCategory;
 
   // user_id
   @Column({ name: 'user_id', type: 'int', nullable: false })

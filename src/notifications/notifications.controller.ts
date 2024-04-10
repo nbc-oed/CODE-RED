@@ -15,7 +15,6 @@ export class NotificationsController {
    */
   @Get()
   async getUserNotifications(@UserInfo() user: Users) {
-    console.log('Notification Controller --- userId:', user.id);
     const startTime = Date.now();
 
     const notificationsLists =

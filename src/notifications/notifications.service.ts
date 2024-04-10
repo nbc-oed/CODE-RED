@@ -5,6 +5,7 @@ import { Cache } from '@nestjs/cache-manager';
 import { InjectRepository } from '@nestjs/typeorm';
 import { NotificationMessages } from 'src/common/entities/notification-messages.entity';
 import { Repository } from 'typeorm';
+import { DisasterMessage } from 'src/common/types/disaster-message.interface';
 
 @Injectable()
 export class NotificationsService {
@@ -17,34 +18,48 @@ export class NotificationsService {
 
   /**
    * 특정 사용자 위치에 따른 알림 목록 조회
-   * Redis에 String으로 저장된 사용자 위치 <> Disaster-Streams 지역명 매칭시켜서 캐싱 후 알림 목록 반환
+   *
+   * 추가 변경사항
+   * - saveNotification 메서드 추가 및 NotificationMessages 엔티티 수정
+   * - any 타입 -> 명확한 타입 사용으로 개선.
+   *
    */
 
   // 1-0. Redis에 String으로 저장된 사용자 위치 <> Disaster-Streams 지역명 매칭시켜서 캐싱 후 알림 목록 반환
-  async getUserNotifications(userId: number) {
+  async getUserNotifications(userId: number): Promise<DisasterMessage[]> {
     const cacheKey = `user-notifications:${userId}`;
-    let notifications = await this.cacheManager.get(cacheKey);
-    // 캐시에 데이터가 있으면 바로 반환
+    let notifications =
+      await this.cacheManager.get<DisasterMessage[]>(cacheKey);
+
+    // Cache Hit! 알림 목록 반환
     if (notifications) {
-      console.log('Cache Hit!! -- 캐시에서 알림 목록 반환');
       return notifications;
     }
 
-    // 캐시에 데이터가 없는 경우, Redis에서 알림 목록을 조회
-    console.log('Cache Miss!! -- 캐싱 후 알림 목록 반환');
+    // Cache Miss!! -- 캐싱 후 알림 목록 반환
     notifications = await this.retrieveAndCacheNotifications(userId, cacheKey);
     return notifications;
   }
 
-  // 1-1. Disaster-Streams에서 재난 문자 데이터 읽어서 캐싱
+  // 1-1. Disaster-Streams에서 재난 문자 데이터 읽어서 DB 저장 및 캐싱
   private async retrieveAndCacheNotifications(
     userId: number,
     cacheKey: string,
-  ): Promise<any[]> {
-    // Redis에 String으로 저장된 사용자의 지역명 조회
+  ): Promise<DisasterMessage[]> {
+    const userArea = await this.getUserArea(userId);
+    const disasterMessages = await this.getDisasterMessages(userArea);
+
+    for (const message of disasterMessages) {
+      await this.saveNotification(userId, message);
+    }
+
+    await this.cacheManager.set(cacheKey, disasterMessages, { ttl: 3600 });
+    return disasterMessages;
+  }
+
+  private async getUserArea(userId: number): Promise<string> {
     const areaKey = `user:${userId}:area`;
     const area = await this.redisService.client.get(areaKey);
-    console.log('Redis에 저장된 사용자 위치 정보:', area);
 
     if (!area) {
       throw new NotFoundException(
@@ -52,43 +67,48 @@ export class NotificationsService {
       );
     }
 
-    // 해당 지역의 재난 문자 데이터 읽기
-    const disasterStreamKey = `disasterStream:${area}`;
-    const disasterMessages = await this.getDisasterMessages(disasterStreamKey);
-    console.log(`사용자 해당 지역 '${area}'의 재난 문자:`, disasterMessages);
-
-    // 조회된 알림을 캐시에 저장
-    await this.cacheManager.set(cacheKey, disasterMessages, { ttl: 3600 }); // 1시간 동안 캐시 유지
-
-    // getDisasterMessages 결과를 반환
-    return disasterMessages;
+    return area;
   }
 
   // 1-2. Disaster-Streams에서 재난 문자 데이터 메시지 읽어서 매핑
-  async getDisasterMessages(streamKey: string): Promise<any[]> {
-    try {
-      const messages = await this.redisService.client.xrange(
-        streamKey,
-        '-',
-        '+',
-      );
-      return messages.map(([id, fields]) => {
-        const data = this.parseFields(fields);
-        return { id, data };
-      });
-    } catch (error) {
-      console.error('재난 문자 데이터 스트림 읽기/파싱 실패:', error);
-      throw error;
-    }
+  private async getDisasterMessages(area: string): Promise<DisasterMessage[]> {
+    const disasterStreamKey = `disasterStream:${area}`;
+    const rawMessages = await this.redisService.client.xrange(
+      disasterStreamKey,
+      '-',
+      '+',
+    );
+    return rawMessages.map(([id, fields]) => this.parseDisasterMessage(fields));
   }
 
   // 1-3. 재난 문자 데이터 파싱
-  private parseFields(fields: string[]): any {
-    // 배열을 객체로 변환
-    let data = {};
+  private parseDisasterMessage(fields: string[]): DisasterMessage {
+    let messageData: { [key: string]: string } = {};
     for (let i = 0; i < fields.length; i += 2) {
-      data[fields[i]] = fields[i + 1];
+      messageData[fields[i]] = fields[i + 1];
     }
-    return data;
+
+    const parsedData = JSON.parse(messageData['message']);
+    return {
+      user_id: parsedData.user_id,
+      region: parsedData.large_category.join(', '),
+      content: parsedData.message,
+      send_datetime: new Date(parsedData.send_datetime),
+    };
+  }
+
+  // 1-4. 알림 목록 조회 기록 DB에 저장
+  private async saveNotification(
+    userId: number,
+    message: DisasterMessage,
+  ): Promise<void> {
+    const notification = this.notificationMessageRepository.create({
+      user_id: userId,
+      region: message.region,
+      content: message.content,
+      send_datetime: new Date(message.send_datetime),
+    });
+
+    await this.notificationMessageRepository.save(notification);
   }
 }
