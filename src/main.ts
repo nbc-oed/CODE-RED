@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -23,6 +24,14 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
+  /** @@@@@@@@@@@@@@@@@@@@@@ */
+  app.enableCors({
+    origin: 'http://localhost:3000/chat', // 허용할 origin (클라이언트 주소)
+    methods: ['GET', 'POST'], // 허용할 HTTP 메서드
+    allowedHeaders: ['Content-Type'], // 허용할 요청 헤더
+  });
+  /** @@@@@@@@@@@@@@@@@@@@@@ */
+
   app.useGlobalPipes(
     // DTO를 사용하는 것의 핵심은 DTO 객체 안에서 클라이언트의 전달 값에 대한 유효성 검사가 자동으로 되어야 하는 것
     new ValidationPipe({
@@ -35,3 +44,6 @@ async function bootstrap() {
   Logger.log(`${PORT}번 포트로 서버 실행 중...`);
 }
 bootstrap();
+function join(__dirname: string, arg1: string, arg2: string): any {
+  throw new Error('Function not implemented.');
+}

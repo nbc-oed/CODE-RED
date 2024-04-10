@@ -23,9 +23,9 @@ import { DisasterData } from './common/entities/disaster-data.entity';
 import { NotificationMessages } from './common/entities/notification-messages.entity';
 import { News } from './news/entities/news.entity';
 import { CrawlingModule } from './crawling/crawling.module';
-
 import { validationSchema } from './common/config/env.config';
 import * as redisStore from 'cache-manager-redis-store';
+import { ChatModule } from './chat/chat.module';
 
 const typeOrmModuleOptions = {
   useFactory: async (
@@ -81,6 +81,7 @@ const typeOrmModuleOptions = {
     PostsModule,
     NewsModule,
     CrawlingModule,
+    ChatModule,
   ],
   controllers: [],
   providers: [],
