@@ -23,18 +23,26 @@ export class SheltersService {
     
       // 공공데이터라 그런지 JSON이 아닌 XML 방식
       let xmlData = response.data;
+
       // 받아온 xml 방식의 데이터를 json으로 변환
       // compact : true는 압축된 json 형식이고, space는 json 출력시 들여쓰기 칸 수
       let xmlToJsonData = convert.xml2json(xmlData, {
         compact: true,
         spaces: 4,
       });
+
       // json 문자열을 자바스크립트 객체로 변환
       let shelterDataJsonVer = JSON.parse(xmlToJsonData);
-      totalData.push(...shelterDataJsonVer['TbEqkShelter']['row']);
+
+      // 객체의 속성 안으로 접근 만약 shelterRows가 배열이 아니라면 배열로 만들어줌
+      let shelterRows = shelterDataJsonVer['TbEqkShelter']['row'];
+      if (!Array.isArray(shelterRows)) {
+        shelterRows = [shelterRows];
+      }
+      totalData.push(...shelterRows);
 
       response = await axios.get(
-        `http://openapi.seoul.go.kr:8088/${seoulShelter}/xml/TbEqkShelter/1001/1552/`, // 1/1000 , 1001/1552 등 데이터 숫자에 따라 변동 가능. 한번에 1000개까지만 가능.
+        `http://openapi.seoul.go.kr:8088/${seoulShelter}/xml/TbEqkShelter/1001/1551/`, // 1/1000 , 1001/1551 등 데이터 숫자에 따라 변동 가능. 한번에 1000개까지만 가능.
       );
       xmlData = response.data;
       xmlToJsonData = convert.xml2json(xmlData, {
@@ -42,7 +50,11 @@ export class SheltersService {
         spaces: 4,
       });
       shelterDataJsonVer = JSON.parse(xmlToJsonData);
-      totalData.push(...shelterDataJsonVer['TbEqkShelter']['row']);
+      shelterRows = shelterDataJsonVer['TbEqkShelter']['row'];
+      if (!Array.isArray(shelterRows)) {
+        shelterRows = [shelterRows];
+      }
+      totalData.push(...shelterRows);
 
       const shelterInfo = totalData.map((element) => {
         return {
@@ -99,8 +111,16 @@ export class SheltersService {
 
     // 기존 데이터와 받아온 데이터의 키 값들 끼리 비교.. 해서 다르다면 그 값들만 updatesNeeded 배열에 할당
     Object.keys(shelterData).forEach(key => {
-      if (shelterData[key] !== findShelterData[key]) {
-        updatesNeeded[key] = shelterData[key];
+      const apiValue = shelterData[key]
+      const dbValue = findShelterData[key]
+
+      // 위도 경도가 key값에 존재 하는지 확인. 그렇다면 비교한뒤 다르다면 받아온 값을 업데이트가 필요한 부분에 할당
+      if (['longitude', 'latitude'].includes(key)) {
+        if(parseFloat(apiValue) !== parseFloat(dbValue)) {
+          updatesNeeded[key] = apiValue
+        }
+      } else if (apiValue !== dbValue) {
+        updatesNeeded[key] = apiValue
       }
     });
 
@@ -112,6 +132,7 @@ export class SheltersService {
         .where("shelter_id = :shelter_id", { shelter_id: shelterId })
         .execute();
     }
+    console.log(updatesNeeded)
   }
 
   async getSheltersMap(search: string) {
