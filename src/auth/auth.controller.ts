@@ -71,9 +71,9 @@ export class AuthController {
     const _hostName = 'https://kauth.kakao.com';
     const KAKAO_REST_API_KEY =
       this.configService.get<string>('KAKAO_REST_API_KEY'); // .env에서 JWT_SECRET_KEY 가져오기
-    const _restApiKey = KAKAO_REST_API_KEY; // @@ .env 에서 왜 못가져오지?
+    const _restApiKey = KAKAO_REST_API_KEY;
     // 카카오 로그인 RedirectURI 등록
-    const _redirectUrl = 'http://127.0.0.1:3000/auth/kakaoLoginLogicRedirect'; // * 입력필요 @@
+    const _redirectUrl = 'http://127.0.0.1:3000/auth/kakaoLoginLogicRedirect';
     const url = `${_hostName}/oauth/authorize?client_id=${_restApiKey}&redirect_uri=${_redirectUrl}&response_type=code`;
     return res.redirect(url);
   }
@@ -86,7 +86,7 @@ export class AuthController {
     console.log(qs.code);
     const KAKAO_REST_API_KEY =
       this.configService.get<string>('KAKAO_REST_API_KEY'); // .env에서 JWT_SECRET_KEY 가져오기
-    const _restApiKey = KAKAO_REST_API_KEY; // @@ .env 에서 왜 못가져오지?
+    const _restApiKey = KAKAO_REST_API_KEY;
     const _redirect_uri = 'http://127.0.0.1:3000/auth/kakaoLoginLogicRedirect';
     const _hostName = `https://kauth.kakao.com/oauth/token?grant_type=authorization_code&client_id=${_restApiKey}&redirect_uri=${_redirect_uri}&code=${qs.code}`;
     const _headers = {

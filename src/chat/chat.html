@@ -22,7 +22,7 @@
     </style>
   </head>
   <body>
-    <h1>WebSocket Client Example</h1>
+    <h1>지역기반 실시간 채팅</h1>
     <div id="message-container"></div>
     <form id="message-form">
       <input type="text" id="message-input" placeholder="메시지를 입력하세요" />
@@ -44,7 +44,7 @@
 
       socket.on('message', (data) => {
         const messageElement = document.createElement('div');
-        const messageText = data.message.data; // input 창에 있는 글만 가져옴
+        const messageText = data.message; // input 창에 있는 글만 가져옴
 
         messageElement.textContent = messageText; // 문자열만 출력, 새로운 요소로 문자열 받음
         messageContainer.appendChild(messageElement); // 컨테이너에 메세지 요소 추가

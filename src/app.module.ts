@@ -26,6 +26,7 @@ import { CrawlingModule } from './crawling/crawling.module';
 import { validationSchema } from './common/config/env.config';
 import * as redisStore from 'cache-manager-redis-store';
 import { ChatModule } from './chat/chat.module';
+import { ChatFilterService } from './chat/chat-filter.service';
 
 const typeOrmModuleOptions = {
   useFactory: async (

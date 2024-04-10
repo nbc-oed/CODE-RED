@@ -8,31 +8,21 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from 'src/auth/guard/jwt.strategy';
 import { ConfigService } from '@nestjs/config';
 import { AwsModule } from 'src/aws/aws.module';
+import { ChatFilterService } from 'src/chat/chat-filter.service';
 
 @Module({
   imports: [
-    /** */
-    // PassportModule.register({defaultStrategy:'jwt'}),
-    // JwtModule.register({
-    //   secret:'JWT_SECRET_KEY',
-    //   signOptions:{expiresIn: '1h'}
-    // }),
-    /** */
     JwtModule.registerAsync({
       useFactory: (config: ConfigService) => ({
         secret: config.get<string>('JWT_SECRET_KEY'),
       }),
       inject: [ConfigService],
     }),
-    /** */
     TypeOrmModule.forFeature([Users]),
     AwsModule,
   ],
   exports: [UsersService, JwtStrategy],
   controllers: [UsersController],
   providers: [UsersService, JwtStrategy],
-  /** */
-  // exports: [JwtStrategy, PassportModule]
-  /** */
 })
 export class UsersModule {}
