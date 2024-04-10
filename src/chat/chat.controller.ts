@@ -2,7 +2,9 @@ import { Controller, Get, Res } from '@nestjs/common';
 import { Response } from 'express';
 import * as path from 'path';
 import { ChatService } from './chat.service';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('chat')
 @Controller('chat')
 export class ChatController {
   constructor(private readonly chatService: ChatService) {}
