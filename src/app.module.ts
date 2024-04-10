@@ -26,6 +26,7 @@ import { CrawlingModule } from './crawling/crawling.module';
 
 import { validationSchema } from './common/config/env.config';
 import * as redisStore from 'cache-manager-redis-store';
+import { SheltersModule } from './shelters/shelters.module';
 
 const typeOrmModuleOptions = {
   useFactory: async (
@@ -81,6 +82,7 @@ const typeOrmModuleOptions = {
     PostsModule,
     NewsModule,
     CrawlingModule,
+    SheltersModule,
   ],
   controllers: [],
   providers: [],
