@@ -8,6 +8,7 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from 'src/auth/guard/jwt.strategy';
 import { ConfigService } from '@nestjs/config';
 import { NotificationsModule } from 'src/notifications/notifications.module';
+import { AwsModule } from 'src/aws/aws.module';
 
 @Module({
   imports: [
@@ -24,8 +25,8 @@ import { NotificationsModule } from 'src/notifications/notifications.module';
       }),
       inject: [ConfigService],
     }),
-    /** */
     TypeOrmModule.forFeature([Users]),
+    AwsModule,
     NotificationsModule,
   ],
   exports: [UsersService, JwtStrategy],
