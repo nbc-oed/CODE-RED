@@ -4,7 +4,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { UserInfo } from 'src/common/decorator/user.decorator';
 import { Users } from 'src/common/entities/users.entity';
 import { LocationDto } from './dto/location.dto';
-
+import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
 @Controller('mayday')
 @UseGuards(AuthGuard('jwt'))
 export class MaydayController {
@@ -52,7 +52,7 @@ export class MaydayController {
     @UserInfo() helper: Users,
     @Body() locationDto: LocationDto,
   ) {
-    const distance = await this.maydayService.acceptRescue(1, 34, locationDto);
+    const distance = await this.maydayService.acceptRescue(1, 2, locationDto);
 
     return { message: `유저와 헬퍼의 최단 거리 ${distance}Km` };
   }

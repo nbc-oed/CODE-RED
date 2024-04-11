@@ -3,7 +3,7 @@ import * as natural from 'natural';
 export class Crawling {
   async crawling() {
     let browser = await puppeteer.launch({
-      headless: false,
+      headless: true,
     });
     try {
       const page = await browser.newPage();
@@ -11,8 +11,8 @@ export class Crawling {
       await Promise.all([
         await page.goto('https://news.naver.com/breakingnews/section/102/249'),
         await page.click('._CALENDAR_LAYER_TOGGLE'),
-        await page.click(`.calendar .calendar-day-2024-04-05`),
-        // await page.click(`.calendar .calendar-day-${today()}`),
+        // await page.click(`.calendar .calendar-day-2024-04-05`),
+        await page.click(`.calendar .calendar-day-${today()}`),
       ]);
       await clickMorePageEnd(page);
       const result = await page.$$eval(
