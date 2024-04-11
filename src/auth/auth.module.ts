@@ -9,6 +9,7 @@ import { Users } from 'src/common/entities/users.entity';
 import { AwsModule } from 'src/aws/aws.module';
 import { HttpModule } from '@nestjs/axios';
 import { ConfigModule } from '@nestjs/config';
+import { AuthController } from './auth.controller';
 @Module({
   imports: [
     HttpModule,
@@ -24,7 +25,7 @@ import { ConfigModule } from '@nestjs/config';
     TypeOrmModule.forFeature([Users]),
     AwsModule,
   ],
-  controllers: [],
+  controllers: [AuthController],
   providers: [AuthService, KakaoLogin],
 })
 export class AuthModule {}
