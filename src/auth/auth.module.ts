@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AuthService, KakaoLogin } from './auth.service';
+import { AuthController } from './auth.controller';
 import { JwtModule } from '@nestjs/jwt';
 import { UsersModule } from 'src/users/users.module';
 import { ConfigService } from '@nestjs/config';
@@ -9,7 +10,6 @@ import { Users } from 'src/common/entities/users.entity';
 import { AwsModule } from 'src/aws/aws.module';
 import { HttpModule } from '@nestjs/axios';
 import { ConfigModule } from '@nestjs/config';
-import { AuthController } from './auth.controller';
 @Module({
   imports: [
     HttpModule,

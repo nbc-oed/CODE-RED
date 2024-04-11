@@ -7,17 +7,19 @@ import {
   Param,
   Delete,
   UseGuards,
-  UploadedFile,
   UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Users } from 'src/common/entities/users.entity';
-import { UserInfo } from 'src/common/decorator/user.decorator';
 import { AuthGuard } from '@nestjs/passport';
+import { LocationDto } from './dto/user-location.dto';
+import { UserInfo } from 'src/common/decorator/user.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { JwtAuthGuard } from 'src/auth/guard/jwt.guard';
+import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
+
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
@@ -53,5 +55,11 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   async remove(@Param('id') id: number, @UserInfo() user: Users) {
     return await this.usersService.remove(id, user);
+  }
+  //사용자 위치정보 수집
+  @Post('location')
+  async updateUserLocation(@Body() locationDto: LocationDto) {
+    const data = await this.usersService.updateUserLocation(locationDto);
+    return data;
   }
 }
