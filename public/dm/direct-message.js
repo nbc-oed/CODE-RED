@@ -1,5 +1,5 @@
 // const userId = document.cookie.userId;
-const userId = +prompt('enter your user ID(2 ~ 6, 8)'); // temp
+const userId = +prompt('enter your user ID'); // temp
 const connectOptions = {
   auth: { userId },
 };
@@ -60,4 +60,17 @@ document.querySelector('#message-form').addEventListener('submit', (e) => {
 
 dmSocket.on('message', (newMessage) => {
   document.querySelector('#messages').innerHTML += buildMessageHtml(newMessage);
+});
+
+dmSocket.on('notification', (userId) => {
+  const time = Date.now();
+
+  document.querySelector('.notifications').innerHTML += buildNotificationHtml(
+    time,
+    userId,
+  );
+
+  setTimeout(() => {
+    document.querySelector(`.noti-${time}`).textContent = '';
+  }, 5000);
 });

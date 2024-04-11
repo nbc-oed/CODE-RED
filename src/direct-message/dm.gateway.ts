@@ -18,8 +18,24 @@ export class DmGateway {
   ) {}
 
   @SubscribeMessage('message')
-  handleMessage(socket: Socket, data: DirectMessages): void {
+  async handleMessage(socket: Socket, data: DirectMessages): Promise<void> {
     this.dmRepo.save({ ...data });
+
+    const targetUserId = +data.roomName
+      .split('_')
+      .filter((id) => data.user_id !== +id)[0];
+    const allSockets = await this.server.fetchSockets();
+
+    let targetSocket;
+    allSockets.forEach((soc) => {
+      if (soc.handshake.auth.userId === targetUserId) {
+        targetSocket = soc;
+      }
+    });
+
+    if (targetSocket && [...targetSocket.rooms][1] !== data.roomName) {
+      this.server.to('' + targetSocket.id).emit('notification', data.user_id);
+    }
 
     this.server.in(data.roomName).emit('message', data);
   }

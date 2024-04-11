@@ -8,9 +8,9 @@ const buildUserHtml = (user) => {
 `;
 };
 
-const buildAlarmHtml = (time, userId) => {
+const buildNotificationHtml = (time, userId) => {
   return `
-  <div class="alarm-${time}"> 💡 ${userId}에게 새 메세지 도착!</div>
+  <div class="noti-${time}"> 💡 ${userId}에게 새 메세지 도착!</div>
   `;
 };
 
