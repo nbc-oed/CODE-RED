@@ -27,6 +27,7 @@ import { CrawlingModule } from './crawling/crawling.module';
 import { validationSchema } from './common/config/env.config';
 import * as redisStore from 'cache-manager-redis-store';
 import { SheltersModule } from './shelters/shelters.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 const typeOrmModuleOptions = {
   useFactory: async (
@@ -74,6 +75,7 @@ const typeOrmModuleOptions = {
       }),
       isGlobal: true,
     }),
+    ScheduleModule.forRoot(),
     CommonModule,
     UsersModule,
     AuthModule,
