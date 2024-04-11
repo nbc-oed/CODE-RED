@@ -26,7 +26,7 @@ export class UsersController {
 
   // 모든 유저 조회
   @Get()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AuthGuard('jwt'))
   getUsers() {
     return this.usersService.getAllUsers();
   }
@@ -39,7 +39,7 @@ export class UsersController {
 
   // 유저 수정
   @Patch(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AuthGuard('jwt'))
   @UseInterceptors(FileInterceptor('image'))
   async update(
     @Param('id') id: number,
@@ -52,7 +52,7 @@ export class UsersController {
 
   //유저 삭제
   @Delete(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AuthGuard('jwt'))
   async remove(@Param('id') id: number, @UserInfo() user: Users) {
     return await this.usersService.remove(id, user);
   }
