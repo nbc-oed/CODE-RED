@@ -10,24 +10,28 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { PostsModule } from './posts/posts.module';
 import { NewsModule } from './news/news.module';
+import { CrawlingModule } from './crawling/crawling.module';
+import { MaydayModule } from './mayday/mayday.module';
+import { ChatModule } from './chat/chat.module';
+import { SheltersModule } from './shelters/shelters.module';
+import { ScheduleModule } from '@nestjs/schedule';
 import { CacheModule } from '@nestjs/cache-manager';
 
 import { Users } from './common/entities/users.entity';
 import { Posts } from './common/entities/posts.entity';
 import { Follows } from './common/entities/follows.entity';
 import { Scores } from './common/entities/scores.entity';
-import { MaydayRecords } from './common/entities/mayday-records.entity';
+import { MaydayRecords } from './mayday/entities/mayday-records.entity';
 import { Shelters } from './common/entities/shelters.entity';
 import { EmergencyData } from './common/entities/emergency-data.entity';
 import { DisasterData } from './common/entities/disaster-data.entity';
 import { NotificationMessages } from './common/entities/notification-messages.entity';
 import { News } from './news/entities/news.entity';
-import { CrawlingModule } from './crawling/crawling.module';
+import { Location } from './mayday/entities/location.entity';
 
 import { validationSchema } from './common/config/env.config';
 import { NotificationsModule } from './notifications/notifications.module';
 import * as redisStore from 'cache-manager-redis-store';
-import { SheltersModule } from './shelters/shelters.module';
 
 const typeOrmModuleOptions = {
   useFactory: async (
@@ -52,6 +56,7 @@ const typeOrmModuleOptions = {
       DisasterData,
       NotificationMessages,
       News,
+      Location,
     ],
     logging: true, // 데이터베이스 쿼리를 로깅할지 여부를 제어, 이 옵션을 true로 설정하면 TypeORM이 실행된 쿼리를 콘솔에 로그로 출력
   }),
@@ -76,6 +81,7 @@ const typeOrmModuleOptions = {
       inject: [ConfigService],
       isGlobal: true,
     }),
+    ScheduleModule.forRoot(),
     CommonModule,
     UsersModule,
     AuthModule,
@@ -85,6 +91,8 @@ const typeOrmModuleOptions = {
     NewsModule,
     NotificationsModule,
     CrawlingModule,
+    ChatModule,
+    MaydayModule,
     SheltersModule,
   ],
   controllers: [],

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AuthService, KakaoLogin } from './auth.service';
+import { AuthController } from './auth.controller';
 import { JwtModule } from '@nestjs/jwt';
 import { UsersModule } from 'src/users/users.module';
 import { ConfigService } from '@nestjs/config';
@@ -24,7 +25,7 @@ import { ConfigModule } from '@nestjs/config';
     TypeOrmModule.forFeature([Users]),
     AwsModule,
   ],
-  controllers: [],
+  controllers: [AuthController],
   providers: [AuthService, KakaoLogin],
 })
 export class AuthModule {}
