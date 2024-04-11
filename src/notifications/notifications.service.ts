@@ -89,9 +89,15 @@ export class NotificationsService {
     }
 
     const parsedData = JSON.parse(messageData['message']);
+
+    // large_category가 배열이 아니거나 존재하지 않을 경우, 빈 배열을 할당합니다.
+    const largeCategory = Array.isArray(parsedData.large_category)
+      ? parsedData.large_category
+      : [];
+
     return {
       user_id: parsedData.user_id,
-      region: parsedData.large_category.join(', '),
+      region: largeCategory.join(', '),
       content: parsedData.message,
       send_datetime: new Date(parsedData.send_datetime),
     };
