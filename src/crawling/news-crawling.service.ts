@@ -11,8 +11,8 @@ export class Crawling {
       await Promise.all([
         await page.goto('https://news.naver.com/breakingnews/section/102/249'),
         await page.click('._CALENDAR_LAYER_TOGGLE'),
-        // await page.click(`.calendar .calendar-day-2024-04-01`),
-        await page.click(`.calendar .calendar-day-${today()}`),
+        await page.click(`.calendar .calendar-day-2024-04-05`),
+        // await page.click(`.calendar .calendar-day-${today()}`),
       ]);
       await clickMorePageEnd(page);
       const result = await page.$$eval(
@@ -49,6 +49,10 @@ export class Crawling {
                 '충돌',
                 '칼부림',
                 '묻지마',
+                '긴급체포',
+                '부상',
+                '사망',
+                '산불',
               ];
 
               if (!(title.includes('서울') || text.includes('서울'))) {
@@ -59,7 +63,7 @@ export class Crawling {
                 return null;
               }
 
-              return { url, title, newsCompany };
+              return { url, title, newsCompany, text };
             })
             .filter((item) => item !== null);
         },
