@@ -20,4 +20,9 @@ export class NewsController {
   async cronNews() {
     await this.newsService.saveNews();
   }
+
+  @Post('accident')
+  async findAccident() {
+    return await this.newsService.findAccident();
+  }
 }
