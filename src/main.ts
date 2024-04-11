@@ -6,6 +6,7 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { join } from 'path';
 import * as exphbs from 'express-handlebars';
+import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -56,6 +57,7 @@ async function bootstrap() {
     }),
   );
 
+  app.use(cookieParser());
   const PORT = 3000;
   await app.listen(PORT);
   Logger.log(`${PORT}번 포트로 서버 실행 중...`);
