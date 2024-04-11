@@ -1,10 +1,9 @@
-import puppeteer, { executablePath } from 'puppeteer-core';
+import puppeteer from 'puppeteer';
 import * as natural from 'natural';
 export class Crawling {
   async crawling() {
     let browser = await puppeteer.launch({
       headless: false,
-      executablePath: executablePath('chrome'),
     });
     try {
       const page = await browser.newPage();
