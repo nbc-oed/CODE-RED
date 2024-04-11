@@ -44,6 +44,3 @@ async function bootstrap() {
   Logger.log(`${PORT}번 포트로 서버 실행 중...`);
 }
 bootstrap();
-function join(__dirname: string, arg1: string, arg2: string): any {
-  throw new Error('Function not implemented.');
-}
