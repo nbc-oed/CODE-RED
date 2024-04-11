@@ -6,7 +6,6 @@ import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { CommonModule } from './common/common.module';
 import { AwsModule } from './aws/aws.module';
 import { UtilsModule } from './utils/utils.module';
-import { EventsModule } from './events/events.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { PostsModule } from './posts/posts.module';
@@ -15,6 +14,7 @@ import { CrawlingModule } from './crawling/crawling.module';
 import { MaydayModule } from './mayday/mayday.module';
 import { ChatModule } from './chat/chat.module';
 import { SheltersModule } from './shelters/shelters.module';
+import { DmModule } from './direct-message/dm.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { CacheModule } from '@nestjs/cache-manager';
 
@@ -29,6 +29,7 @@ import { DisasterData } from './common/entities/disaster-data.entity';
 import { NotificationMessages } from './common/entities/notification-messages.entity';
 import { News } from './news/entities/news.entity';
 import { Location } from './mayday/entities/location.entity';
+import { DirectMessages } from './direct-message/direct-messages.entity';
 
 import { validationSchema } from './common/config/env.config';
 import { NotificationsModule } from './notifications/notifications.module';
@@ -61,6 +62,7 @@ const typeOrmModuleOptions = {
       NotificationMessages,
       News,
       Location,
+      DirectMessages,
     ],
     logging: true, // 데이터베이스 쿼리를 로깅할지 여부를 제어, 이 옵션을 true로 설정하면 TypeORM이 실행된 쿼리를 콘솔에 로그로 출력
   }),
@@ -95,11 +97,11 @@ const typeOrmModuleOptions = {
     NewsModule,
     NotificationsModule,
     CrawlingModule,
-    EventsModule,
     ChatModule,
     MaydayModule,
     SheltersModule,
     DestinationRiskModule,
+    DmModule,
   ],
   controllers: [DestinationRiskController],
   providers: [DestinationRiskService],

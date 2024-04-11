@@ -6,15 +6,11 @@ import {
 import { Server, Socket } from 'socket.io';
 
 const user = {
-  // userInfo()에서 주는거
   id: 1,
-  email: 'email',
-  name: 'name',
-  nickname: 'nickname',
 };
 
-@WebSocketGateway({ namespace: '/chat' })
-export class EventsGateway {
+@WebSocketGateway({ namespace: '/dm' })
+export class DmGateway {
   @WebSocketServer() server: Server;
 
   @SubscribeMessage('message')
@@ -34,11 +30,6 @@ export class EventsGateway {
     socket.join(`${user.id}and${data.userId}`);
     // TODO: DB history emit
     socket.emit('joinRoom', `${user.id}and${data.userId}`);
-  }
-
-  handleConnection(socket: Socket): void {
-    console.log(socket.handshake.auth);
-    console.log(socket.id + ' is connected');
   }
 
   handleDisconnect(socket: Socket): void {
