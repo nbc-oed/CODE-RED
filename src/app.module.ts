@@ -30,6 +30,7 @@ import { News } from './news/entities/news.entity';
 import { Location } from './mayday/entities/location.entity';
 
 import { validationSchema } from './common/config/env.config';
+import { NotificationsModule } from './notifications/notifications.module';
 import * as redisStore from 'cache-manager-redis-store';
 
 const typeOrmModuleOptions = {
@@ -71,12 +72,13 @@ const typeOrmModuleOptions = {
     TypeOrmModule.forRootAsync(typeOrmModuleOptions),
     CacheModule.registerAsync({
       imports: [ConfigModule],
-      useFactory: async () => ({
+      useFactory: async (configService: ConfigService) => ({
         store: redisStore,
-        host: process.env.REDIS_HOST,
-        port: process.env.REDIS_PORT,
-        password: process.env.REDIS_PASSWORD,
+        host: configService.get('REDIS_HOST'),
+        port: configService.get('REDIS_PORT'),
+        password: configService.get('REDIS_PASSWORD'),
       }),
+      inject: [ConfigService],
       isGlobal: true,
     }),
     ScheduleModule.forRoot(),
@@ -87,6 +89,7 @@ const typeOrmModuleOptions = {
     UtilsModule,
     PostsModule,
     NewsModule,
+    NotificationsModule,
     CrawlingModule,
     ChatModule,
     MaydayModule,

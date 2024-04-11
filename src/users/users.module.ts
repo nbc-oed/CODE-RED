@@ -6,6 +6,7 @@ import { Users } from 'src/common/entities/users.entity';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from 'src/auth/guard/jwt.strategy';
 import { ConfigService } from '@nestjs/config';
+import { NotificationsModule } from 'src/notifications/notifications.module';
 import { AwsModule } from 'src/aws/aws.module';
 
 @Module({
@@ -18,6 +19,7 @@ import { AwsModule } from 'src/aws/aws.module';
     }),
     TypeOrmModule.forFeature([Users]),
     AwsModule,
+    NotificationsModule,
   ],
   exports: [UsersService, JwtStrategy],
   controllers: [UsersController],
