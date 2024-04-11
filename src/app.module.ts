@@ -29,7 +29,7 @@ import { DisasterData } from './common/entities/disaster-data.entity';
 import { NotificationMessages } from './common/entities/notification-messages.entity';
 import { News } from './news/entities/news.entity';
 import { Location } from './mayday/entities/location.entity';
-import { DirectMessages } from './direct-message/direct-messages.entity';
+import { DirectMessages } from './common/entities/direct-messages.entity';
 
 import { validationSchema } from './common/config/env.config';
 import { NotificationsModule } from './notifications/notifications.module';
