@@ -11,14 +11,12 @@ import {
   UploadedFile,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Users } from 'src/common/entities/users.entity';
 import { AuthGuard } from '@nestjs/passport';
 import { LocationDto } from './dto/user-location.dto';
 import { UserInfo } from 'src/common/decorator/user.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
 
 @Controller('users')
 export class UsersController {
