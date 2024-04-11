@@ -14,10 +14,11 @@ import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Users } from 'src/common/entities/users.entity';
-import { UserInfo } from 'src/common/decorator/user.decorator';
 import { AuthGuard } from '@nestjs/passport';
+import { UserInfo } from 'src/common/decorator/user.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from 'src/auth/guard/jwt.guard';
+
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
