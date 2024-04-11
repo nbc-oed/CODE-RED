@@ -10,6 +10,11 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { PostsModule } from './posts/posts.module';
 import { NewsModule } from './news/news.module';
+import { CrawlingModule } from './crawling/crawling.module';
+import { MaydayModule } from './mayday/mayday.module';
+import { ChatModule } from './chat/chat.module';
+import { SheltersModule } from './shelters/shelters.module';
+import { ScheduleModule } from '@nestjs/schedule';
 import { CacheModule } from '@nestjs/cache-manager';
 
 import { Users } from './common/entities/users.entity';
@@ -22,14 +27,10 @@ import { EmergencyData } from './common/entities/emergency-data.entity';
 import { DisasterData } from './common/entities/disaster-data.entity';
 import { NotificationMessages } from './common/entities/notification-messages.entity';
 import { News } from './news/entities/news.entity';
-import { CrawlingModule } from './crawling/crawling.module';
+import { Location } from './mayday/entities/location.entity';
 
 import { validationSchema } from './common/config/env.config';
-import { MaydayModule } from './mayday/mayday.module';
 import * as redisStore from 'cache-manager-redis-store';
-import { Location } from './mayday/entities/location.entity';
-import { SheltersModule } from './shelters/shelters.module';
-import { ScheduleModule } from '@nestjs/schedule';
 
 const typeOrmModuleOptions = {
   useFactory: async (
@@ -87,6 +88,7 @@ const typeOrmModuleOptions = {
     PostsModule,
     NewsModule,
     CrawlingModule,
+    ChatModule,
     MaydayModule,
     SheltersModule,
   ],
