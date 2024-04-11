@@ -39,21 +39,148 @@
 
 ```bash
 .
-├── src
-│   ├── app.module.ts
-│   └── main.ts
-├── test
-├── .dockerignore
-├── docker-compose.yml
-├── .eslintrc.js
-├── .gitignore
-├── .prettierrc
-├── README.md
-├── nest-cli.json
-├── tsconfig.json
-├── tsconfig.build.json
-├── package.json
-└── package-lock.json
+├─public
+│      helperLocation.js
+│      location.js
+│
+├─redis
+├─src
+│  │  app.module.ts
+│  │  main.ts
+│  │
+│  ├─auth
+│  │  │  auth.controller.spec.ts
+│  │  │  auth.module.ts
+│  │  │  auth.service.spec.ts
+│  │  │  auth.service.ts
+│  │  │
+│  │  └─guard
+│  │          jwt-auth.guard.ts
+│  │          jwt.guard.ts
+│  │          jwt.strategy.ts
+│  │
+│  ├─aws
+│  │      aws.module.ts
+│  │      aws.service.spec.ts
+│  │      aws.service.ts
+│  │
+│  ├─common
+│  │  │  common.module.ts
+│  │  │
+│  │  ├─config
+│  │  │      env.config.ts
+│  │  │
+│  │  ├─decorator
+│  │  │      user.decorator.ts
+│  │  │
+│  │  ├─entities
+│  │  │      base-model.entity.ts
+│  │  │      disaster-data.entity.ts
+│  │  │      emergency-data.entity.ts
+│  │  │      follows.entity.ts
+│  │  │      notification-messages.entity.ts
+│  │  │      posts.entity.ts
+│  │  │      scores.entity.ts
+│  │  │      shelters.entity.ts
+│  │  │      users.entity.ts
+│  │  │
+│  │  └─types
+│  │          disaster-alert-level.type.ts
+│  │          disaster-large-category.type.ts
+│  │          disaster-small-category.type.ts
+│  │          emergency-alert-level.type.ts
+│  │          emergency-large-category.type.ts
+│  │          emergency-small-category.type.ts
+│  │          notification-messages-category.type.ts
+│  │          post-status.type.ts
+│  │          user-role.type.ts
+│  │
+│  ├─crawling
+│  │      crawling.module.ts
+│  │      news-crawling.service.ts
+│  │
+│  ├─main
+│  ├─mayday
+│  │  │  mayday.controller.spec.ts
+│  │  │  mayday.controller.ts
+│  │  │  mayday.module.ts
+│  │  │  mayday.service.spec.ts
+│  │  │  mayday.service.ts
+│  │  │
+│  │  ├─dto
+│  │  │      create-mayday.dto.ts
+│  │  │      location.dto.ts
+│  │  │      update-mayday.dto.ts
+│  │  │
+│  │  └─entities
+│  │          location.entity.ts
+│  │          mayday-records.entity.ts
+│  │
+│  ├─news
+│  │  │  news.controller.spec.ts
+│  │  │  news.controller.ts
+│  │  │  news.module.ts
+│  │  │  news.service.spec.ts
+│  │  │  news.service.ts
+│  │  │
+│  │  └─entities
+│  │          news.entity.ts
+│  │
+│  ├─posts
+│  │  │  posts.controller.spec.ts
+│  │  │  posts.controller.ts
+│  │  │  posts.module.ts
+│  │  │  posts.service.spec.ts
+│  │  │  posts.service.ts
+│  │  │
+│  │  └─dto
+│  │          create-post.dto.ts
+│  │          find-post-query.dto.ts
+│  │
+│  ├─shelters
+│  │  │  shelters.controller.spec.ts
+│  │  │  shelters.controller.ts
+│  │  │  shelters.module.ts
+│  │  │  shelters.service.spec.ts
+│  │  │  shelters.service.ts
+│  │  │
+│  │  └─shelters-map
+│  │          shelters-map-style.css
+│  │          shelters-map.html
+│  │
+│  ├─users
+│  │  │  users.controller.spec.ts
+│  │  │  users.controller.ts
+│  │  │  users.module.ts
+│  │  │  users.service.spec.ts
+│  │  │  users.service.ts
+│  │  │
+│  │  └─dto
+│  │          create-user.dto.ts
+│  │          login.dto.ts
+│  │          update-user.dto.ts
+│  │
+│  └─utils
+│          utils.module.ts
+│          utils.service.spec.ts
+│          utils.service.ts
+│
+├─test
+│      app.e2e-spec.ts
+│      jest-e2e.json
+│
+└─views
+    │  discripthandlebars.txt
+    │
+    ├─layouts
+    │      main.handlebars
+    │
+    ├─main
+    │      index.handlebars
+    │
+    └─partials
+            footer.handlebars
+            header.handlebars
 
 ```
 

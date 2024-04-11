@@ -16,6 +16,9 @@ export class News {
   @Column({ type: 'varchar', nullable: false })
   url: string;
 
+  @Column({ type: 'text', nullable: false })
+  text: string;
+
   @Column({ type: 'varchar', nullable: false })
   media: string;
 
