@@ -142,9 +142,10 @@ export class MaydayService {
   }
 
   // 구조 요청 보내기
-  async sos(userId: number) {
+  async sendRequestRescue(userId: number) {
     /*
       구조 요청 보내기 로직 추가해야함.
+      구조 요청자(user), 구조 요청 수신할 유저들(receivers), 구조 요청 수락할 특정 유저(helper)
     */
 
     await this.maydayRecordsRepository.insert({ user_id: userId });
@@ -209,11 +210,9 @@ export class MaydayService {
 
   // 유저 아이디로 찾기
   async findUserId(userId: number) {
-    const user = await this.locationRepository
-      .createQueryBuilder()
-      .select()
-      .where('user_id = :userId', { userId: userId })
-      .getOne();
+    const user = await this.locationRepository.findOne({
+      where: { user_id: userId },
+    });
 
     return user;
   }

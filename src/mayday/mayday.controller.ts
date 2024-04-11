@@ -36,8 +36,8 @@ export class MaydayController {
 
   // 구조 요청 보내기
   @Post('sos')
-  async sos(@UserInfo() user: Users) {
-    await this.maydayService.sos(user.id);
+  async sendRequestRescue(@UserInfo() user: Users) {
+    await this.maydayService.sendRequestRescue(user.id);
   }
 
   // 알림 받은 유저 정보 저장 및 거리 계산
