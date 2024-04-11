@@ -29,6 +29,7 @@ import { MaydayModule } from './mayday/mayday.module';
 import * as redisStore from 'cache-manager-redis-store';
 import { Location } from './mayday/entities/location.entity';
 import { SheltersModule } from './shelters/shelters.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 const typeOrmModuleOptions = {
   useFactory: async (
@@ -77,6 +78,7 @@ const typeOrmModuleOptions = {
       }),
       isGlobal: true,
     }),
+    ScheduleModule.forRoot(),
     CommonModule,
     UsersModule,
     AuthModule,
