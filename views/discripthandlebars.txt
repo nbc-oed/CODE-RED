@@ -1,0 +1,79 @@
+handlebars설명
+  - 정적 파일들은 public폴더에 모아둔다.(js, css, img)
+  - 뷰, 즉 html파일은 views폴더에서 저장해두면서 확장자명을 handlebars라고 정해준다.
+      ex) main.handlebars
+  - layouts에 있는 main.handlebars는 header나, footer와 같이 변하지 않는 애들을 제외한 수시로 바뀌는 애들이 자리하게 된다.
+    {{{body}}}라는 부분으로 layouts밖에서 정의한 파일들이 들어가게 됨
+    ex) 서버측: render(index) => index.handlebars 파일안에 내용들이 main.handlebars의 {{{body}}}부분으로 들어가게됨
+  - partials에 있는 파일들은 header나 footer와 같이 모든 페이지에 필요한 아이들이 있는곳.
+    ex) {{> header}} {{{body}}} {{> footer}} 이렇게 한다면 body만 동적으로 계속 바뀔수있고 header와 footer는 변하지 않게됨
+
+handlebars문법설명
+  변수 출력
+    => {{ 변수명 }}
+
+  조건문
+    => {{#if 조건}} {{else}} {{/if}}
+
+  반복문
+    => {{#each 배열변수}} {{/each}}
+
+  헬퍼함수
+    => {{헬퍼함수 변수}}
+
+  주석
+    => {{! 내용}}
+
+
+helpers에 대한 설명
+    헬퍼함수로서 사용하기 위한 커스텀 함수이다. 아래는 커스텀 헬퍼함수
+
+    eq
+      - {{#if (eq title '제목')}} '제목 맞음' {{else}} '제목아님' {{/if}}
+      - if문을 사용할때 eq를 사용하여 서버에서 넘어온 title이 '제목'이라는 문자열과 같은지 비교할수가 있음
+      - true면 '제목 맞음' 이라는 문자열이 false면 '제목아님'이라는 문자열이 나옴.
+
+    lengthOfList 
+      - users = ['철수','짱구','훈이','유리','맹구'] => 서버에서 내보내고자 하는 배열
+      - <div>
+          오늘 어린이집 온 인원 : {{lengthOfList users}} 명
+        </div>
+         => 서버에서 보낸 배열을 html에서 받음
+      - users라는 배열이 넘어왔을때 lengthOfList라는 함수를 통해 users의 길이를 표현할수 있음
+      - 즉, 오늘 어린이집 온 인원 : 5명 이라는 것이 표현됨
+
+
+
+
+main.ts
+  app.useStaticAssets(join(__dirname, '..', 'public'));
+    => 정적 파일(js, css, image) 사용하겠다 어디서? public폴더에 있는 정적파일을 사용할것이다.
+
+  app.setBaseViewsDir(join(__dirname, '..', 'views'));
+    => view(html)을 사용하겠다 어디서? views폴더에 있는 html파일을 사용할것이다.
+
+  const helpers = {
+    eq: (val1, val2) => val1 === val2,
+    lengthOfList: (list = []) => list.length,
+  };
+    => HTML에서 값을 표현하는것에 도움을 주는 커스텀 함수
+
+  const hbsInstance = exphbs.create({
+    defaultLayout: 'main',
+    layoutsDir: join(__dirname, '..', 'views/layouts'),
+    partialsDir: join(__dirname, '..', 'views/partials'),
+    helpers,
+  });
+
+  app.engine('handlebars', hbsInstance.engine); 
+  app.setViewEngine('handlebars');
+    엔진 이름을 handlebars로 할것이고 위와 같은 설정을 해줄것이다 라는것.
+    엔진이름을 handlebars로 설정하게 되면 파일확장자를 정해줄때말고는 렌더링 할시 뷰이름만 적어주면된다.
+    ex) 
+    폴더 경로가 views/index.handlebars 일경우
+    => Render('index')
+
+    폴더 경로가 views/main/index.handlebars 일경우
+    => Render('main/index')
+
+
