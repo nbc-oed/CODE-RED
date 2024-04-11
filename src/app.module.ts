@@ -32,6 +32,9 @@ import { Location } from './mayday/entities/location.entity';
 import { validationSchema } from './common/config/env.config';
 import { NotificationsModule } from './notifications/notifications.module';
 import * as redisStore from 'cache-manager-redis-store';
+import { DestinationRiskController } from './destination-risk/destination-risk.controller';
+import { DestinationRiskService } from './destination-risk/destination-risk.service';
+import { DestinationRiskModule } from './destination-risk/destination-risk.module';
 
 const typeOrmModuleOptions = {
   useFactory: async (
@@ -94,8 +97,9 @@ const typeOrmModuleOptions = {
     ChatModule,
     MaydayModule,
     SheltersModule,
+    DestinationRiskModule,
   ],
-  controllers: [],
-  providers: [],
+  controllers: [DestinationRiskController],
+  providers: [DestinationRiskService],
 })
 export class AppModule {}
