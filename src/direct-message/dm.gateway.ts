@@ -1,35 +1,36 @@
+import { InjectRepository } from '@nestjs/typeorm';
 import {
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-
-const user = {
-  id: 1,
-};
+import { DirectMessages } from '../common/entities/direct-messages.entity';
+import { Repository } from 'typeorm';
 
 @WebSocketGateway({ namespace: '/dm' })
 export class DmGateway {
   @WebSocketServer() server: Server;
 
+  constructor(
+    @InjectRepository(DirectMessages)
+    private readonly dmRepo: Repository<DirectMessages>,
+  ) {}
+
   @SubscribeMessage('message')
-  handleMessage(socket: Socket, data: any): void {
-    // TODO: DB에 저장
-    // TODO: 채팅목록 관련된 것
-    this.server.in([...socket.rooms][1]).emit('message', {
-      ...data,
-      userName: '',
-      profile_image: '',
-    });
+  handleMessage(socket: Socket, data: DirectMessages): void {
+    this.dmRepo.save({ ...data });
+
+    this.server.in(data.roomName).emit('message', data);
   }
 
   @SubscribeMessage('joinRoom')
-  handleJoinRoom(socket: Socket, data: any) {
+  async handleJoinRoom(socket: Socket, roomName: string): Promise<void> {
     socket.leave([...socket.rooms][1]);
-    socket.join(`${user.id}and${data.userId}`);
-    // TODO: DB history emit
-    socket.emit('joinRoom', `${user.id}and${data.userId}`);
+    socket.join(roomName);
+
+    const history = await this.dmRepo.findBy({ roomName });
+    socket.emit('joinRoom', { roomName, history });
   }
 
   handleDisconnect(socket: Socket): void {
