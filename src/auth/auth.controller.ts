@@ -38,7 +38,11 @@ export class AuthController {
       loginDto.email,
       loginDto.password,
     );
-    res.cookie('authorization', `Bearer ${user.access_token}`);
+    res.cookie('Authentication', user.access_token, {
+      domain: 'localhost',
+      path: '/',
+      httpOnly: true,
+    });
     res.end();
   }
 
