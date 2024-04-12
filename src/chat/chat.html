@@ -58,9 +58,15 @@
 
         roomButtons.forEach((button) => {
           button.addEventListener('click', () => {
-            currentRoomId = button.getAttribute('roomId'); // roomId 속성 값 가져오기
-            messageContainer.innerHTML = ''; // 메시지 컨테이너 초기화
-            socket.emit('joinRoom', currentRoomId);
+            const roomId = button.getAttribute('roomId'); // roomId 속성 값 가져오기
+            if (roomId !== currentRoomId) {
+              if (currentRoomId) {
+                socket.emit('leaveRoom', currentRoomId); // 현재 룸에서 떠나기
+              }
+              currentRoomId = roomId;
+              messageContainer.innerHTML = ''; // 메시지 컨테이너 초기화
+              socket.emit('joinRoom', currentRoomId); // 새로운 룸에 참여하기
+            }
           });
         });
 

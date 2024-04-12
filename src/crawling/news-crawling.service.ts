@@ -3,7 +3,7 @@ import * as natural from 'natural';
 export class Crawling {
   async crawling() {
     let browser = await puppeteer.launch({
-      headless: false,
+      headless: true,
     });
     try {
       const page = await browser.newPage();
