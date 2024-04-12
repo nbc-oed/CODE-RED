@@ -2,6 +2,7 @@ import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { RedisService } from '../../redis/redis.service';
+import { RedisKeys } from 'src/notifications/redis/redis.keys';
 
 @Injectable()
 export class GeoLocationService {
@@ -36,6 +37,7 @@ export class GeoLocationService {
 
       const region1DepthName = response.data.documents[0].region_1depth_name;
       const region2DepthName = response.data.documents[0].region_2depth_name;
+
       const area = `${region1DepthName} ${region2DepthName}`;
 
       await this.addUserToLocationStream(area, userId);
@@ -48,7 +50,7 @@ export class GeoLocationService {
 
   // 1-2. 사용자 위치 정보를 해당 지역 스트림에 추가
   async addUserToLocationStream(area: string, userId: number) {
-    const userLocationsStreamKey = `user-locationsStream:${area}`;
+    const userLocationsStreamKey = RedisKeys.userLocationsStream(area);
     await this.redisService.client.xadd(
       userLocationsStreamKey,
       '*',

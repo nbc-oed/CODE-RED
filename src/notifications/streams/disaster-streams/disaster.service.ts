@@ -7,6 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import axios from 'axios';
 import convert from 'xml-js';
+import { RedisKeys } from 'src/notifications/redis/redis.keys';
 
 @Injectable()
 export class DisasterService {
@@ -123,7 +124,7 @@ export class DisasterService {
   // 1-2. 재난 문자 데이터를 Redis Stream에서 관리
   async sendDisasterInfoToStreams(disasterData: DisasterData) {
     for (const area of disasterData.locationName) {
-      const disasterStreamKey = `disasterStream:${area}`;
+      const disasterStreamKey = RedisKeys.disasterStream(area);
 
       try {
         const streamExists =
@@ -152,7 +153,7 @@ export class DisasterService {
   }
 
   async addDataToStream(disasterData: DisasterData, area: string) {
-    const disasterStreamKey = `disasterStream:${area}`;
+    const disasterStreamKey = RedisKeys.disasterStream(area);
     await this.redisService.client.xadd(
       disasterStreamKey,
       '*',
@@ -166,7 +167,7 @@ export class DisasterService {
   }
 
   async updateLastTimestamp(streamKey: string, timestamp: string) {
-    const lastTimestampKey = `${streamKey}:lastTimestamp`;
+    const lastTimestampKey = RedisKeys.lastTimestamp(streamKey);
     await this.redisService.client.set(lastTimestampKey, timestamp);
   }
 
@@ -174,8 +175,8 @@ export class DisasterService {
     disasterData: DisasterData,
     area: string,
   ) {
-    const disasterStreamKey = `disasterStream:${area}`;
-    const lastTimestampKey = `${disasterStreamKey}:lastTimestamp`;
+    const disasterStreamKey = RedisKeys.disasterStream(area);
+    const lastTimestampKey = RedisKeys.lastTimestamp(disasterStreamKey);
     const lastTimestamp = await this.redisService.client.get(lastTimestampKey);
 
     if (

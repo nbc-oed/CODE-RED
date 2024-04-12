@@ -6,6 +6,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { NotificationMessages } from 'src/common/entities/notification-messages.entity';
 import { Repository } from 'typeorm';
 import { DisasterMessage } from 'src/common/types/disaster-message.interface';
+import { RedisKeys } from './redis/redis.keys';
 
 @Injectable()
 export class NotificationsService {
@@ -27,9 +28,9 @@ export class NotificationsService {
 
   // 1-0. Redis에 String으로 저장된 사용자 위치 <> Disaster-Streams 지역명 매칭시켜서 캐싱 후 알림 목록 반환
   async getUserNotifications(userId: number): Promise<DisasterMessage[]> {
-    const cacheKey = `user-notifications:${userId}`;
+    const userAreaCacheKey = RedisKeys.userNotificationsCache(userId);
     let notifications =
-      await this.cacheManager.get<DisasterMessage[]>(cacheKey);
+      await this.cacheManager.get<DisasterMessage[]>(userAreaCacheKey);
 
     // Cache Hit! 알림 목록 반환
     if (notifications) {
@@ -37,7 +38,10 @@ export class NotificationsService {
     }
 
     // Cache Miss!! -- 캐싱 후 알림 목록 반환
-    notifications = await this.retrieveAndCacheNotifications(userId, cacheKey);
+    notifications = await this.retrieveAndCacheNotifications(
+      userId,
+      userAreaCacheKey,
+    );
     return notifications;
   }
 
@@ -58,7 +62,7 @@ export class NotificationsService {
   }
 
   private async getUserArea(userId: number): Promise<string> {
-    const areaKey = `user:${userId}:area`;
+    const areaKey = RedisKeys.userAreaCache(userId);
     const area = await this.redisService.client.get(areaKey);
 
     if (!area) {
@@ -72,7 +76,7 @@ export class NotificationsService {
 
   // 1-2. Disaster-Streams에서 재난 문자 데이터 메시지 읽어서 매핑
   private async getDisasterMessages(area: string): Promise<DisasterMessage[]> {
-    const disasterStreamKey = `disasterStream:${area}`;
+    const disasterStreamKey = RedisKeys.disasterStream(area);
     const rawMessages = await this.redisService.client.xrange(
       disasterStreamKey,
       '-',

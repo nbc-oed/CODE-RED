@@ -9,12 +9,17 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { DisasterData } from 'src/common/entities/disaster-data.entity';
 import { HttpModule } from '@nestjs/axios';
 import { NotificationMessages } from 'src/common/entities/notification-messages.entity';
+import { RealtimeNotificationService } from './streams/realtime-notifications.service';
+import { UtilsModule } from 'src/utils/utils.module';
+import { FcmService } from './messing-services/fcm.service';
+import { SmsService } from './messing-services/sms.service';
 
 @Module({
   imports: [
     ScheduleModule.forRoot(),
     TypeOrmModule.forFeature([DisasterData, NotificationMessages]),
     HttpModule,
+    UtilsModule,
   ],
   controllers: [NotificationsController],
   providers: [
@@ -22,6 +27,9 @@ import { NotificationMessages } from 'src/common/entities/notification-messages.
     RedisService,
     GeoLocationService,
     DisasterService,
+    RealtimeNotificationService,
+    FcmService,
+    SmsService,
   ],
   exports: [RedisService, GeoLocationService],
 })
