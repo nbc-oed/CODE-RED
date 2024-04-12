@@ -52,7 +52,7 @@ export class MaydayController {
     @UserInfo() helper: Users,
     @Body() locationDto: LocationDto,
   ) {
-    const distance = await this.maydayService.acceptRescue(1, 34, locationDto);
+    const distance = await this.maydayService.acceptRescue(1, 2, locationDto);
 
     return { message: `유저와 헬퍼의 최단 거리 ${distance}Km` };
   }
