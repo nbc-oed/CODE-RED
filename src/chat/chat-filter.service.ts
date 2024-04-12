@@ -66,12 +66,17 @@ export class ChatFilterService {
     }
   }
 
-  filterMessage(message: { message: string; clientId: string }): string {
+  filterMessage(message: {
+    message: string;
+    clientId: string;
+    roomId: string;
+  }): string {
     if (!this.bannedWords || this.bannedWords.length === 0) {
       return message.message;
     }
 
     const { message: originalMessage, clientId } = message;
+    console.log(clientId);
     const clientIdPrefix = clientId.substring(0, 4); // 클라이언트 ID 앞 4글자 추출
 
     let filteredMessage = originalMessage;
