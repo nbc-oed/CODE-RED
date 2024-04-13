@@ -3,6 +3,8 @@ import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import axios from 'axios';
 import { Shelters } from 'src/common/entities/shelters.entity';
+import { MaydayRecords } from 'src/mayday/entities/mayday-records.entity';
+import { MaydayService } from 'src/mayday/mayday.service';
 import { Like, Repository } from 'typeorm';
 import convert from 'xml-js'; // convert 메서드는 직접 import해서 억지로 끌어와야함
 
@@ -10,6 +12,7 @@ import convert from 'xml-js'; // convert 메서드는 직접 import해서 억지
 export class SheltersService {
   constructor(
     private configService: ConfigService,
+    private maydayService: MaydayService,
     @InjectRepository(Shelters)
     private sheltersRepository: Repository<Shelters>,
   ) {}
@@ -80,7 +83,13 @@ export class SheltersService {
         if (existingShelterIds.has(shelter.shelter_id)) {
           await this.updateShelter(shelter.shelter_id, shelter)
         } else {
-          await this.sheltersRepository.save(shelter)
+          await this.sheltersRepository
+          .createQueryBuilder()
+          .insert()
+          .into('shelters')
+          .values({ shelter })
+          .execute()
+          //await this.sheltersRepository.save(shelter)
         }
       }
       
@@ -135,6 +144,7 @@ export class SheltersService {
     console.log(updatesNeeded)
   }
 
+  // 검색칸의 값이 포함된 대피소 불러오기
   async getSheltersMap(search: string) {
     const findShelterData = await this.sheltersRepository.find({
       where: [
@@ -153,5 +163,38 @@ export class SheltersService {
       },
     });
     return findShelterData;
+  }
+
+  async closeToShelter(userId : number) {
+    const user = await this.maydayService.findUserId(userId);
+
+    const { latitude, longitude } = user;
+
+    try {
+      const distanceThreshold = 1000;
+      const closeToShelter = this.sheltersRepository
+        .createQueryBuilder('shelters')
+        .select([
+          'shelters.*',
+          `ST_Distance(
+            ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)::geography,
+            ST_SetSRID(ST_MakePoint(shelters.longitude, shelters.latitude), 4326)::geography
+          ) AS distance_meters`,
+        ])
+        .setParameter('longitude', longitude)
+        .setParameter('latitude', latitude)
+        .where(
+          `ST_Distance(ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326),
+          ST_SetSRID(ST_MakePoint(shelters.longitude, shelters.latitude), 4326) <= :distanceThreshold`,
+          {
+            distanceThreshold,
+          },
+        )
+        .orderBy('distance_meters');
+      return closeToShelter
+    } catch (err) {
+      console.error('An error occurred while finding shelters:', err);
+      return 'Failed';
+    }
   }
   }
