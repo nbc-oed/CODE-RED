@@ -1,12 +1,15 @@
+import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
+import { LocationDto } from 'src/users/dto/user-location.dto';
 import convert from 'xml-js'
 
 @Injectable()
 export class DestinationRiskService {
     constructor (
         private configService: ConfigService,
+        private httpService: HttpService
     ) {}
 
     async getDestinationRisk (destination : string) {
@@ -34,5 +37,40 @@ export class DestinationRiskService {
              '예상 인구' : `약 ${predictedPopulation}명, ${populationTrends.FCST_TIME._text}기준`
         }
         return realTimeDestinationRiskData
+    }
+
+    async getUserCoordinate (locationDto : LocationDto) {
+    const myLocation = await this.getAreaCoordinates(
+            locationDto.userId,
+            locationDto.latitude,
+            locationDto.longitude,
+          );
+    return myLocation
+    }
+
+    async getAreaCoordinates(userId: number, latitude: number, longitude: number) {
+        try {
+            const apiKey = this.configService.get<string>('KAKAO_REST_API_KEY');
+            const response = await this.httpService
+              .get(
+                `https://dapi.kakao.com/v2/local/geo/coord2regioncode.json?x=${longitude}&y=${latitude}`,
+                {
+                  headers: {
+                    Authorization: `KakaoAK ${apiKey}`,
+                  },
+                },
+              )
+              .toPromise();
+      
+            const region1DepthName = response.data.documents[0].region_1depth_name;
+            const region2DepthName = response.data.documents[0].region_2depth_name;
+            const region3DepthName = response.data.documents[0].region_3depth_name;
+            const area = `${region1DepthName} ${region2DepthName} ${region3DepthName}`;
+      
+            return area;
+          } catch (error) {
+            console.error('사용자 위치 정보를 지역 스트림에 추가 실패:', error);
+            throw error;
+          }
     }
 }
