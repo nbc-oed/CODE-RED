@@ -35,6 +35,7 @@ import * as redisStore from 'cache-manager-redis-store';
 import { DestinationRiskController } from './destination-risk/destination-risk.controller';
 import { DestinationRiskService } from './destination-risk/destination-risk.service';
 import { DestinationRiskModule } from './destination-risk/destination-risk.module';
+import { HttpModule } from '@nestjs/axios';
 
 const typeOrmModuleOptions = {
   useFactory: async (
@@ -98,6 +99,7 @@ const typeOrmModuleOptions = {
     MaydayModule,
     SheltersModule,
     DestinationRiskModule,
+    HttpModule
   ],
   controllers: [DestinationRiskController],
   providers: [DestinationRiskService],
