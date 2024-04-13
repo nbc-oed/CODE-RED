@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CODE : RED(메인 화면 테스트)</title>
+    <script>
+      document.addEventListener('DOMContentLoaded', async function () {
+        try {
+          const response = await fetch(`/destination-risk?userId=${userId}&latitude=${latitude}&longitude=${longitude}`);
+          if (response.ok) {
+            const data = await response.text();
+            document.querySelector('.myLocation').innerText = `나의 현재 위치 : ${data}`;
+          } else {
+            throw new Error('서버 응답 오류');
+          }
+        } catch (error) {
+          console.log('요청 실패', error);
+        }
+      
+        try{
+            const response = await fetch(`/shelters/nearby?id=${id}`)
+            if (response.ok) {
+            const data = await response.text();
+            document.querySelector('.closeToShelter').innerText = `가까운 대피소 : ${data}`;
+          } else {
+            throw new Error('서버 응답 오류');
+          }
+        } catch (error) {
+          console.log('요청 실패', error);
+        }
+        });
+    </script>
+  </head>
+  <body>
+    <div class="myLocation"></div>
+    <div class="closeToShelter"></div>
+  </body>
+</html>
