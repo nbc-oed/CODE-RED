@@ -6,7 +6,7 @@ import { Users } from 'src/common/entities/users.entity';
 import { LocationDto } from './dto/location.dto';
 
 @Controller('mayday')
-@UseGuards(AuthGuard('jwt'))
+//@UseGuards(AuthGuard('jwt'))
 export class MaydayController {
   constructor(private readonly maydayService: MaydayService) {}
 
