@@ -36,6 +36,7 @@ import { DestinationRiskController } from './destination-risk/destination-risk.c
 import { DestinationRiskService } from './destination-risk/destination-risk.service';
 import { DestinationRiskModule } from './destination-risk/destination-risk.module';
 import { HttpModule } from '@nestjs/axios';
+import { Destination } from './common/entities/destination.entity';
 
 const typeOrmModuleOptions = {
   useFactory: async (
@@ -61,6 +62,7 @@ const typeOrmModuleOptions = {
       NotificationMessages,
       News,
       Location,
+      Destination
     ],
     logging: true, // 데이터베이스 쿼리를 로깅할지 여부를 제어, 이 옵션을 true로 설정하면 TypeORM이 실행된 쿼리를 콘솔에 로그로 출력
   }),
@@ -101,7 +103,7 @@ const typeOrmModuleOptions = {
     DestinationRiskModule,
     HttpModule
   ],
-  controllers: [DestinationRiskController],
-  providers: [DestinationRiskService],
+  controllers: [],
+  providers: [],
 })
 export class AppModule {}
