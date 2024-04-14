@@ -155,7 +155,9 @@ export class DestinationRiskService {
       }
     }
 
-    // 장소명,위도,경도만 저장
+    // 장소명,장소코드,위도,경도만 저장
+    // 공백,특수 문자등을 정확하게 전달하기 위해 encodeURIComponent 메서드 사용
+    // 데이터 받아서 xml->json 변환한 다음 필요한 데이터에 접근해서 변수에 할당 후 데이터 형식에 맞게 저장
     async savedDestination (destination : string) {
       try {
         const seoulRealTimeData = await this.configService.get('REAL_TIME_DATA_API')
@@ -167,11 +169,13 @@ export class DestinationRiskService {
         })
         const realTimeDataJsonVer = JSON.parse(xmlToJsonData)
         const areaName = realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['AREA_NM']['_text'];
+        const areaCode = realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['AREA_CD']['_text'];
         console.log("-------------------",realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['SUB_STTS']['SUB_STTS'][0]['SUB_STN_X']['_text'])
         const areaLongitude = realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['SUB_STTS']['SUB_STTS'][0]['SUB_STN_X']['_text'];
         const areaLatitude = realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['SUB_STTS']['SUB_STTS'][0]['SUB_STN_Y']['_text'];
         await this.destinationRepository.save({
           area_name : areaName,
+          area_code : areaCode,
           longitude : parseFloat(areaLongitude),
           latitude : parseFloat(areaLatitude)
         })
