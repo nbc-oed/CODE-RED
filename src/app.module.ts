@@ -35,6 +35,8 @@ import { DestinationRiskController } from './destination-risk/destination-risk.c
 import { DestinationRiskService } from './destination-risk/destination-risk.service';
 import { DestinationRiskModule } from './destination-risk/destination-risk.module';
 import { ClientToken } from './common/entities/client-token.entity';
+import { BullModule } from '@nestjs/bull';
+import { QueueModule } from './notifications/queue/queue.module';
 
 const typeOrmModuleOptions = {
   useFactory: async (
@@ -74,6 +76,17 @@ const typeOrmModuleOptions = {
       validationSchema: validationSchema,
     }),
     TypeOrmModule.forRootAsync(typeOrmModuleOptions),
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        redis: {
+          host: configService.get('REDIS_HOST'),
+          port: configService.get('REDIS_PORT'),
+          password: configService.get('REDIS_PASSWORD'),
+        },
+      }),
+      inject: [ConfigService],
+    }),
     CacheModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
@@ -99,6 +112,7 @@ const typeOrmModuleOptions = {
     MaydayModule,
     SheltersModule,
     DestinationRiskModule,
+    QueueModule,
   ],
   controllers: [DestinationRiskController],
   providers: [DestinationRiskService],

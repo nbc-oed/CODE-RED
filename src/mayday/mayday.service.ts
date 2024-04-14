@@ -4,6 +4,7 @@ import { Location } from './entities/location.entity';
 import { Repository } from 'typeorm';
 import { LocationDto } from './dto/location.dto';
 import { MaydayRecords } from './entities/mayday-records.entity';
+import { QueueService } from 'src/notifications/queue/queue.service';
 
 @Injectable()
 export class MaydayService {
@@ -12,6 +13,7 @@ export class MaydayService {
     private readonly locationRepository: Repository<Location>,
     @InjectRepository(MaydayRecords)
     private readonly maydayRecordsRepository: Repository<MaydayRecords>,
+    private queueService: QueueService,
   ) {}
 
   // 내위치 정보 저장
