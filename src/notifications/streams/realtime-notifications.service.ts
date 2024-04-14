@@ -5,7 +5,7 @@ import {
   DisasterMessage,
   RedisStreamResult,
 } from 'src/common/types/disaster-message.interface';
-import { FcmService } from '../messing-services/fcm.service';
+import { FcmService } from '../messing-services/firebase/fcm.service';
 import { SmsService } from '../messing-services/sms.service';
 import { RedisKeys } from '../redis/redis.keys';
 
@@ -31,6 +31,7 @@ export class RealtimeNotificationService {
 
     while (this.running) {
       try {
+        this.logger.log('Attempting to read from stream...');
         // 재난 메시지 스트림에서 메시지 읽기
         const messages = (await this.redisService.client.xreadgroup(
           'GROUP',
@@ -42,7 +43,7 @@ export class RealtimeNotificationService {
           disasterStreamKey,
           '>',
         )) as RedisStreamResult[];
-
+        console.log('messages', messages);
         if (messages && messages.length > 0) {
           this.logger.log(
             `메세지 수신 성공, Received ${messages.length} messages from stream.`,
@@ -54,6 +55,7 @@ export class RealtimeNotificationService {
               );
               const parsedMessage =
                 this.parserService.parseDisasterMessage(messageFields);
+              console.log('parsedMessage:', parsedMessage);
               await this.processMessage(parsedMessage);
               await this.redisService.client.xack(
                 stream,
@@ -65,6 +67,8 @@ export class RealtimeNotificationService {
               );
             }
           }
+        } else {
+          this.logger.log('No messages received.');
         }
       } catch (error) {
         // 에러 발생 시 로그
@@ -78,16 +82,29 @@ export class RealtimeNotificationService {
   }
 
   private async processMessage(message: DisasterMessage) {
-    this.logger.log(
-      `메세지 파싱 성공, Parsed message: ${JSON.stringify(message)}`,
-    );
-    await this.fcmService.sendPushNotification(
-      message.user_id.toString(),
-      message.content,
-    );
-    await this.smsService.sendSms(message.user_id.toString(), message.content);
+    this.logger.log(`Processing message: ${JSON.stringify(message)}`);
+    try {
+      const notificationPromise = this.fcmService.sendPushNotification(
+        message.user_id.toString(),
+        message.content,
+      );
+      const smsPromise = this.smsService.sendSms(
+        message.user_id.toString(),
+        message.content,
+      );
+
+      await Promise.all([notificationPromise, smsPromise]);
+      this.logger.log(
+        `Notifications sent successfully for user ${message.user_id}.`,
+      );
+    } catch (notificationError) {
+      this.logger.error(
+        `Error sending notifications for user ${message.user_id}: ${notificationError.message}`,
+      );
+    }
   }
   onModuleDestroy() {
     this.running = false;
+    this.logger.log('Shutting down notification service...');
   }
 }

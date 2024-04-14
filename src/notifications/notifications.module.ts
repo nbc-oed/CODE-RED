@@ -11,7 +11,7 @@ import { HttpModule } from '@nestjs/axios';
 import { NotificationMessages } from 'src/common/entities/notification-messages.entity';
 import { RealtimeNotificationService } from './streams/realtime-notifications.service';
 import { UtilsModule } from 'src/utils/utils.module';
-import { FcmService } from './messing-services/fcm.service';
+import { FcmService } from './messing-services/firebase/fcm.service';
 import { SmsService } from './messing-services/sms.service';
 
 @Module({
@@ -31,6 +31,6 @@ import { SmsService } from './messing-services/sms.service';
     FcmService,
     SmsService,
   ],
-  exports: [RedisService, GeoLocationService],
+  exports: [RedisService, GeoLocationService, FcmService],
 })
 export class NotificationsModule {}

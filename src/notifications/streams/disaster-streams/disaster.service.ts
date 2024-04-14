@@ -38,7 +38,7 @@ export class DisasterService {
    *    : AWS S3를 백업 저장소처럼 사용?
    */
 
-  @Cron(CronExpression.EVERY_30_SECONDS)
+  @Cron(CronExpression.EVERY_10_MINUTES) //EVERY_30_SECONDS
   async handleCron() {
     const disasterDataList = await this.fetchDisasterData();
     for (const disasterData of disasterDataList) {
