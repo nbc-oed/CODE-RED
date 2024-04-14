@@ -2,11 +2,12 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Notification Example</title>
+    <title>CODE:RED</title>
     <script src="https://www.gstatic.com/firebasejs/8.2.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.2.0/firebase-messaging.js"></script>
     <script>
       document.addEventListener('DOMContentLoaded', function () {
+        // FCM 연동을 위한 서비스 계정 정보
         const firebaseConfig = {
           apiKey: 'FIREBASE_API_KEY',
           authDomain: 'FIREBASE_AUTH_DOMAIN',
@@ -24,10 +25,13 @@
         // 푸시 알림 권한 요청 및 토큰 획득
         function requestPermission() {
           console.log('Requesting permission...');
+
+          // 푸시 알림 권한 요청
           Notification.requestPermission().then((permission) => {
             if (permission === 'granted') {
               console.log('Notification permission granted.');
-              // 토큰 획득
+
+              // 클라이언트의 디바이스 토큰 획득
               messaging
                 .getToken({
                   vapidKey: 'VAPID_PUBLIC_KEY',
@@ -35,7 +39,7 @@
                 .then((currentToken) => {
                   if (currentToken) {
                     console.log('Token:', currentToken);
-                    //sendTokenToServer(currentToken);
+                    sendTokenToServer(currentToken);
                   } else {
                     console.log(
                       'No registration token available. Request permission to generate one.',
@@ -50,12 +54,27 @@
             }
           });
         }
+        // 디바이스 토큰를 서버에 전송 (app.controller.ts)
+        function sendTokenToServer(token) {
+          fetch('/notifications/register-token', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ token: token }),
+          })
+            .then((response) => response.json())
+            .then((data) => console.log('Token sent to server:', data))
+            .catch((error) =>
+              console.log('Error sending token to server:', error),
+            );
+        }
 
         document
           .getElementById('permissionBtn')
           .addEventListener('click', requestPermission);
 
-        // Ensure the service worker is registered
+        // 서비스 워커등록
         if ('serviceWorker' in navigator) {
           navigator.serviceWorker
             .register('/firebase-messaging-sw.js')
@@ -74,7 +93,7 @@
     </script>
   </head>
   <body>
-    <h1>Firebase Messaging Example</h1>
-    <button id="permissionBtn">Request Permission</button>
+    <h1>FCM 알림 전송 테스트</h1>
+    <button id="permissionBtn">알림 허용하기</button>
   </body>
 </html>
