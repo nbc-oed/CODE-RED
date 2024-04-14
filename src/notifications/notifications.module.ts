@@ -13,11 +13,12 @@ import { RealtimeNotificationService } from './streams/realtime-notifications.se
 import { UtilsModule } from 'src/utils/utils.module';
 import { FcmService } from './messing-services/firebase/fcm.service';
 import { SmsService } from './messing-services/sms.service';
+import { ClientToken } from 'src/common/entities/client-token.entity';
 
 @Module({
   imports: [
     ScheduleModule.forRoot(),
-    TypeOrmModule.forFeature([DisasterData, NotificationMessages]),
+    TypeOrmModule.forFeature([DisasterData, NotificationMessages, ClientToken]),
     HttpModule,
     UtilsModule,
   ],
@@ -31,6 +32,6 @@ import { SmsService } from './messing-services/sms.service';
     FcmService,
     SmsService,
   ],
-  exports: [RedisService, GeoLocationService, FcmService],
+  exports: [RedisService, GeoLocationService, FcmService, NotificationsService],
 })
 export class NotificationsModule {}

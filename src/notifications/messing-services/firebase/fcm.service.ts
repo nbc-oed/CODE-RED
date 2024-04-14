@@ -2,7 +2,9 @@ import { Injectable, Logger } from '@nestjs/common';
 import * as admin from 'firebase-admin';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
-//import { getMessaging, getToken } from "firebase/messaging";
+import { InjectRepository } from '@nestjs/typeorm';
+import { ClientToken } from 'src/common/entities/client-token.entity';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class FcmService {
@@ -11,6 +13,8 @@ export class FcmService {
   constructor(
     private configService: ConfigService,
     private httpService: HttpService,
+    @InjectRepository(ClientToken)
+    private clientTokenRepository: Repository<ClientToken>,
   ) {
     this.initializeFirebase();
   }
@@ -60,11 +64,26 @@ Payload 준비: 전송할 메시지와 함께 토큰을 포함한 페이로드�
     };
 
     try {
+      console.log('-----------payload', payload);
       const response = await admin.messaging().send(payload);
+      console.log('-----------response', response);
       return { sent_message: response };
     } catch (error) {
       this.logger.error('푸시 전송 에러', error.message);
       return { error: error.code, message: error.message };
+    }
+  }
+
+  async saveOrUpdateToken(userId: number, token: string) {
+    let tokenEntry = await this.clientTokenRepository.findOneBy({ userId });
+    if (tokenEntry) {
+      tokenEntry.token = token;
+      await this.clientTokenRepository.save(tokenEntry);
+      return { message: 'Token updated successfully' };
+    } else {
+      const tokenEntry = this.clientTokenRepository.create({ userId, token });
+      await this.clientTokenRepository.save(tokenEntry);
+      return { message: 'Token saved successfully' };
     }
   }
 }
