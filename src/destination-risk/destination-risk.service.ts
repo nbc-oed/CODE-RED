@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import axios from 'axios';
+import { find } from 'lodash';
 import { Destination } from 'src/common/entities/destination.entity';
 import { MaydayService } from 'src/mayday/mayday.service';
 import { LocationDto } from 'src/users/dto/user-location.dto';
@@ -21,14 +22,8 @@ export class DestinationRiskService {
 
     // 위험도 조회
     async findRisk (destination : string) {
-        const seoulRealTimeData = await this.configService.get('REAL_TIME_DATA_API')
-        const response = await axios.get(`http://openapi.seoul.go.kr:8088/${seoulRealTimeData}/xml/citydata/1/1/${destination}`)
-        const xmlData = response.data
-        const xmlToJsonData = convert.xml2json(xmlData, {
-            compact : true,
-            spaces : 4
-        })
-        const realTimeDataJsonVer = JSON.parse(xmlToJsonData)
+      try {
+        const realTimeDataJsonVer = await this.seoulCityDataXmlToJson(destination)
         const areaName = realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['AREA_NM']['_text']
         const areaCongestLvlMsg = realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['LIVE_PPLTN_STTS']['LIVE_PPLTN_STTS']
 
@@ -47,13 +42,18 @@ export class DestinationRiskService {
              '예상 인구' : `약 ${predictedPopulation}명, ${populationTrends.FCST_TIME._text}기준`
         }
         return realTimeDestinationRiskData
+      } catch (error) {
+        console.error('해당 데이터를 찾지 못했습니다.', error)
+        throw error
+      }
+        
     }
 
     // 목적지(와 가장 가까운 곳의) 위험도 조회
     // 목적지를 값으로 받고, 그 값을 getCoordinate 함수로 보내서 경도,위도를 받아옴(키워드 검색-> 유사 값의 경도,위도 추출)
     // 받은 경도,위도와 미리 DB에 다운 받은 데이터를 바탕으로 서울시에서 정한 115곳 중 1000m 이내에 있으면서 가장 가까운 장소를 가져옴
     // 가장 가까운 장소를 받았으면 findRisk 함수로 장소 이름을 보낸 다음 데이터 가공 후 반환
-    async getDestinationRisk (destination : string) {
+    async checkDestinationRisk (destination : string) {
     const coordinate = await this.getCoordinate(destination)
     const { longitude, latitude } = coordinate
     try {
@@ -155,19 +155,12 @@ export class DestinationRiskService {
       }
     }
 
-    // 장소명,장소코드,위도,경도만 저장
+    // 서울시 주요 115곳 장소 데이터 저장
     // 공백,특수 문자등을 정확하게 전달하기 위해 encodeURIComponent 메서드 사용
     // 데이터 받아서 xml->json 변환한 다음 필요한 데이터에 접근해서 변수에 할당 후 데이터 형식에 맞게 저장
     async savedDestination (destination : string) {
       try {
-        const seoulRealTimeData = await this.configService.get('REAL_TIME_DATA_API')
-        const response = await axios.get(`http://openapi.seoul.go.kr:8088/${seoulRealTimeData}/xml/citydata/1/1/${encodeURIComponent(destination)}`)
-        const xmlData = response.data
-        const xmlToJsonData = convert.xml2json(xmlData, {
-            compact : true,
-            spaces : 4
-        })
-        const realTimeDataJsonVer = JSON.parse(xmlToJsonData)
+        const realTimeDataJsonVer = await this.seoulCityDataXmlToJson(destination)
         const areaName = realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['AREA_NM']['_text'];
         const areaCode = realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['AREA_CD']['_text'];
         console.log("-------------------",realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['SUB_STTS']['SUB_STTS'][0]['SUB_STN_X']['_text'])
@@ -183,5 +176,64 @@ export class DestinationRiskService {
       console.error('해당 데이터를 찾지 못했습니다.', error)
       throw error
     }
-    } 
+    }
+
+    // 서울시 주요 115곳 장소 데이터 업데이트
+    async updatedDestination (destination : string) {
+      try {
+      const realTimeDataJsonVer = await this.seoulCityDataXmlToJson(destination)
+      const areaName = realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['AREA_NM']['_text'];
+      const areaCode = realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['AREA_CD']['_text'];
+      const areaLongitude = realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['SUB_STTS']['SUB_STTS'][0]['SUB_STN_X']['_text'];
+      const areaLatitude = realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['SUB_STTS']['SUB_STTS'][0]['SUB_STN_Y']['_text'];
+      const updatedDestination = {
+        areaName, areaCode, areaLongitude, areaLatitude
+      }
+      const findDestination = await this.destinationRepository.findOne({ 
+        where : {
+          area_code : updatedDestination.areaCode
+        }
+      })
+      if (findDestination) {
+        await this.destinationRepository.update({area_code : updatedDestination.areaCode}, {
+        area_name : areaName,
+        area_code : areaCode,
+        longitude : areaLongitude,
+        latitude : areaLatitude
+      })
+      return { message : '업데이트 성공' }
+      } else {
+        await this.destinationRepository.save({
+          area_name : areaName,
+          area_code : areaCode,
+          longitude : parseFloat(areaLongitude),
+          latitude : parseFloat(areaLatitude)
+        })
+        return { message : '저장 성공'}
+      }
+      } catch (error) {
+        console.error('해당 데이터를 찾지 못했습니다.', error)
+        throw error
+      }
+      
+
+    }
+
+    // 서울시 주요 115곳 장소 데이터 받아와서 xml->json변환 함수
+    async seoulCityDataXmlToJson (destination : string) {
+      try {
+        const seoulRealTimeData = await this.configService.get('REAL_TIME_DATA_API')
+        const response = await axios.get(`http://openapi.seoul.go.kr:8088/${seoulRealTimeData}/xml/citydata/1/1/${encodeURIComponent(destination)}`)
+        const xmlData = response.data
+        const xmlToJsonData = convert.xml2json(xmlData, {
+            compact : true,
+            spaces : 4
+        })
+        const realTimeDataJsonVer = JSON.parse(xmlToJsonData)
+        return realTimeDataJsonVer
+      }catch (error) {
+        console.error('해당 데이터를 찾지 못했습니다.', error)
+        throw error
+      }
+    }
 }

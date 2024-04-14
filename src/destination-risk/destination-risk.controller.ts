@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Query } from '@nestjs/common';
+import { Body, Controller, Get, Patch, Query } from '@nestjs/common';
 import { DestinationRiskService } from './destination-risk.service';
 import { LocationDto } from 'src/users/dto/user-location.dto';
 
@@ -14,9 +14,9 @@ export class DestinationRiskController {
     }
 
     // 목적지(와 가장 가까운 곳의) 위험도 조회
-    @Get('closest')
-    async getDestinationRisk (@Query('destination') destination : string) {
-    const destinationRisk = await this.destinationRiskService.getDestinationRisk(destination)
+    @Get('check')
+    async checkDestinationRisk (@Query('destination') destination : string) {
+    const destinationRisk = await this.destinationRiskService.checkDestinationRisk(destination)
     return destinationRisk
     }
 
@@ -27,9 +27,15 @@ export class DestinationRiskController {
     return myLocation
     }
 
-    // 목적지, 위도, 경도만 저장
+    // 서울시 주요 115곳 장소 데이터 저장
     @Get('save')
     async savedDestination (@Query('destination') destination : string) {
         await this.destinationRiskService.savedDestination(destination)
+    }
+
+    // 서울시 115곳 장소 데이터 업데이트
+    @Patch('update')
+    async updatedDestination (@Query('destination') destination : string) {
+        await this.destinationRiskService.updatedDestination(destination)
     }
 }
