@@ -165,33 +165,38 @@ export class SheltersService {
     return findShelterData;
   }
 
+  // 사용자 위치로 부터 가장 가까운 대피소 조회
   async closeToShelter(userId : number) {
     const user = await this.maydayService.findUserId(userId);
-
     const { latitude, longitude } = user;
-
     try {
       const distanceThreshold = 1000;
       const closeToShelter = this.sheltersRepository
         .createQueryBuilder('shelters')
-        .select([
-          'shelters.*',
-          `ST_Distance(
-            ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)::geography,
-            ST_SetSRID(ST_MakePoint(shelters.longitude, shelters.latitude), 4326)::geography
-          ) AS distance_meters`,
-        ])
+        .select('shelters.facility_name', 'facility_name')
+        .addSelect(`ST_Distance(
+          ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)::geography,
+          ST_SetSRID(ST_MakePoint(shelters.longitude, shelters.latitude), 4326)::geography
+          )`, 'distance_meters') // 정렬을 위해 거리도 계산
         .setParameter('longitude', longitude)
         .setParameter('latitude', latitude)
         .where(
-          `ST_Distance(ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326),
-          ST_SetSRID(ST_MakePoint(shelters.longitude, shelters.latitude), 4326) <= :distanceThreshold`,
-          {
-            distanceThreshold,
-          },
+          `ST_DWithin(
+            ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326),
+            ST_SetSRID(ST_MakePoint(shelters.longitude, shelters.latitude), 4326),
+            :distanceThreshold
+          )`,
+          { distanceThreshold }
         )
-        .orderBy('distance_meters');
-      return closeToShelter
+        .orderBy('distance_meters', 'ASC')
+        .limit(1) // 가장 가까운 대피소 하나만 가져옴
+        .getRawOne(); // 단일 결과 가져오기
+      if (closeToShelter) {
+        return closeToShelter;
+      } else {
+        console.log('1000m 이내의 대피소가 없습니다.');
+        return null
+      }
     } catch (err) {
       console.error('An error occurred while finding shelters:', err);
       return 'Failed';

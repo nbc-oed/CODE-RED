@@ -22,10 +22,11 @@ export class SheltersController {
     // 내 위치 기반 가까운 대피소 표시
     @Get('nearby')
     async closeToShelter (
-        @Query('id')id : number,
+        @Query('id')id : string,
         //@UserInfo() user: Users
     ) {
-        const shelter = await this.sheltersService.closeToShelter(id)
+        const userId = parseInt(id)
+        const shelter = await this.sheltersService.closeToShelter(userId)
         return shelter
     }
 
