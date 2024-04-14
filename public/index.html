@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Notification Example</title>
+    <script src="https://www.gstatic.com/firebasejs/8.2.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.2.0/firebase-messaging.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        const firebaseConfig = {
+          apiKey: 'FIREBASE_API_KEY',
+          authDomain: 'FIREBASE_AUTH_DOMAIN',
+          projectId: 'FIREBASE_PROJECT_ID',
+          storageBucket: 'FIREBASE_STORAGEBUCKET',
+          messagingSenderId: 'FIREBASE_MESSAGING_SENDER_ID',
+          appId: 'FIREBASE_APP_ID',
+          measurementId: 'FIREBASE_MEASUREMENT_ID',
+        };
+
+        // Firebase 초기화
+        firebase.initializeApp(firebaseConfig);
+        const messaging = firebase.messaging();
+
+        // 푸시 알림 권한 요청 및 토큰 획득
+        function requestPermission() {
+          console.log('Requesting permission...');
+          Notification.requestPermission().then((permission) => {
+            if (permission === 'granted') {
+              console.log('Notification permission granted.');
+              // 토큰 획득
+              messaging
+                .getToken({
+                  vapidKey: 'VAPID_PUBLIC_KEY',
+                })
+                .then((currentToken) => {
+                  if (currentToken) {
+                    console.log('Token:', currentToken);
+                    //sendTokenToServer(currentToken);
+                  } else {
+                    console.log(
+                      'No registration token available. Request permission to generate one.',
+                    );
+                  }
+                })
+                .catch((error) => {
+                  console.log('Error retrieving token:', error);
+                });
+            } else {
+              console.log('Unable to get permission to notify.');
+            }
+          });
+        }
+
+        document
+          .getElementById('permissionBtn')
+          .addEventListener('click', requestPermission);
+
+        // Ensure the service worker is registered
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker
+            .register('/firebase-messaging-sw.js')
+            .then(function (registration) {
+              console.log(
+                'Service Worker registered with scope:',
+                registration.scope,
+              );
+              messaging.useServiceWorker(registration);
+            })
+            .catch(function (err) {
+              console.log('Service worker registration failed:', err);
+            });
+        }
+      });
+    </script>
+  </head>
+  <body>
+    <h1>Firebase Messaging Example</h1>
+    <button id="permissionBtn">Request Permission</button>
+  </body>
+</html>
