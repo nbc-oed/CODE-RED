@@ -165,7 +165,7 @@ export class SheltersService {
     return findShelterData;
   }
 
-  // 사용자 위치로 부터 가장 가까운 대피소 조회
+  // 사용자 위치로 부터 가장 가까운 대피소 조회 (메인화면 표시용)
   async closeToShelter(userId : number) {
     const user = await this.maydayService.findUserId(userId);
     const { latitude, longitude } = user;
@@ -192,6 +192,43 @@ export class SheltersService {
         .limit(1) // 가장 가까운 대피소 하나만 가져옴
         .getRawOne(); // 단일 결과 가져오기
       if (closeToShelter) {
+        return closeToShelter;
+      } else {
+        console.log('1000m 이내의 대피소가 없습니다.');
+        return null
+      }
+    } catch (err) {
+      console.error('An error occurred while finding shelters:', err);
+      return 'Failed';
+    }
+  }
+
+  // 사용자 위치로 부터 1km내 대피소 모두 조회 (주변 대피소 찾기 시작화면용)
+  async myLocationShelterAround (userId : number) {
+    const user = await this.maydayService.findUserId(userId);
+    const { latitude, longitude } = user;
+    try {
+      const distanceThreshold = 1000;
+      const closeToShelter = await this.sheltersRepository
+        .createQueryBuilder('shelters')
+        .select('shelters.*' )
+        .addSelect(`ST_Distance(
+          ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)::geography,
+          ST_SetSRID(ST_MakePoint(shelters.longitude, shelters.latitude), 4326)::geography
+          )`, 'distance_meters')
+        .setParameter('longitude', longitude)
+        .setParameter('latitude', latitude)
+        .where(
+          `ST_DWithin(
+            ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)::geography,
+            ST_SetSRID(ST_MakePoint(shelters.longitude, shelters.latitude), 4326)::geography,
+            :distanceThreshold
+          )`,
+          { distanceThreshold }
+        )
+        .orderBy('distance_meters', 'ASC')
+        .getRawMany();
+      if (closeToShelter.length > 0) {
         return closeToShelter;
       } else {
         console.log('1000m 이내의 대피소가 없습니다.');
