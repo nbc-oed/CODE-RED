@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Render, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Render, UseGuards, Query } from '@nestjs/common';
 import { MaydayService } from './mayday.service';
 import { AuthGuard } from '@nestjs/passport';
 import { UserInfo } from 'src/common/decorator/user.decorator';
@@ -6,7 +6,7 @@ import { Users } from 'src/common/entities/users.entity';
 import { LocationDto } from './dto/location.dto';
 
 @Controller('mayday')
-@UseGuards(AuthGuard('jwt'))
+//@UseGuards(AuthGuard('jwt'))
 export class MaydayController {
   constructor(private readonly maydayService: MaydayService) {}
 
@@ -20,10 +20,12 @@ export class MaydayController {
   // 내위치 정보 저장
   @Post()
   async saveMyLocation(
-    @UserInfo() user: Users,
+    //@UserInfo() user: Users,
+    @Query('id') id : string,
     @Body() locationDto: LocationDto,
   ) {
-    await this.maydayService.saveMyLocation(locationDto, user.id);
+    const userId = parseInt(id)
+    await this.maydayService.saveMyLocation(locationDto, userId);
   }
 
   // 내 위치 기반 유저 찾기
