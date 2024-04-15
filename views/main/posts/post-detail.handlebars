@@ -1,0 +1,14 @@
+<div class='post' id='{{id}}'>
+  <img src='{{post_image}}' />
+  <h3><a href='/posts/{{id}}'>{{title}}</a></h3>
+  <p>{{status}}</p>
+  {{#if isUpdated}}
+    수정됨
+  {{/if}}
+  <p>{{updated_at}}</p>
+  <p>{{content}}</p>
+  <div class='user' id='{{user.id}}'>
+    <img src='{{user.profile_image}}' />
+    <p>{{user.nickname}}</p>
+  </div>
+</div>

@@ -11,11 +11,13 @@ import { AwsService } from 'src/aws/aws.service';
 
 import { CreatePostDto } from './dto/create-post.dto';
 import { Posts } from 'src/common/entities/posts.entity';
+import { Users } from 'src/common/entities/users.entity';
 
 @Injectable()
 export class PostsService {
   constructor(
     @InjectRepository(Posts) private readonly postsRepo: Repository<Posts>,
+    @InjectRepository(Users) private readonly usersRepo: Repository<Users>,
     private readonly awsService: AwsService,
   ) {}
 
@@ -56,22 +58,29 @@ export class PostsService {
       });
     }
 
-    return await queryBuilder.getMany();
+    const posts = (await queryBuilder.getMany()).map((post) => ({
+      ...post,
+      updated_at: new Date(post.updated_at).toLocaleString(),
+    }));
+    return { posts };
   }
 
   async findPost(postId: number) {
-    const queryBuilder = this.postsRepo
-      .createQueryBuilder('post')
-      .innerJoin('post.user', 'user')
-      .select(['post', 'user.nickname'])
-      .andWhere('post.id=:id', { id: postId });
-
-    const post = await queryBuilder.getOne();
+    const post = await this.postsRepo.findOneBy({ id: postId });
     if (_.isNil(post)) {
       throw new NotFoundException('존재하지 않는 게시글입니다.');
     }
 
-    return post;
+    const user = await this.usersRepo.findOneBy({ id: post.user_id });
+
+    const isUpdated = !_.isEqual(post.created_at, post.updated_at);
+
+    return {
+      ...post,
+      isUpdated,
+      updated_at: new Date(post.updated_at).toLocaleString(),
+      user: { ...user },
+    };
   }
 
   async updatePost(

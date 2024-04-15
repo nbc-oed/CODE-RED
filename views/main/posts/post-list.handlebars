@@ -1,0 +1,8 @@
+{{#each posts}}
+  <div class='post' id='{{id}}'>
+    <img src='{{post_image}}' />
+    <h3><a href='/posts/{{id}}'>{{title}}</a></h3>
+    <p>{{status}}</p>
+    <p>{{updated_at}}</p>
+  </div>
+{{/each}}

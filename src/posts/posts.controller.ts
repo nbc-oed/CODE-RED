@@ -10,6 +10,7 @@ import {
   UploadedFile,
   UseGuards,
   Query,
+  Render,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 
@@ -37,6 +38,7 @@ export class PostsController {
   }
 
   @Get()
+  @Render('main/posts/post-list')
   async findAllPosts(@Query() query: FindPostQueryDto) {
     return await this.postsService.findAllPosts(
       +query.page,
@@ -46,6 +48,7 @@ export class PostsController {
   }
 
   @Get(':postId')
+  @Render('main/posts/post-detail')
   async findPost(@Param('postId') postId: string) {
     return await this.postsService.findPost(+postId);
   }
