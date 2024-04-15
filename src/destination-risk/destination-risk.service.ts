@@ -52,7 +52,8 @@ export class DestinationRiskService {
     // 목적지(와 가장 가까운 곳의) 위험도 조회
     // 목적지를 값으로 받고, 그 값을 getCoordinate 함수로 보내서 경도,위도를 받아옴(키워드 검색-> 유사 값의 경도,위도 추출)
     // 받은 경도,위도와 미리 DB에 다운 받은 데이터를 바탕으로 서울시에서 정한 115곳 중 1000m 이내에 있으면서 가장 가까운 장소를 가져옴
-    // 가장 가까운 장소를 받았으면 findRisk 함수로 장소 이름을 보낸 다음 데이터 가공 후 반환
+    // 가장 가까운 장소를 받았으면 findRisk 함수로 장소 이름을 보낸 다음 findRisk는 seoulCityDataXmlToJson로 목적지를 보내서 json으로 변환후 findRisk로 리턴,
+    // 리턴 받은 받은 findRisk는 데이터 가공 후 checkDestinationRisk로 반환
     async checkDestinationRisk (destination : string) {
     const coordinate = await this.getCoordinate(destination)
     const { longitude, latitude } = coordinate
@@ -69,8 +70,8 @@ export class DestinationRiskService {
         .setParameter('latitude', latitude)
         .where(
           `ST_DWithin(
-            ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326),
-            ST_SetSRID(ST_MakePoint(destination.longitude, destination.latitude), 4326),
+            ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)::geography,
+            ST_SetSRID(ST_MakePoint(destination.longitude, destination.latitude), 4326)::geography,
             :distanceThreshold
           )`,
           { distanceThreshold }
@@ -78,12 +79,10 @@ export class DestinationRiskService {
         .orderBy('distance_meters', 'ASC')
         .limit(1)
         .getRawOne();
-      if (closeToDestination.distance_meters < 1000) {
-        console.log(closeToDestination)
+      if (closeToDestination) {
         const destinationRisk = await this.findRisk(closeToDestination.area_name)
         return destinationRisk;
       } else {
-        console.log('1km 안에 가까운 장소가 없습니다.');
         return { message : '1km 안에 가까운 장소가 없습니다.'}
       }
     } catch (err) {
@@ -163,15 +162,50 @@ export class DestinationRiskService {
         const realTimeDataJsonVer = await this.seoulCityDataXmlToJson(destination)
         const areaName = realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['AREA_NM']['_text'];
         const areaCode = realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['AREA_CD']['_text'];
-        console.log("-------------------",realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['SUB_STTS']['SUB_STTS'][0]['SUB_STN_X']['_text'])
-        const areaLongitude = realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['SUB_STTS']['SUB_STTS'][0]['SUB_STN_X']['_text'];
-        const areaLatitude = realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['SUB_STTS']['SUB_STTS'][0]['SUB_STN_Y']['_text'];
-        await this.destinationRepository.save({
+        console.log("-------------------",realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['SUB_STTS']['SUB_STTS'][0])
+        if (realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['SUB_STTS']['SUB_STTS'][0] === undefined) {
+          const areaLongitude = realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['SUB_STTS']['SUB_STTS']['SUB_STN_X']['_text'];
+          const areaLatitude = realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['SUB_STTS']['SUB_STTS']['SUB_STN_Y']['_text'];
+          const savedDestination = {
+            areaName, areaCode, areaLongitude, areaLatitude
+          }
+          const findDestination = await this.destinationRepository.findOne({ 
+            where : {
+              area_code : savedDestination.areaCode
+            }
+          })
+          if (findDestination) {
+            await this.updatedDestination(findDestination.area_code)
+          } else {
+            await this.destinationRepository.save({
+            area_name : areaName,
+            area_code : areaCode,
+            longitude : parseFloat(areaLongitude),
+            latitude : parseFloat(areaLatitude)
+          })
+          }
+        } else {
+          const areaLongitude = realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['SUB_STTS']['SUB_STTS'][0]['SUB_STN_X']['_text'];
+          const areaLatitude = realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['SUB_STTS']['SUB_STTS'][0]['SUB_STN_Y']['_text'];
+          const savedDestination = {
+          areaName, areaCode, areaLongitude, areaLatitude
+          }
+          const findDestination = await this.destinationRepository.findOne({ 
+          where : {
+            area_code : savedDestination.areaCode
+          }
+        })
+        if (findDestination) {
+          await this.updatedDestination(findDestination.area_code)
+        } else {
+          await this.destinationRepository.save({
           area_name : areaName,
           area_code : areaCode,
           longitude : parseFloat(areaLongitude),
           latitude : parseFloat(areaLatitude)
-        })
+          })
+          }
+        }
       }catch (error) {
       console.error('해당 데이터를 찾지 못했습니다.', error)
       throw error
