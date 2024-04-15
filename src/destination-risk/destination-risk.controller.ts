@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Patch, Query } from '@nestjs/common';
+import { Body, Controller, Get, Patch, Post, Query } from '@nestjs/common';
 import { DestinationRiskService } from './destination-risk.service';
 import { LocationDto } from 'src/users/dto/user-location.dto';
 
@@ -20,7 +20,7 @@ export class DestinationRiskController {
     return destinationRisk
     }
 
-    // 좌표로 지역명 받아오기
+    // 좌표로 지역명 받아오기 (역 지오코딩)
     @Get()
     async getUserCoordinate (@Body() locationDto : LocationDto) {
     const myLocation = await this.destinationRiskService.getUserCoordinate(locationDto)
@@ -28,7 +28,7 @@ export class DestinationRiskController {
     }
 
     // 서울시 주요 115곳 장소 데이터 저장
-    @Get('save')
+    @Post('save')
     async savedDestination (@Query('destination') destination : string) {
         await this.destinationRiskService.savedDestination(destination)
     }
