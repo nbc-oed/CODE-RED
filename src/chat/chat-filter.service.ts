@@ -7,6 +7,7 @@ export class ChatFilterService {
   private bannedWords: string[];
 
   constructor() {
+    this.bannedWords = [];
     this.loadBannedWords();
   }
 
@@ -18,7 +19,6 @@ export class ChatFilterService {
       this.bannedWords = data.split('\n').map((word) => word.trim());
     } catch (error) {
       console.error('욕설 목록 파일 읽기 오류:', error);
-      this.bannedWords = [];
     }
   }
 
@@ -27,23 +27,30 @@ export class ChatFilterService {
     clientId: string;
     roomId: string;
   }): string {
-    if (!this.bannedWords || this.bannedWords.length === 0) {
-      return message.message;
-    }
-
     const { message: originalMessage, clientId } = message;
-    const clientIdPrefix = clientId.substring(0, 4); // 클라이언트 ID 앞 4글자 추출
+    const clientIdPrefix = clientId.substring(0, 4);
 
     let filteredMessage = originalMessage;
 
-    const profanity = this.bannedWords;
-    function messageFilter(text) {
-      const regex = new RegExp(profanity.join('|'), 'gi');
-      return text.replace(regex, '**');
+    if (this.bannedWords && this.bannedWords.length > 0) {
+      const regex = new RegExp(this.bannedWords.join('|'), 'gi');
+      filteredMessage = filteredMessage.replace(regex, '**');
+
+      return `${clientIdPrefix} : ${filteredMessage}`;
     }
-
-    filteredMessage = messageFilter(filteredMessage);
-
-    return `${clientIdPrefix} : ${filteredMessage}`;
   }
+
+  // // 클라이언트 ID가 없으면 랜덤한 4글자 ID 생성
+  // const clientIdPrefix = clientId
+  //   ? this.randomClientId.substring(0, 4)
+  //   : this.generateRandomClientId();
+  // generateRandomClientId(): string {
+  //   const chars =
+  //     'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  //   let randomClientId = '';
+  //   for (let i = 0; i < 4; i++) {
+  //     randomClientId += chars.charAt(Math.floor(Math.random() * chars.length));
+  //   }
+  //   return randomClientId;
+  // }
 }
