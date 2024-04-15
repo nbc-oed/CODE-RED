@@ -1,0 +1,292 @@
+<!-- <!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>WebSocket Client Example</title>
+  <style>
+    #message-container {
+      border: 1px solid #ddd;
+      padding: 10px;
+      margin-bottom: 10px;
+      height: 300px;
+      overflow-y: auto;
+    }
+    #message-form {
+      display: flex;
+    }
+    #message-input {
+      flex-grow: 1;
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>지역기반 실시간 채팅</h1>
+
+  <div>
+    <h2>채팅방 목록</h2>
+    <ul id="room-buttons">
+      <button class="room-button" roomId="1">
+        도심권 (종로구, 중구, 용산구)
+      </button>
+      <button class="room-button" roomId="2">
+        동북권 (성동구, 광진구, 동대문구, 중랑구, 성북구, 강북구, 도봉구, 노원구)
+      </button>
+      <button class="room-button" roomId="3">
+        서북권 (은평구, 서대문구, 마포구)
+      </button>
+      <button class="room-button" roomId="4">
+        서남권 (양천구, 강서구, 구로구, 금천구, 영등포구, 동작구, 관악구)
+      </button>
+      <button class="room-button" roomId="5">
+        동남권 (서초구, 강남구, 송파구, 강동구)
+      </button>
+    </ul>
+  </div>
+
+  <div id="message-container"></div>
+  <form id="message-form">
+    <input type="text" id="message-input" placeholder="메시지를 입력하세요" />
+    <button type="submit">전송</button>
+  </form>
+
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const socket = io('/chat');
+      const roomButtons = document.querySelectorAll('.room-button');
+      const messageContainer = document.getElementById('message-container');
+      const messageForm = document.getElementById('message-form');
+      const messageInput = document.getElementById('message-input');
+
+      let currentRoomId = null;
+
+      // 사용자 위치 정보 가져오기
+      navigator.geolocation.getCurrentPosition((position) => {
+        const { latitude, longitude } = position.coords;
+        let region = determineRegion(latitude, longitude); // 위도, 경도로 지역 판별
+
+        // 판별된 지역에 따라 해당 채팅 룸으로 자동 접속
+        if (region) {
+          const button = document.querySelector(`[roomId="${region.roomId}"]`);
+          button.click(); // 해당 버튼 클릭하여 채팅 룸 접속
+        }
+      });
+
+      // 버튼 클릭 시 채팅 룸 변경
+      roomButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+          const roomId = button.getAttribute('roomId');
+          if (roomId !== currentRoomId) {
+            if (currentRoomId) {
+              socket.emit('leaveRoom', currentRoomId); // 이전 룸에서 떠나기
+            }
+            currentRoomId = roomId;
+            messageContainer.innerHTML = ''; // 메시지 컨테이너 초기화
+            socket.emit('joinRoom', currentRoomId); // 새로운 룸에 참여
+          }
+        });
+      });
+
+      // 메시지 전송
+      messageForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const message = messageInput.value.trim();
+        if (message === '') return;
+        const clientId = socket.id;
+        socket.emit('message', { message, clientId, roomId: currentRoomId });
+        messageInput.value = '';
+      });
+
+      // 서버로부터 메시지 수신
+      socket.on('message', (data) => {
+        const messageElement = document.createElement('div');
+        messageElement.textContent = data;
+        messageContainer.appendChild(messageElement);
+        messageContainer.scrollTop = messageContainer.scrollHeight;
+      });
+
+// 위도와 경도를 기반으로 사용자의 지역을 판별하는 함수
+function determineRegion(latitude, longitude) {
+    const regions = [
+    { roomId: '1', name: '도심권', bounds: { lat: 37.5729, lon: 126.9794 } }, // 종로구
+    { roomId: '1', name: '도심권', bounds: { lat: 37.5641, lon: 126.9970 } }, // 중구
+    { roomId: '1', name: '도심권', bounds: { lat: 37.5311, lon: 126.9814 } }, // 용산구
+
+    { roomId: '2', name: '동북권', bounds: { lat: 37.5509, lon: 127.0407 } }, // 성동구
+    { roomId: '2', name: '동북권', bounds: { lat: 37.5388, lon: 127.0827 } }, // 광진구
+    { roomId: '2', name: '동북권', bounds: { lat: 37.5744, lon: 127.0395 } }, // 동대문구
+    { roomId: '2', name: '동북권', bounds: { lat: 37.6065, lon: 127.0927 } }, // 중랑구
+    { roomId: '2', name: '동북권', bounds: { lat: 37.6109, lon: 127.0273 } }, // 성북구
+    { roomId: '2', name: '동북권', bounds: { lat: 37.6396, lon: 127.0257 } }, // 강북구
+    { roomId: '2', name: '동북권', bounds: { lat: 37.6688, lon: 127.0471 } }, // 도봉구
+    { roomId: '2', name: '동북권', bounds: { lat: 37.6550, lon: 127.0778 } }, // 노원구
+
+    { roomId: '3', name: '서북권', bounds: { lat: 37.6027, lon: 126.9288 } }, // 은평구
+    { roomId: '3', name: '서북권', bounds: { lat: 37.5794, lon: 126.9368 } }, // 서대문구
+    { roomId: '3', name: '서북권', bounds: { lat: 37.5662, lon: 126.9018 } }, // 마포구
+
+    { roomId: '4', name: '서남권', bounds: { lat: 37.5271, lon: 126.8561 } }, // 양천구
+    { roomId: '4', name: '서남권', bounds: { lat: 37.5509, lon: 126.8497 } }, // 강서구
+    { roomId: '4', name: '서남권', bounds: { lat: 37.4954, lon: 126.8581 } }, // 구로구
+    { roomId: '4', name: '서남권', bounds: { lat: 37.4574, lon: 126.8956 } }, // 금천구
+    { roomId: '4', name: '서남권', bounds: { lat: 37.5265, lon: 126.8962 } }, // 영등포구
+    { roomId: '4', name: '서남권', bounds: { lat: 37.4979, lon: 126.9828 } }, // 동작구
+    { roomId: '4', name: '서남권', bounds: { lat: 37.4654, lon: 126.9436 } }, // 관악구
+
+    { roomId: '5', name: '동남권', bounds: { lat: 37.4761, lon: 127.0376 } }, // 서초구
+    { roomId: '5', name: '동남권', bounds: { lat: 37.5184, lon: 127.0473 } }, // 강남구
+    { roomId: '5', name: '동남권', bounds: { lat: 37.5048, lon: 127.1147 } }, // 송파구
+    { roomId: '5', name: '동남권', bounds: { lat: 37.5499, lon: 127.1465 } }, // 강동구
+  ];
+
+  // 사용자의 위치가 어느 지역에 속하는지 판별
+  for (const region of regions) {
+    const { lat, lon } = region.bounds;
+    // 사용자의 위치가 해당 구의 위도(latitude)와 경도(longitude) 범위 내에 있는지 확인
+    const distanceThreshold = 0.01; // 위도, 경도 0.01도 이내로 설정 (약 1km)
+    if (Math.abs(latitude - lat) < distanceThreshold && Math.abs(longitude - lon) < distanceThreshold) {
+      return region; // 해당 지역 객체 반환
+    }
+  }
+
+  return null; // 판별되는 지역이 없을 경우
+}})
+
+//@ 도심권
+// 서울특별시 종로구 : 37.5729° N 위도, 126.9794° E 경도
+// 서울특별시 중구 : 37.5641° N 위도, 126.9970° E 경도
+// 서울특별시 용산구 : 37.5311° N 위도, 126.9814° E 경도
+
+//@ 동북권
+// 서울특별시 성동구 : 37.5509° N 위도, 127.0407° E 경도
+// 서울특별시 광진구 : 37.5388° N 위도, 127.0827° E 경도
+// 서울특별시 동대문구 : 37.5744° N 위도, 127.0395° E 경도
+// 서울특별시 중랑구 : 37.6065° N 위도, 127.0927° E 경도
+// 서울특별시 성북구 : 37.6109° N 위도, 127.0273° E 경도
+// 서울특별시 강북구 : 37.6396° N 위도, 127.0257° E 경도
+// 서울특별시 도봉구 : 37.6688° N 위도, 127.0471° E 경도
+// 서울특별시 노원구 : 37.6550° N 위도, 127.0778° E 경도
+
+//@ 서북권
+// 서울특별시 은평구 : 37.6027° N 위도, 126.9288° E 경도
+// 서울특별시 서대문구 : 37.5794° N 위도, 126.9368° E 경도
+// 서울특별시 마포구 : 37.5662° N 위도, 126.9018° E 경도
+
+//@ 서남권
+// 서울특별시 양천구 : 37.5271° N 위도, 126.8561° E 경도
+// 서울특별시 강서구 : 37.5509° N 위도, 126.8497° E 경도
+// 서울특별시 구로구 : 37.4954° N 위도, 126.8581° E 경도
+// 서울특별시 금천구 : 37.4574° N 위도, 126.8956° E 경도
+// 서울특별시 영등포구 : 37.5265° N 위도, 126.8962° E 경도
+// 서울특별시 동작구 : 37.4979° N 위도, 126.9828° E 경도
+// 서울특별시 관악구 : 37.4654° N 위도, 126.9436° E 경도
+
+//@ 동남권
+// 서울특별시 서초구 : 37.4761° N 위도, 127.0376° E 경도
+// 서울특별시 강남구 : 37.5184° N 위도, 127.0473° E 경도
+// 서울특별시 송파구 : 37.5048° N 위도, 127.1147° E 경도
+// 서울특별시 강동구 : 37.5499° N 위도, 127.1465° E 경도
+
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>WebSocket Client Example</title>
+    <style>
+      #message-container {
+        border: 1px solid #ddd;
+        padding: 10px;
+        margin-bottom: 10px;
+        height: 300px;
+        overflow-y: auto;
+      }
+      #message-form {
+        display: flex;
+      }
+      #message-input {
+        flex-grow: 1;
+        margin-right: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>지역기반 실시간 채팅</h1>
+
+    <div>
+      <h2>채팅방 목록</h2>
+      <ul id="room-buttons">
+        <button class="room-button" roomId="1">
+          도심권 (종로구, 중구, 용산구)
+        </button>
+        <button class="room-button" roomId="2">
+          동북권 (성동구, 광진구, 동대문구, 중랑구, 성북구, 강북구, 도봉구,
+          노원구)
+        </button>
+        <button class="room-button" roomId="3">
+          서북권 (은평구, 서대문구, 마포구)
+        </button>
+        <button class="room-button" roomId="4">
+          서남권 (양천구, 강서구, 구로구, 금천구, 영등포구, 동작구, 관악구)
+        </button>
+        <button class="room-button" roomId="5">
+          동남권 (서초구, 강남구, 송파구, 강동구)
+        </button>
+      </ul>
+    </div>
+
+    <div id="message-container"></div>
+    <form id="message-form">
+      <input type="text" id="message-input" placeholder="메시지를 입력하세요" />
+      <button type="submit">전송</button>
+    </form>
+
+    <!--Socket.IO 클라이언트 라이브러리 추가 -->
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const socket = io('/chat'); // '/chat' 네임스페이스에 연결
+        const roomButtons = document.querySelectorAll('.room-button');
+        const messageContainer = document.getElementById('message-container');
+        const messageForm = document.getElementById('message-form');
+        const messageInput = document.getElementById('message-input');
+
+        let currentRoomId = null;
+
+        roomButtons.forEach((button) => {
+          button.addEventListener('click', () => {
+            const roomId = button.getAttribute('roomId'); // roomId 속성 값 가져오기
+            if (roomId !== currentRoomId) {
+              if (currentRoomId) {
+                socket.emit('leaveRoom', currentRoomId); // 현재 룸에서 떠나기
+              }
+              currentRoomId = roomId;
+              messageContainer.innerHTML = ''; // 메시지 컨테이너 초기화
+              socket.emit('joinRoom', currentRoomId); // 새로운 룸에 참여하기
+            }
+          });
+        });
+
+        // 메시지 전송
+        messageForm.addEventListener('submit', (e) => {
+          e.preventDefault();
+          const message = messageInput.value.trim(); // 입력값 앞뒤 공백 제거
+          if (message === '') return; // 빈 메시지는 전송하지 않음
+
+          const clientId = socket.id; // 현재 클라이언트의 ID 가져오기
+          socket.emit('message', { message, clientId, roomId: currentRoomId }); // 서버에 메시지와 클라이언트 ID 전송
+          messageInput.value = ''; // 입력창 비우기
+        });
+
+        // 서버로부터 메시지 수신
+        socket.on('message', (data) => {
+          const messageElement = document.createElement('div');
+          messageElement.textContent = data; // 서버로부터 받은 메시지 표시
+          messageContainer.appendChild(messageElement); // 메시지를 컨테이너에 추가
+          messageContainer.scrollTop = messageContainer.scrollHeight; // 스크롤 자동 이동
+        });
+      });
+    </script>
+  </body>
+</html> -->

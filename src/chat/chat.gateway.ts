@@ -16,18 +16,20 @@ export class ChatGateway {
 
   @SubscribeMessage('message')
   handleMessage(
-    @MessageBody() data: { message: string; clientId: string; roomId: string }, // 메시지와 클라이언트 ID를 함께 받음
+    @MessageBody() data: { message: string; clientId: string; roomId: string },
     @ConnectedSocket() socket: Socket,
   ): void {
     const { message, clientId, roomId } = data;
+
     const filteredMessage = this.chatFilterService.filterMessage({
       message,
       clientId,
       roomId,
     });
+
     const formattedMessage = `${filteredMessage}`;
 
-    this.server.to(roomId).emit('message', formattedMessage); // 클라이언트에게 포맷된 메시지 전송
+    this.server.to(roomId).emit('message', formattedMessage);
   }
 
   @SubscribeMessage('joinRoom')
@@ -56,31 +58,11 @@ export class ChatGateway {
     console.log(`Client ${socket.id} left room ${roomId}`);
   }
 
-  private leaveAllRooms(socket: Socket): void {
-    if (socket.rooms.size > 1) {
-      // 현재 조인한 룸이 1개 초과인 경우 leave 처리
-      socket.rooms.forEach((room) => {
-        if (room !== socket.id) {
-          socket.leave(room);
-          console.log(`Client ${socket.id} left room ${room}`);
-        }
-      });
-    }
-  }
-
   handleConnection(client: Socket): void {
     console.log(`Client connected: ${client.id}`);
   }
 
   handleDisconnect(client: Socket): void {
-    const currentRoom = Object.keys(client.rooms).find(
-      (room) => room !== client.id,
-    );
-
-    if (currentRoom) {
-      client.leave(currentRoom); // 클라이언트가 속한 룸에서 나가기
-      console.log(`Client ${client.id} left room ${currentRoom}`);
-    }
     console.log(`Client disconnected: ${client.id}`);
   }
 }
