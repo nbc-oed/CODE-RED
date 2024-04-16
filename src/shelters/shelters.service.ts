@@ -36,7 +36,7 @@ export class SheltersService {
 
       // json 문자열을 자바스크립트 객체로 변환
       let shelterDataJsonVer = JSON.parse(xmlToJsonData);
-
+     
       // 객체의 속성 안으로 접근 만약 shelterRows가 배열이 아니라면 배열로 만들어줌
       let shelterRows = shelterDataJsonVer['TbEqkShelter']['row'];
       if (!Array.isArray(shelterRows)) {
@@ -58,7 +58,6 @@ export class SheltersService {
         shelterRows = [shelterRows];
       }
       totalData.push(...shelterRows);
-
       const shelterInfo = totalData.map((element) => {
         return {
           // ._text를 안 쓸 경우, shelterId : { _text:'1'} 이런식으로 표시됨
@@ -73,6 +72,7 @@ export class SheltersService {
         };
       });
       const dbShelters = await this.sheltersRepository.find();
+      
       // 현재 데이터베이스에 존재하는 모든 shelter_id를 가져옴. db속 대피소들을 모아서 그 안에 shelter_id만 추출한 후 객체 생성
       const existingShelterIds = new Set(dbShelters.map(shelter => shelter.shelter_id));
 
@@ -87,9 +87,17 @@ export class SheltersService {
           .createQueryBuilder()
           .insert()
           .into('shelters')
-          .values({ shelter })
+          .values({
+            id : shelter.id,
+            shelter_id: shelter.shelter_id,
+            address: shelter.address,
+            facility_name: shelter.facility_name,
+            facility_area: shelter.facility_area,
+            longitude: shelter.longitude,
+            latitude: shelter.latitude,
+            department_number: shelter.department_number
+           })
           .execute()
-          //await this.sheltersRepository.save(shelter)
         }
       }
       
@@ -206,6 +214,7 @@ export class SheltersService {
   // 사용자 위치로 부터 1km내 대피소 모두 조회 (주변 대피소 찾기 시작화면용)
   async myLocationShelterAround (userId : number) {
     const user = await this.maydayService.findUserId(userId);
+    console.log(user)
     const { latitude, longitude } = user;
     try {
       const distanceThreshold = 1000;
