@@ -10,6 +10,8 @@ import jellyfish
 import os
 import psycopg2
 from flask_apscheduler import APScheduler
+from datetime import datetime, date
+import joblib
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -103,8 +105,7 @@ def crawling():
                 else:
                     j += 1
             i += 1
-        return copy_seoul_articles
-        
+        return copy_seoul_articles     
     except Exception as e:
         error_message = f"데이터베이스 작업 중 오류 발생: {type(e).__name__} - {e}"
         print(error_message)
@@ -144,7 +145,46 @@ def getNews():
     return news
 
 
+@app.route('/accident',methods=['GET'])
+def accident():
+    today = date.today()
+    start_of_today = datetime.combine(today, datetime.min.time())
+    end_of_today = datetime.combine(today, datetime.max.time())
 
+    cursor = conn.cursor()
+
+    loaded_data = joblib.load('model.pkl')
+    
+    loaded_model, loaded_cv = loaded_data
+    
+    cursor.execute('select * from news where created_at BETWEEN %s AND %s', (start_of_today, end_of_today))
+
+    news = cursor.fetchall()
+
+    if not news :
+        return 'Not Found Error : 현재 뉴스가 존재하지 않습니다.', 404
+    
+    filtered_articles = []
+    key_words = ['무죄','선고','구속','검거','법원','항소','징역','구형','법원','수사','공판','판사','기소','송치','지난','전날','작년','체포','단속','법정','고속도로']
+    for article in news:
+        if not any(keyword in article[1] for keyword in key_words) and not any(keyword in article[3] for keyword in key_words):
+            filtered_articles.append(article)
+  
+    combined_text = []
+    for item  in filtered_articles:
+        title = item[1]
+        mini_context = item[3]
+        combined_text.append(title + ' ' + mini_context)
+
+    new_text_processed = loaded_cv.transform(combined_text)
+    pred_new_text = loaded_model.predict(new_text_processed)
+    
+    selected_texts = []
+    for i in range(len(pred_new_text)):
+        if pred_new_text[i] == 1:
+            selected_texts.append(filtered_articles[i])
+     
+    return selected_texts
 
 
 
