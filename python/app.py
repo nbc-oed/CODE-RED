@@ -112,7 +112,7 @@ def crawling():
     finally:
         driver.close()
 
-@scheduler.task('interval', id='do_save_news_5minutes', minutes=2)
+@scheduler.task('interval', id='do_save_news_5minutes', minutes=5)
 def saveNews():
     result = crawling()
     
