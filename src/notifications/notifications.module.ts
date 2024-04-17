@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 import { NotificationsController } from './notifications.controller';
 import { RedisService } from './redis/redis.service';
@@ -13,13 +13,25 @@ import { RealtimeNotificationService } from './streams/realtime-notifications.se
 import { UtilsModule } from 'src/utils/utils.module';
 import { FcmService } from './messing-services/firebase/fcm.service';
 import { SmsService } from './messing-services/sms.service';
-import { ClientToken } from 'src/common/entities/client-token.entity';
+import { BullModule } from '@nestjs/bull';
+import { UsersModule } from 'src/users/users.module';
+import { QueueModule } from './queue/queue.module';
+import { QueueService } from './queue/queue.service';
 
 @Module({
   imports: [
     ScheduleModule.forRoot(),
-    TypeOrmModule.forFeature([DisasterData, NotificationMessages, ClientToken]),
+    TypeOrmModule.forFeature([DisasterData, NotificationMessages]),
+    BullModule.registerQueue(
+      {
+        name: 'rescueServiceQueue',
+      },
+      {
+        name: 'chatServiceQueue',
+      },
+    ),
     HttpModule,
+    forwardRef(() => UsersModule),
     UtilsModule,
   ],
   controllers: [NotificationsController],
@@ -31,6 +43,7 @@ import { ClientToken } from 'src/common/entities/client-token.entity';
     RealtimeNotificationService,
     FcmService,
     SmsService,
+    QueueModule,
   ],
   exports: [RedisService, GeoLocationService, FcmService, NotificationsService],
 })

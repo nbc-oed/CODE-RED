@@ -11,12 +11,15 @@ import { AwsService } from 'src/aws/aws.service';
 
 import { CreatePostDto } from './dto/create-post.dto';
 import { Posts } from 'src/common/entities/posts.entity';
+import { TokenExpiredError } from '@nestjs/jwt';
+import { FcmService } from 'src/notifications/messing-services/firebase/fcm.service';
 
 @Injectable()
 export class PostsService {
   constructor(
     @InjectRepository(Posts) private readonly postsRepo: Repository<Posts>,
     private readonly awsService: AwsService,
+    private fcmService: FcmService,
   ) {}
 
   // TODO? 한 유저가 몇초 이내엔 글 연달아 못 쓰도록 제어
@@ -91,14 +94,21 @@ export class PostsService {
       post_image: uploadedFile,
       ...updatePostDto,
     });
+
     return await this.postsRepo.save(updatedPost);
   }
 
   async removePost(userId: number, postId: number) {
     const post = await this.postsRepo.findOneBy({ id: postId });
+    console.log(post);
     if (userId !== post.user_id) {
       throw new UnauthorizedException('권한이 없습니다.');
     }
+
+    // FCM 푸시 알림 보내기
+    const title = '수정 완료';
+    const message = '수정완료되었습니다.';
+    await this.fcmService.sendPushNotification(title, message, userId);
 
     return await this.postsRepo.remove(post);
   }

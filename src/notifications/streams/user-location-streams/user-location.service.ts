@@ -18,9 +18,10 @@ export class GeoLocationService {
 
   // 1-1. KAKAO API에서 역지오코딩으로 사용자 위치의 지역명 추출하는 로직
   async getAreaFromCoordinates(
-    userId: number,
     latitude: number,
     longitude: number,
+    userId?: number,
+    clientId?: string,
   ): Promise<string> {
     try {
       const apiKey = this.configService.get<string>('KAKAO_REST_API_KEY');
@@ -40,7 +41,7 @@ export class GeoLocationService {
 
       const area = `${region1DepthName} ${region2DepthName}`;
 
-      await this.addUserToLocationStream(area, userId);
+      await this.addUserToLocationStream(area, userId, clientId);
       return area;
     } catch (error) {
       console.error('사용자 위치 정보를 지역 스트림에 추가 실패:', error);
@@ -49,13 +50,19 @@ export class GeoLocationService {
   }
 
   // 1-2. 사용자 위치 정보를 해당 지역 스트림에 추가
-  async addUserToLocationStream(area: string, userId: number) {
+  async addUserToLocationStream(
+    area: string,
+    userId?: number,
+    clientId?: string,
+  ) {
     const userLocationsStreamKey = RedisKeys.userLocationsStream(area);
     await this.redisService.client.xadd(
       userLocationsStreamKey,
       '*',
       'userId',
-      userId.toString(),
+      userId.toString() || null,
+      'clientId',
+      clientId || null,
     );
   }
 }
