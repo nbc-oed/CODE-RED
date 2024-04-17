@@ -9,8 +9,6 @@ import time
 import jellyfish
 import os
 import psycopg2
-import schedule
-# from flask_crontab import Crontab
 from flask_apscheduler import APScheduler
 
 from dotenv import load_dotenv
