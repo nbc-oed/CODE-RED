@@ -10,6 +10,7 @@ import { Users } from 'src/common/entities/users.entity';
 import { AwsModule } from 'src/aws/aws.module';
 import { HttpModule } from '@nestjs/axios';
 import { ConfigModule } from '@nestjs/config';
+import { JwtAuthGuard } from './guard/client-custom.guard';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { ConfigModule } from '@nestjs/config';
     AwsModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, KakaoLogin],
+  providers: [AuthService, KakaoLogin, JwtAuthGuard],
+  exports: [JwtAuthGuard],
 })
 export class AuthModule {}

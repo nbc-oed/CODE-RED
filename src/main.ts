@@ -4,7 +4,6 @@ import { Logger, ValidationPipe } from '@nestjs/common';
 
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
 import { join } from 'path';
 import * as exphbs from 'express-handlebars';
 import cookieParser from 'cookie-parser';
@@ -29,7 +28,6 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  /** @@@@@@@@@@@@@@@@@@@@@@ */
   app.enableCors({
     origin: [
       'http://localhost:3000/',
@@ -42,7 +40,6 @@ async function bootstrap() {
     methods: ['GET', 'POST'], // 허용할 HTTP 메서드
     allowedHeaders: ['Content-Type', '*'], // 허용할 요청 헤더
   });
-  /** @@@@@@@@@@@@@@@@@@@@@@ */
 
   app.useStaticAssets(join(__dirname, '..', 'public'));
   app.setBaseViewsDir(join(__dirname, '..', 'views'));
@@ -66,6 +63,7 @@ async function bootstrap() {
       transform: true,
     }),
   );
+
   app.use(cookieParser());
   const PORT = 3000;
   await app.listen(PORT);
