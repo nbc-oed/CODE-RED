@@ -48,8 +48,7 @@ def crawling():
         calendar_element.click()
         time.sleep(1)
 
-        date_selector = ".calendar-day-2024-04-04"
-        # date_selector = ".is_today"
+        date_selector = ".is_today"
         date_element = driver.find_element(By.CSS_SELECTOR, date_selector)
         date_element.click()
         time.sleep(1)
