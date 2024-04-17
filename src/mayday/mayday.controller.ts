@@ -4,7 +4,6 @@ import { AuthGuard } from '@nestjs/passport';
 import { UserInfo } from 'src/common/decorator/user.decorator';
 import { Users } from 'src/common/entities/users.entity';
 import { LocationDto } from './dto/location.dto';
-import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
 @Controller('mayday')
 @UseGuards(AuthGuard('jwt'))
 export class MaydayController {
