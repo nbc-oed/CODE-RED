@@ -32,3 +32,9 @@
     background-color: white;
     border-radius: 7px;
   }
+
+  #searchResultList {
+    max-width: 500px;
+    max-height: 400px;
+    overflow-y: auto;
+  }
