@@ -6,11 +6,18 @@ import { LocationDto } from 'src/users/dto/user-location.dto';
 export class DestinationRiskController {
     constructor (private readonly destinationRiskService : DestinationRiskService) {}
 
-    // 위험도 조회
+    // 위험도 조회 
     @Get('get')
     async findRisk (@Query('destination') destination : string) {
         const findRisk = await this.destinationRiskService.findRisk(destination)
         return findRisk
+    }
+
+    // 상세 조회 (목적지 위험도 조회 상세 페이지)
+    @Get('detail')
+    async detailCheck (@Query('destination') destination : string) {
+    const detailCheck = await this.destinationRiskService.destinationRiskDetailedInquiry(destination)
+    return detailCheck
     }
 
     // 목적지(와 가장 가까운 곳의) 위험도 조회

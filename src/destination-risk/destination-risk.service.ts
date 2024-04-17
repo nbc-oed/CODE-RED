@@ -20,7 +20,7 @@ export class DestinationRiskService {
         private destinationRepository : Repository<Destination>
     ) {}
 
-    // 위험도 조회
+    // 위험도 조회 (from checkDestinationRisk)
     async findRisk (destination : string) {
       try {
         const realTimeDataJsonVer = await this.seoulCityDataXmlToJson(destination)
@@ -45,11 +45,38 @@ export class DestinationRiskService {
       } catch (error) {
         console.error('해당 데이터를 찾지 못했습니다.', error)
         throw error
-      }
-        
+      }   
     }
 
-    // 목적지(와 가장 가까운 곳의) 위험도 조회
+    // 상세 조회 (from destinationRiskDetailedInquiry)
+    async detailCheck (destination : string) {
+      try {
+        const realTimeDataJsonVer = await this.seoulCityDataXmlToJson(destination)
+        const areaName = realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['AREA_NM']['_text']
+        const areaCongestLvlMsg = realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['LIVE_PPLTN_STTS']['LIVE_PPLTN_STTS']
+
+        // 인구 추이는 가장 최근 시간대 기준(12:30이면 13시 기준)
+        const populationTrends = realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['LIVE_PPLTN_STTS']['LIVE_PPLTN_STTS']['FCST_PPLTN']['FCST_PPLTN'][0]
+        const minPredictedPopulation = populationTrends.FCST_PPLTN_MIN._text
+        const maxPredictedPopulation = populationTrends.FCST_PPLTN_MAX._text
+        const destinationRainOrSnowNews = realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['WEATHER_STTS']['WEATHER_STTS']
+
+        // 중간에 클라이언트한테 리턴 하는 로직 전에 db에 저장-> 키워드 검색 로직
+        const realTimeDestinationRiskDetailInquiry = {
+             '기준 장소' : areaName,
+             '실시간 장소 혼잡도' : areaCongestLvlMsg.AREA_CONGEST_LVL._text,
+             '관련 안내사항' : areaCongestLvlMsg.AREA_CONGEST_MSG._text,
+             '예상 인구' : `약 ${minPredictedPopulation}명 ~ ${maxPredictedPopulation}명, ${populationTrends.FCST_TIME._text} 기준`,
+             '비,눈 관련 사항' : ` ${destinationRainOrSnowNews.PCP_MSG._text} , ${destinationRainOrSnowNews.WEATHER_TIME._text} 기준`
+        }
+        return realTimeDestinationRiskDetailInquiry
+      } catch (error) {
+        console.error('해당 데이터를 찾지 못했습니다.', error)
+        throw error
+      }  
+    }
+
+    // 목적지(와 가장 가까운 곳의) 위험도 조회 (메인화면 : 인구 밀집도, 인구 추이)
     // 목적지를 값으로 받고, 그 값을 getCoordinate 함수로 보내서 경도,위도를 받아옴(키워드 검색-> 유사 값의 경도,위도 추출)
     // 받은 경도,위도와 미리 DB에 다운 받은 데이터를 바탕으로 서울시에서 정한 115곳 중 1000m 이내에 있으면서 가장 가까운 장소를 가져옴
     // 가장 가까운 장소를 받았으면 findRisk 함수로 장소 이름을 보낸 다음 findRisk는 seoulCityDataXmlToJson로 목적지를 보내서 json으로 변환후 findRisk로 리턴,
@@ -91,7 +118,47 @@ export class DestinationRiskService {
     }
     }
 
-    // 좌표로 지역명 받아오기
+    // 목적지 위험도 상세조회 (목적지 위험도 조회 상세 페이지)
+    async destinationRiskDetailedInquiry (destination : string) {
+      const coordinate = await this.getCoordinate(destination)
+      const { longitude, latitude } = coordinate
+      try{
+       const distanceThreshold = 1000;
+       const closeToDestination = await this.destinationRepository
+        .createQueryBuilder('destination')
+        .select('destination.area_name', 'area_name')
+        .addSelect(`ST_Distance(
+          ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)::geography,
+          ST_SetSRID(ST_MakePoint(destination.longitude, destination.latitude), 4326)::geography
+          )`, 'distance_meters')
+        .setParameter('longitude', longitude)
+        .setParameter('latitude', latitude)
+        .where(
+          `ST_DWithin(
+            ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)::geography,
+            ST_SetSRID(ST_MakePoint(destination.longitude, destination.latitude), 4326)::geography,
+            :distanceThreshold
+          )`,
+          { distanceThreshold }
+        )
+        .orderBy('distance_meters', 'ASC')
+        .limit(1)
+        .getRawOne();
+        if (closeToDestination) {
+          const realTimeDestinationRiskDetailInquiry = await this.detailCheck(closeToDestination.area_name)
+          return realTimeDestinationRiskDetailInquiry;
+        } else {
+          return { message : '1km 안에 가까운 장소가 없습니다.'}
+        }
+      } catch (err) {
+        console.error('An error occurred while finding destination:', err);
+        return 'Failed';
+      }
+      
+
+    }
+
+    // 좌표로 지역명 받아오기 (메인 화면 : 나의 현재 위치)
     async getUserCoordinate (locationDto : LocationDto) {
     const { userId } = locationDto
     await this.maydayService.saveMyLocation( locationDto, userId )
