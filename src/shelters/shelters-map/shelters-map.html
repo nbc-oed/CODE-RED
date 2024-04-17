@@ -36,14 +36,19 @@
           });
         });
 
-        // 임시로 프롬프트 창을 띄워서 유저 아이디를 받도록 설정. 최종 프론트 구현시 이 부분 생략하고 바로 유저 아이디를 받도록 해야함
-        let userId = prompt("사용자 ID를 입력하세요.")
-        fetch(`http://localhost:3000/shelters/around?id=${userId}`)
+        navigator.geolocation.getCurrentPosition(function(position) {
+           let lat = position.coords.latitude, // 위도
+               lon = position.coords.longitude; // 경도
+        
+        fetch(`http://localhost:3000/shelters/around?x=${lon}&y=${lat}`)
         .then(function (response) {
                 return response.json();
               })
         .then(function (data) {
-          let bounds = new kakao.maps.LatLngBounds();
+          if(!data.length) {
+            alert('1000m이내에 대피소가 없습니다.')
+          } else {
+            let bounds = new kakao.maps.LatLngBounds();
 
           // 기존 마커 제거 및 배열 초기화. setMap(null):기존에 생성된 마커들 모두 제거
           for (let i = 0; i < markers.length; i++) {
@@ -117,11 +122,13 @@
               );
               map.setBounds(bounds);
             });
-        })
-        .catch(function (error) {
+          }
+          
+          }).catch(function (error) {
                 console.error('에러 발생:', error);
-        });
-
+          });     
+        },
+      )
         document
           .getElementById('searchButton')
           .addEventListener('click', function () {
@@ -147,8 +154,12 @@
                 });
                 detailOverlays = [];
 
+                // 검색 결과 목록 초기화
+                let searchResultList = document.getElementById('searchResultList');
+                searchResultList.innerHTML = ''; // 이전 검색 결과를 비웁니다.
+
                 // 검색 결과에 따른 마커 생성. 
-                data.forEach(function (item) {
+                data.forEach(function (item, index) {
                   // 검색된 주소 좌표 할당
                   let positions = { x: item.longitude, y: item.latitude };
                   // kakao.maps.Marker: 마커 생성 메서드(객체), .LatLng:좌표를 품은 객체 생성 메서드(해당 코드에선 검색 결과의 좌표를 할당)
@@ -205,6 +216,23 @@
                   bounds.extend(
                     new kakao.maps.LatLng(positions.y, positions.x),
                   );
+
+                  // 검색 결과 목록에 항목 추가
+                  let listItem = document.createElement('div');
+                  listItem.classList.add('list-item');
+                  listItem.innerHTML = `
+                  <div class = "facility-name">${item.facility_name}</div>
+                  <div class = "address">${item.address}</div>
+                  <div class = "department-number">${item.department_number}</div>
+                  <h4>`;
+                  // 검색 결과 목록 항목에 마우스 이벤트 리스너 추가
+                  listItem.addEventListener('mouseover', function () {
+                    customOverlay.setMap(map); // 마우스 오버 시 커스텀 오버레이 표시
+                  });
+                  listItem.addEventListener('mouseout', function () {
+                    customOverlay.setMap(null); // 마우스 아웃 시 커스텀 오버레이 숨김
+                  });
+                  searchResultList.appendChild(listItem);
                   map.setBounds(bounds);
                 });
               })
@@ -219,5 +247,6 @@
     <input type="text" id="searchInput" />
     <button id="searchButton">검색</button>
     <div id="map" style="width: 500px; height: 400px"></div>
+    <div id="searchResultList"></div>
   </body>
 </html>
