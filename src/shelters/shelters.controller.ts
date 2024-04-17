@@ -31,11 +31,16 @@ export class SheltersController {
 
     // 사용자 위치로 부터 1km내 대피소 모두 조회
     @Get('around')
-    async myLocationShelterAround (@Query('id') id : string
-        //@UserInfo() user: Users 최종 완성시 주석 해제해서 쿼리 대신 써야함
+    async myLocationShelterAround (@Query('x') x : string, @Query('y') y : string
     ) {
-        const userId = parseInt(id)
-        const shelter = await this.sheltersService.myLocationShelterAround(userId)
+        const longitude = parseFloat(x)
+        const latitude = parseFloat(y)
+        const shelter = await this.sheltersService.myLocationShelterAround(longitude, latitude)
+
+        if (!shelter || shelter.length === 0) {
+            return [];
+        }
+
         return shelter
     }
 }

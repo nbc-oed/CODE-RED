@@ -66,8 +66,8 @@ export class DestinationRiskService {
              '기준 장소' : areaName,
              '실시간 장소 혼잡도' : areaCongestLvlMsg.AREA_CONGEST_LVL._text,
              '관련 안내사항' : areaCongestLvlMsg.AREA_CONGEST_MSG._text,
-             '예상 인구' : `약 ${minPredictedPopulation}명 ~ ${maxPredictedPopulation}명, ${populationTrends.FCST_TIME._text} 기준`,
-             '비,눈 관련 사항' : ` ${destinationRainOrSnowNews.PCP_MSG._text} , ${destinationRainOrSnowNews.WEATHER_TIME._text} 기준`
+             '예상 인구' : `약 ${minPredictedPopulation}명 ~ ${maxPredictedPopulation}명  , ${populationTrends.FCST_TIME._text} 기준`,
+             '비,눈 관련 사항' : ` ${destinationRainOrSnowNews.PCP_MSG._text}  , ${destinationRainOrSnowNews.WEATHER_TIME._text} 기준`
         }
         return realTimeDestinationRiskDetailInquiry
       } catch (error) {

@@ -212,10 +212,7 @@ export class SheltersService {
   }
 
   // 사용자 위치로 부터 1km내 대피소 모두 조회 (주변 대피소 찾기 시작화면용)
-  async myLocationShelterAround (userId : number) {
-    const user = await this.maydayService.findUserId(userId);
-    console.log(user)
-    const { latitude, longitude } = user;
+  async myLocationShelterAround (longitude : number, latitude : number) {
     try {
       const distanceThreshold = 1000;
       const closeToShelter = await this.sheltersRepository
