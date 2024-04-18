@@ -50,6 +50,8 @@ export class FcmService {
       userId,
       clientId,
     );
+
+    // 알림 전송
     const payload = {
       token,
       notification: {

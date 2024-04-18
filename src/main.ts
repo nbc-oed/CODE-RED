@@ -31,6 +31,7 @@ async function bootstrap() {
   app.enableCors({
     origin: [
       'http://localhost:3000/',
+      'http://localhost:3000/auth/sign-in',
       'http://localhost:3000/notifications',
       'http://localhost:3000/api/firebase-config',
       'http://localhost:3000/save-token',

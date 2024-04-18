@@ -15,6 +15,7 @@ import { CreateUserDto } from 'src/users/dto/create-user.dto';
 import { ConfigService } from '@nestjs/config';
 import { AwsService } from 'src/aws/aws.service';
 import { HttpService } from '@nestjs/axios';
+import { UtilsService } from 'src/utils/utils.service';
 
 @Injectable()
 export class AuthService {
@@ -23,6 +24,7 @@ export class AuthService {
     private usersRepository: Repository<Users>,
     private readonly jwtService: JwtService,
     private readonly usersService: UsersService,
+    private utilsService: UtilsService,
     private readonly configService: ConfigService,
     private readonly awsService: AwsService,
     private readonly httpService: HttpService,
@@ -59,7 +61,7 @@ export class AuthService {
     return this.usersRepository.save(newUser);
   }
 
-  async signIn(email: string, password: string) {
+  async signIn(email: string, password: string, client_id?: string) {
     const user = await this.usersRepository.findOne({
       select: ['id', 'email', 'password'],
       where: { email },
@@ -72,10 +74,16 @@ export class AuthService {
     if (!(await bcrypt.compare(password, user.password))) {
       throw new UnauthorizedException('비밀번호를 확인해주세요.');
     }
-
+    // client_id 조회 후 반환
     const payload = { email, id: user.id };
+    const newClientId = this.utilsService.getUUID();
+    const clientsInfo = await this.usersService.updateClientsInfo({
+      user_id: user.id,
+      client_id: newClientId,
+    });
     return {
       access_token: this.jwtService.sign(payload),
+      clientsInfo,
     };
   }
 

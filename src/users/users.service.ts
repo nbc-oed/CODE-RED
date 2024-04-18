@@ -15,6 +15,7 @@ import { AwsService } from 'src/aws/aws.service';
 import { Clients } from 'src/common/entities/clients.entity';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { ClientsDto } from './dto/clients.dto';
+import { UtilsService } from 'src/utils/utils.service';
 
 @Injectable()
 export class UsersService {
@@ -28,6 +29,7 @@ export class UsersService {
     private readonly usersRepository: Repository<Users>,
     @InjectRepository(Clients)
     private clientsRepository: Repository<Clients>,
+    private utilsService: UtilsService,
     @Inject(RedisService)
     private redisService: RedisService,
     @Inject(GeoLocationService)
@@ -110,7 +112,9 @@ export class UsersService {
     return await this.usersRepository.delete(userId);
   }
 
-  /** ----------------------- 사용자 푸시 토큰 및 위치 정보------------------------------ */
+  /** ----------------------- 사용자 푸시 토큰 및 위치 정보------------------------------
+   * TODO: 추후 트랜잭션 처리 필요함.
+   */
 
   async updateClientsInfo(clientsDto: ClientsDto) {
     const { user_id, client_id, push_token, latitude, longitude } = clientsDto;
@@ -123,27 +127,34 @@ export class UsersService {
     });
 
     let area;
+    let updateNeeded = false;
+
     console.log(clientsInfo);
+
     if (clientsInfo) {
-      // 필드별로 변경 확인
+      // 변경사항 확인
       const isUpdated =
         clientsInfo.push_token !== push_token ||
         clientsInfo.latitude !== latitude ||
         clientsInfo.longitude !== longitude;
       if (isUpdated) {
-        // 변경 사항이 있을 때만 저장
+        // 변경 사항이 있을 때만 객체 업데이트
         console.log('변경 전', clientsInfo, clientsDto);
         Object.assign(clientsInfo, clientsDto);
         console.log('변경 후---------', clientsInfo, clientsDto);
-        await this.clientsRepository.save(clientsInfo);
+        updateNeeded = true;
       }
     } else {
       clientsInfo = this.clientsRepository.create(clientsDto);
+      updateNeeded = true;
+    }
+
+    if (updateNeeded) {
       await this.clientsRepository.save(clientsInfo);
     }
 
     // 역지오코딩 및 Redis 저장 (위도, 경도가 있는 경우)
-    if (latitude !== undefined && longitude !== undefined) {
+    if (latitude !== undefined && longitude !== undefined && updateNeeded) {
       area = await this.geoLocationService.getAreaFromCoordinates(
         latitude,
         longitude,
@@ -154,6 +165,55 @@ export class UsersService {
     }
 
     return { clientsInfo, area };
+  }
+
+  // 사용자에 대한 client_id 검색 또는 생성 함수
+  async getClientAndTokenByIdentifiers(
+    userId?: number,
+    clientId?: string,
+  ): Promise<{ client_id: string; push_token: string | null }> {
+    let clientInfo;
+
+    /**userid / clientId
+     * O O -> (로그인 회원)return clientId
+     * O X -> (로그인 회원)새로 uuid 생성해서 userId랑 clientId를 Clients 테이블에 저장
+     * X O -> (비회원)
+     */
+
+    if (!clientId) {
+      clientInfo = await this.clientsRepository.findOne({
+        where: { user_id: userId },
+      });
+    } else if (clientId) {
+      clientInfo = await this.clientsRepository.findOne({
+        where: { client_id: clientId },
+      });
+      // userId를 업데이트 해줘야되지 않냐? + clientId만 가진 비회원도 여기에 걸린다가 문제.
+    }
+
+    if (!userId && clientId) {
+    }
+
+    // 클라이언트 정보가 없으면 새로 생성 (주로 사용자 ID 기반)
+    if (!clientInfo && userId) {
+      // UtilsService를 사용하여 UUID 생성
+      const newClientId = this.utilsService.getUUID();
+      clientInfo = this.clientsRepository.create({
+        user_id: userId,
+        client_id: newClientId,
+      });
+      await this.clientsRepository.save(clientInfo);
+    }
+
+    // 클라이언트 정보가 여전히 없으면 예외 처리
+    if (!clientInfo) {
+      throw new Error('클라이언트 정보가 없습니다.');
+    }
+
+    return {
+      client_id: clientInfo.client_id,
+      push_token: clientInfo.push_token || null,
+    };
   }
 
   // 클라이언트의 푸시 토큰 검증 함수

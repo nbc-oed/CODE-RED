@@ -40,7 +40,7 @@ export class GeoLocationService {
       const region2DepthName = response.data.documents[0].region_2depth_name;
 
       const area = `${region1DepthName} ${region2DepthName}`;
-
+      console.log('역지오코딩 완료', area);
       await this.addUserToLocationStream(area, user_id, client_id);
       return area;
     } catch (error) {
@@ -56,13 +56,16 @@ export class GeoLocationService {
     client_id?: string,
   ) {
     const userLocationsStreamKey = RedisKeys.userLocationsStream(area);
+    const userIdStr = user_id ? user_id.toString() : 'undefined'; // null이나 undefined인 경우 'undefined' 문자열 사용
+    const clientIdStr = client_id ? client_id : 'undefined'; // null이나 undefined인 경우 'undefined' 문자열 사용
+
     await this.redisService.client.xadd(
       userLocationsStreamKey,
       '*',
       'user_id',
-      user_id.toString() || null,
+      userIdStr,
       'client_id',
-      client_id || null,
+      clientIdStr,
     );
   }
 }

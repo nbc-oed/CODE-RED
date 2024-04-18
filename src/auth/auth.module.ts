@@ -11,6 +11,7 @@ import { AwsModule } from 'src/aws/aws.module';
 import { HttpModule } from '@nestjs/axios';
 import { ConfigModule } from '@nestjs/config';
 import { JwtAuthGuard } from './guard/client-custom.guard';
+import { UtilsModule } from 'src/utils/utils.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { JwtAuthGuard } from './guard/client-custom.guard';
     UsersModule,
     TypeOrmModule.forFeature([Users]),
     AwsModule,
+    UtilsModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, KakaoLogin, JwtAuthGuard],
