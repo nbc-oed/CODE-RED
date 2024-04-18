@@ -1,13 +1,12 @@
-import { Body, Controller, Get, Patch, Post, Query } from '@nestjs/common';
+import { Controller, Get, Patch, Post, Query } from '@nestjs/common';
 import { DestinationRiskService } from './destination-risk.service';
-import { LocationDto } from 'src/users/dto/user-location.dto';
 
 @Controller('destination-risk')
 export class DestinationRiskController {
     constructor (private readonly destinationRiskService : DestinationRiskService) {}
 
     // 위험도 조회 
-    @Get('get')
+    @Get()
     async findRisk (@Query('destination') destination : string) {
         const findRisk = await this.destinationRiskService.findRisk(destination)
         return findRisk
@@ -20,17 +19,19 @@ export class DestinationRiskController {
     return detailCheck
     }
 
-    // 목적지(와 가장 가까운 곳의) 위험도 조회
+    // 목적지(와 가장 가까운 곳의) 위험도 조회 (메인화면 : 인구 밀집도, 인구 추이)
     @Get('check')
     async checkDestinationRisk (@Query('destination') destination : string) {
     const destinationRisk = await this.destinationRiskService.checkDestinationRisk(destination)
     return destinationRisk
     }
 
-    // 좌표로 지역명 받아오기 (역 지오코딩)
-    @Get()
-    async getUserCoordinate (@Body() locationDto : LocationDto) {
-    const myLocation = await this.destinationRiskService.getUserCoordinate(locationDto)
+    // 좌표로 지역명 받아오기 (역 지오코딩) (메인 화면 : 나의 현재 위치)
+    @Get('coordinate')
+    async getUserCoordinate (@Query('x') x : string, @Query('y') y : string) {
+    const longitude = parseFloat(x)
+    const latitude = parseFloat(y)
+    const myLocation = await this.destinationRiskService.getUserCoordinate(longitude, latitude)
     return myLocation
     }
 
@@ -41,7 +42,7 @@ export class DestinationRiskController {
     }
 
     // 서울시 115곳 장소 데이터 업데이트
-    @Patch('update')
+    @Patch()
     async updatedDestination (@Query('destination') destination : string) {
         await this.destinationRiskService.updatedDestination(destination)
     }

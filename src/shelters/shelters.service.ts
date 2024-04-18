@@ -4,7 +4,6 @@ import { Cron } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import axios from 'axios';
 import { Shelters } from 'src/common/entities/shelters.entity';
-import { MaydayService } from 'src/mayday/mayday.service';
 import { Like, Repository } from 'typeorm';
 import convert from 'xml-js'; // convert 메서드는 직접 import해서 억지로 끌어와야함
 

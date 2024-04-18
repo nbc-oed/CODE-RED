@@ -3,10 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import axios from 'axios';
-import { find } from 'lodash';
 import { Destination } from 'src/common/entities/destination.entity';
-import { MaydayService } from 'src/mayday/mayday.service';
-import { LocationDto } from 'src/users/dto/user-location.dto';
 import { Repository } from 'typeorm';
 import convert from 'xml-js'
 
@@ -15,7 +12,6 @@ export class DestinationRiskService {
     constructor (
         private configService: ConfigService,
         private httpService: HttpService,
-        private maydayService : MaydayService,
         @InjectRepository(Destination)
         private destinationRepository : Repository<Destination>
     ) {}
@@ -159,19 +155,13 @@ export class DestinationRiskService {
     }
 
     // 좌표로 지역명 받아오기 (메인 화면 : 나의 현재 위치)
-    async getUserCoordinate (locationDto : LocationDto) {
-    const { userId } = locationDto
-    await this.maydayService.saveMyLocation( locationDto, userId )
-    const myLocation = await this.getAreaCoordinates(
-            userId,
-            locationDto.latitude,
-            locationDto.longitude,
-          );
+    async getUserCoordinate (longitude : number, latitude : number) {
+    const myLocation = await this.getAreaCoordinates( longitude, latitude );
     return myLocation
     }
 
-    // 역 지오코딩(좌표->지역명 변환)
-    async getAreaCoordinates(userId: number, latitude: number, longitude: number) {
+    // 역 지오코딩(좌표->지역명 변환) (from getUserCoordinate)
+    async getAreaCoordinates(longitude: number, latitude: number ) {
         try {
             const apiKey = this.configService.get<string>('KAKAO_REST_API_KEY');
             const response = await this.httpService
@@ -184,7 +174,6 @@ export class DestinationRiskService {
                 },
               )
               .toPromise();
-
             const region1DepthName = response.data.documents[0].region_1depth_name;
             const region2DepthName = response.data.documents[0].region_2depth_name;
             const region3DepthName = response.data.documents[0].region_3depth_name;
@@ -193,7 +182,7 @@ export class DestinationRiskService {
       
             return area;
           } catch (error) {
-            console.error('사용자 위치 정보를 지역 스트림에 추가 실패:', error);
+            console.error('지역명 변환 실패:', error);
             throw error;
           }
     }
