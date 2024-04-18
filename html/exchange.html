@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>구호 물품 교환</title>
+    <style>
+      * {
+        width: 440px;
+        margin: 0 auto;
+        padding: 5px;
+      }
+
+      #divide {
+        height: 0px;
+        border-bottom: solid 2px red;
+      }
+
+      body {
+        font-family: sans-serif;
+        background-color: white;
+        color: black;
+        text-align: center;
+      }
+
+      h2 {
+        font-size: 24px;
+        margin-bottom: 20px;
+      }
+
+      /*header*/
+
+      header {
+        color: red;
+        padding: 20px;
+        text-align: center;
+        display: flex;
+        padding-bottom: 0px;
+      }
+
+      #sos {
+        height: 30px;
+        background-color: red;
+        color: white;
+        width: 40px;
+        cursor: pointer;
+        border-radius: 5px;
+        margin-top: 5px;
+      }
+
+      .header-image {
+        width: 30px;
+        height: 30px;
+      }
+
+      /*footer*/
+      footer {
+        padding: 2px;
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        width: 440px;
+        height: 30px;
+        margin: 20px;
+      }
+
+      .button {
+        background-color: white;
+        color: black;
+        border: solid 1px black;
+        border-radius: 8px;
+        cursor: pointer;
+        width: 60px;
+      }
+
+      .footer-image {
+        width: 25px;
+        height: 25px;
+      }
+
+      .slider {
+        position: absolute;
+        top: 27%;
+        transition: all 0.5s;
+      }
+
+      .slider-image {
+        width: 200px;
+        height: 200px;
+        border: solid 1px black;
+        border-radius: 10px;
+      }
+
+      #main-text {
+        padding-top: 230px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <image
+        src="./images/free-icon-notification-3119322.png"
+        class="header-image"
+      ></image>
+      <h1>CODE:RED</h1>
+      <button id="sos">sos</button>
+    </header>
+
+    <main>
+      <p id="divide"></p>
+      <br />
+      <h2>구호 물품 교환</h2>
+      <p id="divide"></p>
+    </main>
+
+    <div id="sliderWrap">
+      <div class="slider" style="opacity: 1">
+        <img class="slider-image" src="./images/구상.jpeg" alt="이미지1" />
+      </div>
+      <div class="slider" style="opacity: 0">
+        <img class="slider-image" src="./images/붕대.jpeg" alt="이미지2" />
+      </div>
+      <div class="slider" style="opacity: 0">
+        <img class="slider-image" src="./images/키트.jpeg" alt="이미지3" />
+      </div>
+    </div>
+
+    <div id="main-text">
+      <p id="divide"></p>
+
+      <table>
+        <tr>
+          <td>[구급상자]</td>
+          <td>2개랑 물이랑 교환해요</td>
+        </tr>
+        <tr>
+          <td>[붕대]</td>
+          <td>5개 드림 구상이랑 교환해요</td>
+        </tr>
+        <tr>
+          <td>[의료용키트]</td>
+          <td>드링크 있으신 분 교환해요</td>
+        </tr>
+      </table>
+    </div>
+
+    <footer>
+      <a href="./main.html"
+        ><image
+          src="./images/free-icon-home-4690939.png"
+          class="footer-image"
+        ></image
+      ></a>
+      <a href="./findshelter.html"
+        ><image
+          src="./images/free-icon-search-149852.png"
+          class="footer-image"
+        ></image
+      ></a>
+      <a href="./chat-list.html"
+        ><image
+          src="./images/free-icon-bubble-chat-2076218.png"
+          class="footer-image"
+        ></image
+      ></a>
+      <a href="./exchange.html"
+        ><image
+          src="./images/free-icon-exchange-9788303.png"
+          class="footer-image"
+        ></image
+      ></a>
+      <a href="./myinfo.html"
+        ><image
+          src="./images/free-icon-user-3856336.png"
+          class="footer-image"
+        ></image
+      ></a>
+    </footer>
+
+    <script>
+      const slider = document.querySelectorAll('.slider');
+
+      let currentIndex = 0; // 현재 보이는 이미지
+      let sliderCount = slider.length; // 이미지 갯수
+      let sliderInterval = 3000; // 이미지 변경 간격 시간
+
+      setInterval(() => {
+        let nextIndex = (currentIndex + 1) % sliderCount;
+
+        slider[currentIndex].style.opacity = '0';
+        slider[nextIndex].style.opacity = '1';
+
+        currentIndex = nextIndex;
+
+        console.log(currentIndex);
+      }, sliderInterval);
+    </script>
+  </body>
+</html>
