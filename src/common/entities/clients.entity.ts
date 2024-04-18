@@ -2,8 +2,8 @@ import { Entity, Column, PrimaryGeneratedColumn, Unique } from 'typeorm';
 import { BaseModel } from './base-model.entity';
 
 @Entity({ name: 'clients' })
+@Unique(['client_id'])
 @Unique(['push_token'])
-@Unique(['user_id'])
 export class Clients extends BaseModel {
   @Column({ type: 'int', nullable: true })
   user_id: number;

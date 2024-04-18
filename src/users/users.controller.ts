@@ -21,6 +21,7 @@ import { UserInfo } from 'src/common/decorator/user.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UtilsService } from 'src/utils/utils.service';
 import { JwtAuthGuard } from 'src/auth/guard/client-custom.guard';
+import { ClientsDto } from './dto/clients.dto';
 
 @Controller('users')
 export class UsersController {
@@ -70,20 +71,25 @@ export class UsersController {
    * 3. 위도-경도 -> 역지오코딩 -> redis set 저장 & stream 생성
    *
    */
+
   @UseGuards(JwtAuthGuard)
   @Post('register-location')
-  async registerUserLocation(
+  async registerClientsLocation(
     @UserInfo() user: Users,
-    @Body() body: { latitude: number; longitude: number },
+    @Body() body: ClientsDto,
   ) {
     const userId = user ? user.id : null;
-    const clientId = this.utilsService.getUUID();
-    const result = await this.usersService.registerUserLocation(
-      body.latitude,
-      body.longitude,
-      userId,
-      clientId,
-    );
+    //uuid로 clientId 생성하는 함수
+    let client_id = body.client_id;
+    if (!client_id) {
+      client_id = this.utilsService.getUUID();
+    }
+    const clientsDto = {
+      ...body,
+      user_id: userId,
+      client_id: client_id,
+    };
+    const result = await this.usersService.updateClientsInfo(clientsDto);
     return result;
   }
 
@@ -96,20 +102,20 @@ export class UsersController {
    */
   @UseGuards(JwtAuthGuard)
   @Post('register-token')
-  async registerToken(
-    @UserInfo() user: Users,
-    @Body() body: { token: string },
-  ) {
+  async registerToken(@UserInfo() user: Users, @Body() body: ClientsDto) {
     const userId = user ? user.id : null;
     //uuid로 clientId 생성하는 함수
-    const clientId = this.utilsService.getUUID();
-
-    const result = await this.usersService.saveOrUpdateToken(
-      body.token,
-      userId,
-      clientId,
-    );
-    return { ...result, token: body.token };
+    let client_id = body.client_id;
+    if (!client_id) {
+      client_id = this.utilsService.getUUID();
+    }
+    const clientsDto = {
+      ...body,
+      user_id: userId,
+      client_id: client_id,
+    };
+    const result = await this.usersService.updateClientsInfo(clientsDto);
+    return result;
   }
 
   // 만료된 사용자 푸시 토큰 삭제

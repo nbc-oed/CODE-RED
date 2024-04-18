@@ -59,29 +59,32 @@
           // 로컬스토리지에서 clientId 조회
           const clientId = localStorage.getItem('clientId') || null;
           // clientId(null일 수 있음), pushToken을 body에 할당
-          const body = { token: token, clientId: clientId };
+          const body = { push_token: token, client_id: clientId };
           // 서버에 전송_usersController
           fetch('/users/register-token', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ token: token }),
+            body: JSON.stringify({ push_token: token, client_id: clientId }),
           })
             .then((response) => response.json())
             // 서버에서 DB 저장 후 다시 전달받은 clientId를 로컬스토리지에서 조회, 없다면 저장, 변경됐다면 업데이트
             .then((data) => {
               console.log(
-                '---------------클라이언트 data',
-                data.data.client_id,
+                '---------------클라이언트 clientsInfo',
+                data.clientsInfo.client_id,
               );
-              if (data.data.client_id || !localStorage.getItem('clientId')) {
-                localStorage.setItem('clientId', data.data.client_id);
+              if (
+                data.clientsInfo.client_id ||
+                !localStorage.getItem('clientId')
+              ) {
+                localStorage.setItem('clientId', data.clientsInfo.client_id);
               }
               console.log(
                 'Token registered with server, clientId:',
-                data.data.client_id,
-                data.token,
+                data.clientsInfo.client_id,
+                data.clientsInfo.push_token,
               );
             })
             .catch((error) =>
@@ -113,7 +116,7 @@
           const body = {
             latitude: latitude,
             longitude: longitude,
-            clientId: clientId,
+            client_id: clientId,
           };
           // 서버에 전송_usersController
           fetch('/users/register-location', {
@@ -124,12 +127,16 @@
             body: JSON.stringify({
               latitude: latitude,
               longitude: longitude,
+              client_id: clientId,
             }),
           })
             .then((response) => response.json())
             .then((data) => {
-              if (data.data.client_id || !localStorage.getItem('clientId')) {
-                localStorage.setItem('clientId', data.data.client_id);
+              if (
+                data.clientsInfo.client_id ||
+                !localStorage.getItem('clientId')
+              ) {
+                localStorage.setItem('clientId', data.clientsInfo.client_id);
               }
             })
             .catch((error) =>
