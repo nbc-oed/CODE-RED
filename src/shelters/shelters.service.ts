@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Cron } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import axios from 'axios';
 import { Shelters } from 'src/common/entities/shelters.entity';
@@ -11,10 +12,15 @@ import convert from 'xml-js'; // convert 메서드는 직접 import해서 억지
 export class SheltersService {
   constructor(
     private configService: ConfigService,
-    private maydayService: MaydayService,
     @InjectRepository(Shelters)
     private sheltersRepository: Repository<Shelters>,
   ) {}
+
+  // 서울 기준 매일 아침 10시에 getShelters가 실행되도록 설정
+  @Cron('0 0 10 * * *', { timeZone : 'Asia/seoul'})
+  async handleCron () {
+    await this.getShelters()
+  }
 
   async getShelters() {
     const seoulShelter = await this.configService.get('SHELTER_API');
