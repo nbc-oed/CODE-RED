@@ -4,6 +4,8 @@ import { AuthGuard } from '@nestjs/passport';
 import { UserInfo } from 'src/common/decorator/user.decorator';
 import { Users } from 'src/common/entities/users.entity';
 import { LocationDto } from './dto/location.dto';
+import { RescueCompleteDto } from './dto/rescueCompleteDto.dto';
+import { SendRescueMessageDto } from './dto/sendRescueMessage.dto';
 @Controller('mayday')
 @UseGuards(AuthGuard('jwt'))
 export class MaydayController {
@@ -35,15 +37,18 @@ export class MaydayController {
 
   // 구조 요청 보내기
   @Post('sos')
-  async sendRequestRescue(@UserInfo() user: Users) {
-    await this.maydayService.sendRequestRescue(user.id);
+  async sendRequestRescue(
+    @UserInfo() user: Users,
+    @Body() sendRescueMessageDto: SendRescueMessageDto,
+  ) {
+    await this.maydayService.sendRequestRescue(user.id, sendRescueMessageDto);
   }
 
   // 알림 받은 유저 정보 저장 및 거리 계산
   /* 알림 보낼때 세션같은걸로 유저 아이디 받아와야함 userId = 1 */
   /* 이곳은 helper가 수락 버튼을 누르면 작동되는 곳
     user = 도움 요청하는 사람 = userID 1
-    helper = 도움 주는 사람 = helperID 34
+    helper = 도움 주는 사람 = helperID 2
     locationDto = 도움 주는 사람의 현재 위치 정보 가져오기(확실하게 하기 위하여)
   */
   @Post('accept-rescue')
@@ -51,8 +56,21 @@ export class MaydayController {
     @UserInfo() helper: Users,
     @Body() locationDto: LocationDto,
   ) {
-    const distance = await this.maydayService.acceptRescue(1, 2, locationDto);
+    const distance = await this.maydayService.acceptRescue(
+      1,
+      helper.id,
+      locationDto,
+    );
 
     return { message: `유저와 헬퍼의 최단 거리 ${distance}Km` };
+  }
+
+  // 구조 요청 완료 하기
+  @Post('rescue-complete')
+  async rescueComplete(
+    @UserInfo() user: Users,
+    @Body() rescueCompleteDto: RescueCompleteDto,
+  ) {
+    await this.maydayService.rescueComplete(user.id, rescueCompleteDto);
   }
 }
