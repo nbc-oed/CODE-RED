@@ -3,7 +3,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Kakao 지도 API 테스트</title>
-    <link rel="stylesheet" type="text/css" href="/reset.css" />
     <link rel="stylesheet" type="text/css" href="./shelters-map-style.css" />
     <script
       type="text/javascript"
@@ -39,7 +38,7 @@
         navigator.geolocation.getCurrentPosition(function(position) {
            let lat = position.coords.latitude, // 위도
                lon = position.coords.longitude; // 경도
-        
+
         fetch(`http://localhost:3000/shelters/around?x=${lon}&y=${lat}`)
         .then(function (response) {
                 return response.json();
@@ -129,7 +128,7 @@
           });     
         },
       )
-        document
+      document
           .getElementById('searchButton')
           .addEventListener('click', function () {
             let searchInput = document.getElementById('searchInput').value;

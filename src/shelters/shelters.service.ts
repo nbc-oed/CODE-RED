@@ -3,7 +3,6 @@ import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import axios from 'axios';
 import { Shelters } from 'src/common/entities/shelters.entity';
-import { MaydayRecords } from 'src/mayday/entities/mayday-records.entity';
 import { MaydayService } from 'src/mayday/mayday.service';
 import { Like, Repository } from 'typeorm';
 import convert from 'xml-js'; // convert 메서드는 직접 import해서 억지로 끌어와야함
@@ -173,32 +172,30 @@ export class SheltersService {
     return findShelterData;
   }
 
-  // 사용자 위치로 부터 가장 가까운 대피소 조회 (메인화면 표시용)
-  async closeToShelter(userId : number) {
-    const user = await this.maydayService.findUserId(userId);
-    const { latitude, longitude } = user;
+  // 사용자 위치로 부터 가장 가까운 대피소 조회 (메인화면 표시용), 남양주에서 테스트를 위해 1000->20000(20km)로 변경
+  async closeToShelter(longitude : number, latitude : number) {
     try {
-      const distanceThreshold = 1000;
-      const closeToShelter = this.sheltersRepository
+      const distanceThreshold = 20000;
+      const closeToShelter = await this.sheltersRepository
         .createQueryBuilder('shelters')
         .select('shelters.facility_name', 'facility_name')
         .addSelect(`ST_Distance(
           ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)::geography,
           ST_SetSRID(ST_MakePoint(shelters.longitude, shelters.latitude), 4326)::geography
-          )`, 'distance_meters') // 정렬을 위해 거리도 계산
+          )`, 'distance_meters')
         .setParameter('longitude', longitude)
         .setParameter('latitude', latitude)
         .where(
           `ST_DWithin(
-            ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326),
-            ST_SetSRID(ST_MakePoint(shelters.longitude, shelters.latitude), 4326),
+            ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)::geography,
+            ST_SetSRID(ST_MakePoint(shelters.longitude, shelters.latitude), 4326)::geography,
             :distanceThreshold
           )`,
           { distanceThreshold }
         )
         .orderBy('distance_meters', 'ASC')
-        .limit(1) // 가장 가까운 대피소 하나만 가져옴
-        .getRawOne(); // 단일 결과 가져오기
+        .limit(1)
+        .getRawOne();
       if (closeToShelter) {
         return closeToShelter;
       } else {
@@ -211,10 +208,10 @@ export class SheltersService {
     }
   }
 
-  // 사용자 위치로 부터 1km내 대피소 모두 조회 (주변 대피소 찾기 시작화면용)
+  // 사용자 위치로 부터 1km내 대피소 모두 조회 (주변 대피소 찾기 시작화면용), 남양주에서 테스트를 위해 1000->16000(1.6km)로 변경
   async myLocationShelterAround (longitude : number, latitude : number) {
     try {
-      const distanceThreshold = 1000;
+      const distanceThreshold = 16000;
       const closeToShelter = await this.sheltersRepository
         .createQueryBuilder('shelters')
         .select('shelters.*' )

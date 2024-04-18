@@ -1,7 +1,5 @@
 import { Controller, Get, Query } from '@nestjs/common';
 import { SheltersService } from './shelters.service';
-import { UserInfo } from 'src/common/decorator/user.decorator';
-import { Users } from 'src/common/entities/users.entity';
 
 @Controller('shelters')
 export class SheltersController {
@@ -19,17 +17,22 @@ export class SheltersController {
         return findShelterData
     }
 
-    // 내 위치 기반 가까운 대피소 표시
+    // 내 위치 기반 가장 가까운 대피소 표시 (메인화면 표시용)
     @Get('nearby')
-    async closeToShelter (@Query('id')id : string,
-        //@UserInfo() user: Users 최종 완성시 주석 해제해서 쿼리 대신 써야함
+    async closeToShelter (@Query('x') x : string, @Query('y') y : string
     ) {
-        const userId = parseInt(id)
-        const shelter = await this.sheltersService.closeToShelter(userId)
+        const longitude = parseFloat(x)
+        const latitude = parseFloat(y)
+        const shelter = await this.sheltersService.closeToShelter(longitude, latitude)
+
+        if (!shelter || shelter.length === 0) {
+            return [];
+        }
+        
         return shelter
     }
 
-    // 사용자 위치로 부터 1km내 대피소 모두 조회
+    // 사용자 위치로 부터 1km내 대피소 모두 조회 (주변 대피소 찾기 시작화면용)
     @Get('around')
     async myLocationShelterAround (@Query('x') x : string, @Query('y') y : string
     ) {
