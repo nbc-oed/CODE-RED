@@ -33,9 +33,10 @@ export class DestinationRiskService {
         // 중간에 클라이언트한테 리턴 하는 로직 전에 db에 저장-> 키워드 검색 로직
         const realTimeDestinationRiskData = {
              '기준 장소' : areaName,
-             '실시간 장소 혼잡도' : areaCongestLvlMsg.AREA_CONGEST_LVL._text,
+             '실시간 장소 혼잡도' : `${areaCongestLvlMsg.AREA_CONGEST_LVL._text}, (${areaName} 기준 )`,
              '관련 안내사항' : areaCongestLvlMsg.AREA_CONGEST_MSG._text,
-             '예상 인구' : `약 ${predictedPopulation}명, ${populationTrends.FCST_TIME._text}기준`
+             '예상 인구' : `약 ${predictedPopulation}명 `,
+             '기준 시간' : `${populationTrends.FCST_TIME._text}기준`
         }
         return realTimeDestinationRiskData
       } catch (error) {
@@ -60,9 +61,10 @@ export class DestinationRiskService {
         // 중간에 클라이언트한테 리턴 하는 로직 전에 db에 저장-> 키워드 검색 로직
         const realTimeDestinationRiskDetailInquiry = {
              '기준 장소' : areaName,
-             '실시간 장소 혼잡도' : areaCongestLvlMsg.AREA_CONGEST_LVL._text,
+             '실시간 장소 혼잡도' : `${areaCongestLvlMsg.AREA_CONGEST_LVL._text}, (${areaName} 기준 )`,
              '관련 안내사항' : areaCongestLvlMsg.AREA_CONGEST_MSG._text,
-             '예상 인구' : `약 ${minPredictedPopulation}명 ~ ${maxPredictedPopulation}명  , ${populationTrends.FCST_TIME._text} 기준`,
+             '예상 인구' : `약 ${minPredictedPopulation}명 ~ ${maxPredictedPopulation}명`,
+             '기준 시간' : `${populationTrends.FCST_TIME._text}기준`,
              '비,눈 관련 사항' : ` ${destinationRainOrSnowNews.PCP_MSG._text}  , ${destinationRainOrSnowNews.WEATHER_TIME._text} 기준`
         }
         return realTimeDestinationRiskDetailInquiry
@@ -77,11 +79,12 @@ export class DestinationRiskService {
     // 받은 경도,위도와 미리 DB에 다운 받은 데이터를 바탕으로 서울시에서 정한 115곳 중 1000m 이내에 있으면서 가장 가까운 장소를 가져옴
     // 가장 가까운 장소를 받았으면 findRisk 함수로 장소 이름을 보낸 다음 findRisk는 seoulCityDataXmlToJson로 목적지를 보내서 json으로 변환후 findRisk로 리턴,
     // 리턴 받은 받은 findRisk는 데이터 가공 후 checkDestinationRisk로 반환
+    // 남양주에서 테스트 때문에 임시로 30km로 설정
     async checkDestinationRisk (destination : string) {
     const coordinate = await this.getCoordinate(destination)
     const { longitude, latitude } = coordinate
     try {
-      const distanceThreshold = 1000;
+      const distanceThreshold = 30000;
       const closeToDestination = await this.destinationRepository
         .createQueryBuilder('destination')
         .select('destination.area_name', 'area_name')
