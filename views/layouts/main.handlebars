@@ -1,14 +1,17 @@
-<html lang='en'>
-  <head>
-    <meta charset='UTF-8' />
-    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
-    <link rel='stylesheet' href='/style/style.css' />
-    <title>{{title}}</title>
-  </head>
-  <body>
-    <h1>header, body, footer 내용이 모이는곳</h1>
-    {{> header}}
-    {{{body}}}
-    {{> footer}}
-  </body>
+<html lang='ko'>
+
+<head>
+  <meta charset='UTF-8' />
+  <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+  <link rel='stylesheet' href='/style/style.css' />
+  <title>CODE:RED</title>
+</head>
+
+<body>
+  {{> header}}
+  {{{body}}}
+  {{> nav}}
+  <script src="/js/location.js"></script>
+</body>
+
 </html>

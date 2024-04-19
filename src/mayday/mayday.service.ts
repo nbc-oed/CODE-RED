@@ -1,9 +1,18 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Location } from './entities/location.entity';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { LocationDto } from './dto/location.dto';
 import { MaydayRecords } from './entities/mayday-records.entity';
+import _ from 'lodash';
+import { Scores } from 'src/common/entities/scores.entity';
+import { RescueCompleteDto } from './dto/rescueCompleteDto.dto';
+import { SendRescueMessageDto } from './dto/sendRescueMessage.dto';
+import { Users } from 'src/common/entities/users.entity';
 
 @Injectable()
 export class MaydayService {
@@ -12,6 +21,11 @@ export class MaydayService {
     private readonly locationRepository: Repository<Location>,
     @InjectRepository(MaydayRecords)
     private readonly maydayRecordsRepository: Repository<MaydayRecords>,
+    @InjectRepository(Scores)
+    private readonly scoreRepository: Repository<Scores>,
+    @InjectRepository(Users)
+    private readonly userRepository: Repository<Users>,
+    private readonly dataSource: DataSource,
   ) {}
 
   // 내위치 정보 저장
@@ -109,46 +123,54 @@ export class MaydayService {
        4. 그것들을 distance_meters순으로 오름차순 정렬
        5. 내위치 기반 1000m안에있는 사람들이 배열 형태로 나온 것이므로 배열의 길이 = 나를 구해줄수 있는 사람수 리턴
    */
-    try {
-      const distanceThreshold = 1000;
-      const queryBuilder = this.locationRepository
-        .createQueryBuilder('location')
-        .select([
-          'location.*',
-          `ST_Distance(ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)::geography,
+
+    const distanceThreshold = 1000;
+    const queryBuilder = this.locationRepository
+      .createQueryBuilder('location')
+      .select([
+        'location.*',
+        `ST_Distance(ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)::geography,
                              ST_SetSRID(location.location, 4326)::geography) AS distance_meters`,
-        ])
-        .setParameter('longitude', longitude)
-        .setParameter('latitude', latitude)
-        .where(
-          `ST_Distance(ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326), 
+      ])
+      .setParameter('longitude', longitude)
+      .setParameter('latitude', latitude)
+      .where(
+        `ST_Distance(ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326), 
                           ST_SetSRID(location.location, 4326)) <= :distanceThreshold`,
-          {
-            distanceThreshold,
-          },
-        )
-        .orderBy('distance_meters');
+        {
+          distanceThreshold,
+        },
+      )
+      .orderBy('distance_meters');
 
-      const helpersArray = await queryBuilder.getRawMany();
+    const helpersArray = await queryBuilder.getRawMany();
 
-      const helpers = helpersArray.filter(
-        (helper) => helper.distance_meters > 0,
-      );
-      return helpers.length;
-    } catch (err) {
-      console.error('An error occurred while finding helpers:', err);
-      return 'Failed';
-    }
+    const helpers = helpersArray.filter((helper) => helper.distance_meters > 0);
+    return {
+      helpers,
+      distanceThreshold: distanceThreshold / 1000,
+    };
   }
 
   // 구조 요청 보내기
-  async sendRequestRescue(userId: number) {
+  async sendRequestRescue(
+    userId: number,
+    sendRescueMessageDto: SendRescueMessageDto,
+  ) {
+    const { context, helpers } = sendRescueMessageDto;
+
     /*
       구조 요청 보내기 로직 추가해야함.
       구조 요청자(user), 구조 요청 수신할 유저들(receivers), 구조 요청 수락할 특정 유저(helper)
     */
+    const helpersId = helpers.map((user_id) => {
+      this.findUserId(+user_id);
+    });
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    // 1km 사람에게 알림보내기 2명헬퍼 -> 메세지 보냄
+    // await this.sendPushNotification(userId, helpersId, context)
 
-    await this.maydayRecordsRepository.insert({ user_id: userId });
+    await this.maydayRecordsRepository.insert({ user_id: userId, context });
 
     /*
       프론트 쪽임.
@@ -174,10 +196,11 @@ export class MaydayService {
 
     const distance = distanceMeter.shortest_distance / 1000;
 
-    const latestRecord = await this.maydayRecordsRepository.findOne({
-      where: { user_id: userId },
-      order: { created_at: 'DESC' },
-    });
+    const latestRecord = await this.findGetMaydayRecord(userId);
+
+    if (!_.isNil(latestRecord.helper_id)) {
+      throw new BadRequestException('이미 헬퍼가 배정되었습니다.');
+    }
 
     await this.maydayRecordsRepository.update(
       { id: latestRecord.id },
@@ -185,6 +208,37 @@ export class MaydayService {
     );
 
     return Number(distance.toFixed(1));
+  }
+
+  // 구조 요청 완료(포인트 및 구조 요청완료 하기)
+  async rescueComplete(userId: number, rescueCompleteDto: RescueCompleteDto) {
+    const { score, reason } = rescueCompleteDto;
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction('READ COMMITTED');
+
+    try {
+      const latestRecord = await this.findGetMaydayRecord(userId);
+
+      await this.maydayRecordsRepository.update(
+        { id: latestRecord.id },
+        { is_completed: true },
+      );
+
+      // point db에는 점수를 부여해야함..(1~10점 => 프론트에서 선택할수있도록 해야할듯.)
+      await this.scoreRepository.insert({
+        user_id: userId,
+        record_id: latestRecord.id,
+        reason,
+        score,
+      });
+    } catch (err) {
+      console.log('Rollback 실행..');
+      await queryRunner.rollbackTransaction();
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   // 거리 계산
@@ -215,5 +269,14 @@ export class MaydayService {
     });
 
     return user;
+  }
+
+  // 유저 아이디로 최근 구조요청 찾기
+  async findGetMaydayRecord(userId: number) {
+    const latestRecord = await this.maydayRecordsRepository.findOne({
+      where: { user_id: userId },
+      order: { created_at: 'DESC' },
+    });
+    return latestRecord;
   }
 }

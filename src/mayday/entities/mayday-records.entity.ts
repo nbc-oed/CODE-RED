@@ -8,8 +8,8 @@ export class MaydayRecords extends BaseModel {
   @Column({ type: 'decimal', nullable: true })
   distance: number;
 
-  @Column({ type: 'time', nullable: true })
-  arrival_time: number;
+  @Column({ type: 'text', nullable: false })
+  context: string;
 
   @Column({ type: 'boolean', default: 'false', nullable: false })
   is_completed: boolean;
