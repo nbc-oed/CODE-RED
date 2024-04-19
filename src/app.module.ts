@@ -37,6 +37,7 @@ import * as redisStore from 'cache-manager-redis-store';
 import { DestinationRiskController } from './destination-risk/destination-risk.controller';
 import { DestinationRiskService } from './destination-risk/destination-risk.service';
 import { DestinationRiskModule } from './destination-risk/destination-risk.module';
+import { AppController } from './app.controller';
 
 const typeOrmModuleOptions = {
   useFactory: async (
@@ -103,7 +104,7 @@ const typeOrmModuleOptions = {
     DestinationRiskModule,
     DmModule,
   ],
-  controllers: [DestinationRiskController],
+  controllers: [DestinationRiskController, AppController],
   providers: [DestinationRiskService],
 })
 export class AppModule {}
