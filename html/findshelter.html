@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>주변 대피소 찾기</title>
+    <style>
+      * {
+        width: 440px;
+        margin: 0 auto;
+        padding: 5px;
+      }
+
+      #divide {
+        height: 0px;
+        width: 440px;
+        border-bottom: solid 2px red;
+      }
+
+      body {
+        font-family: sans-serif;
+        background-color: white;
+        color: black;
+        text-align: center;
+      }
+
+      h2 {
+        font-size: 24px;
+        margin-bottom: 20px;
+      }
+
+      /*header*/
+
+      header {
+        color: red;
+        padding: 20px;
+        text-align: center;
+        display: flex;
+        padding-bottom: 0px;
+      }
+
+      #sos {
+        height: 30px;
+        background-color: red;
+        color: white;
+        width: 40px;
+        cursor: pointer;
+        border-radius: 5px;
+        margin-top: 5px;
+      }
+
+      .header-image {
+        width: 30px;
+        height: 30px;
+      }
+
+      /*footer*/
+      footer {
+        padding: 2px;
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        width: 440px;
+        height: 30px;
+        margin: 20px;
+      }
+
+      .button {
+        background-color: white;
+        color: black;
+        border: solid 1px black;
+        border-radius: 8px;
+        cursor: pointer;
+        width: 60px;
+      }
+
+      .footer-image {
+        width: 25px;
+        height: 25px;
+      }
+
+      #message-form {
+        display: flex;
+      }
+      #message-input {
+        flex-grow: 1;
+        margin-right: 10px;
+      }
+
+      #send-box {
+        width: 100px;
+      }
+
+      #map {
+        width: 440px;
+        height: 300px;
+        border: solid 1px black;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <image
+        src="./images/free-icon-notification-3119322.png"
+        class="header-image"
+      ></image>
+      <h1>CODE:RED</h1>
+      <button id="sos">sos</button>
+    </header>
+
+    <main>
+      <p id="divide"></p>
+      <br />
+      <h2>대피소 찾기</h2>
+      <p id="divide"></p>
+    </main>
+
+    <form id="message-form">
+      <input
+        type="text"
+        id="message-input"
+        placeholder="지역명을 입력해주세요."
+      />
+      <button id="send-box" type="submit">Send</button>
+    </form>
+
+    <div id="map">지도 들어갈 자리</div>
+    <br />
+    <table>
+      <tr>
+        <td>[종로초등학교]</td>
+        <td>종로구 어딘가</td>
+        <td>02-203-4429</td>
+      </tr>
+      <tr>
+        <td>[종로중학교]</td>
+        <td>종로구 어딘가</td>
+        <td>02-203-4429</td>
+      </tr>
+      <tr>
+        <td>[종로고등학교]</td>
+        <td>종로구 어딘가</td>
+        <td>02-203-4429</td>
+      </tr>
+    </table>
+
+    <footer>
+      <a href="./main.html"
+        ><image
+          src="./images/free-icon-home-4690939.png"
+          class="footer-image"
+        ></image
+      ></a>
+      <a href="./findshelter.html"
+        ><image
+          src="./images/free-icon-search-149852.png"
+          class="footer-image"
+        ></image
+      ></a>
+      <a href="./chat-list.html"
+        ><image
+          src="./images/free-icon-bubble-chat-2076218.png"
+          class="footer-image"
+        ></image
+      ></a>
+      <a href="./exchange.html"
+        ><image
+          src="./images/free-icon-exchange-9788303.png"
+          class="footer-image"
+        ></image
+      ></a>
+      <a href="./myinfo.html"
+        ><image
+          src="./images/free-icon-user-3856336.png"
+          class="footer-image"
+        ></image
+      ></a>
+    </footer>
+  </body>
+</html>

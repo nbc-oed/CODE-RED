@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.3.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD"
+      crossorigin="anonymous"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+
+  <body>
+    <div class="container-fluid">
+      <div class="row">
+        <div class="namespaces">
+          <div class="notifications"></div>
+        </div>
+        <div class="rooms">
+          <div class="main-rooms">
+            <h6 class="pointer">
+              <i class="room-caret fa-solid fa-caret-down"></i>users
+            </h6>
+            <div class="user-list"></div>
+          </div>
+        </div>
+        <div class="chat-panel col">
+          <div class="room-header row col-12">
+            <div class="col">
+              <span class="curr-room-text">Current Room</span>
+              <span class="curr-room-num-users"
+                >Users <span class="fa-solid fa-user"></span
+              ></span>
+            </div>
+            <div class="search">
+              <span class="glyphicon glyphicon-search"></span>
+              <input type="text" id="search-box" placeholder="Search" />
+            </div>
+          </div>
+          <div class="message-form">
+            <form id="message-form" id="user-input">
+              <div class="col-sm-12">
+                <input
+                  id="user-message"
+                  type="text"
+                  placeholder="Enter your message"
+                />
+              </div>
+            </form>
+          </div>
+          <ul id="messages" class="col-sm-12"></ul>
+        </div>
+      </div>
+    </div>
+  </body>
+  <script src="../socket.io/socket.io.js"></script>
+  <script src="./dm-utils.js"></script>
+  <script src="./direct-message.js"></script>
+</html>
