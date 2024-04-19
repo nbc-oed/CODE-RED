@@ -178,7 +178,7 @@
   <script>
     // 이 스크립트 태그가 head에 위치 하는 이유: head속 script는 주로 페이지 로딩된 후 페이지 설정, 초기화 작업, 외부 리소스 로딩 등을 맡기 때문. body속 script 태그 보다 늦게 실행됨
     // document.addEventListener : 'DOMContentLoaded'이벤트를 처리하기 위한 메서드
-    document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', () => {
       let mapContainer = document.getElementById('map');
 
       // 지도 생성에 들어갈 옵션 설정. center:지도 초기 중심 좌표 설정하는 속성, level:지도 확대수준. 낮을수록 zoom-in
@@ -195,23 +195,23 @@
       let detailOverlays = [];
 
       // 지도 클릭 시 모든 detailCustomOverlay 숨김 처리
-      kakao.maps.event.addListener(map, 'click', function () {
-        detailOverlays.forEach(function (overlay) {
+      kakao.maps.event.addListener(map, 'click', () => {
+        detailOverlays.forEach(overlay => {
           overlay.setMap(null);
         });
       });
 
       navigator.geolocation
-        .getCurrentPosition(function (position) {
+        .getCurrentPosition(position => {
           let lat = position.coords.latitude, // 위도
               lon = position.coords.longitude; // 경도
 
           const url = `http://localhost:3000/shelters/around?x=${lon}&y=${lat}`;
           fetch(url)
-            .then((response) => {
+            .then(response => {
               return response.json();
             })
-            .then((data) => {
+            .then(data => {
               if (!data.length) {
                 alert('1000m이내에 대피소가 없습니다.');
               } else {
@@ -301,7 +301,7 @@
       })
       document
       .getElementById('searchButton')
-      .addEventListener('click', function () {
+      .addEventListener('click', () => {
         let searchInput = document.getElementById('searchInput').value;
         let url = `http://localhost:3000/shelters/searchMap?search=${searchInput}`
         fetch(url)
@@ -309,7 +309,10 @@
             return response.json();
           })
           .then(data => {
-            let bounds = new kakao.maps.LatLngBounds();
+            if (!data.length) {
+                alert('해당 검색어에 대한 대피소 데이터가 없습니다.');
+              } else {
+                let bounds = new kakao.maps.LatLngBounds();
 
             // 기존 마커 제거 및 배열 초기화. setMap(null):기존에 생성된 마커들 모두 제거
             for (let i = 0; i < markers.length; i++) {
@@ -398,6 +401,8 @@
               searchResultList.appendChild(listItem);
               map.setBounds(bounds);
             });
+              }
+            
           })
           .catch(error => {
             console.error('에러 발생:', error);
