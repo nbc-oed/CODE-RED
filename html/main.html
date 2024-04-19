@@ -85,6 +85,65 @@
         height: 30px;
       }
     </style>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        navigator.geolocation.getCurrentPosition(position => {
+          let lat = position.coords.latitude, // 위도
+              lon = position.coords.longitude; // 경도
+          
+          const url = `http://localhost:3000/destination-risk/coordinate?x=${lon}&y=${lat}`;
+          fetch(url)
+            .then(response => {
+              return response.text();
+            })
+            .then(data => {
+              if (!data.length) {
+                alert('위치 정보를 받아오지 못했습니다.');
+              } else {
+                let myLocation = document.getElementById('user-location');
+                myLocation.innerHTML = '나의 현재 위치 : ' + data;
+
+                const populationCongestTransitionUrl = `http://localhost:3000/destination-risk/check?destination=${data}`
+                fetch(populationCongestTransitionUrl)
+                .then(response => {
+                return response.json();
+                })
+                .then(data => {
+                  if (!data) {
+                    alert('데이터를 찾지 못했습니다.');
+                  } else {
+                    let closestLocationCongest = document.getElementById('congest')
+                    closestLocationCongest.innerHTML = data['실시간 장소 혼잡도']
+                    let closestLocationTransition = document.getElementById('transition')
+                    closestLocationTransition.innerHTML = data['예상 인구']
+                    let closestLocationTime = document.getElementById('time')
+                    closestLocationTime.innerHTML = data['기준 시간']
+                  }
+                })
+              }
+            })
+          const requestShelterUrl = `http://localhost:3000/shelters/nearby?x=${lon}&y=${lat}`;
+          fetch(requestShelterUrl)
+          .then(response => {
+              return response.json();
+          })
+          .then(data => {
+            if (!data.facility_name) {
+              alert('가까운 대피소를 찾지 못했습니다.');
+            } else {
+              let closestShelter = document.getElementById('closest-shelter')
+              closestShelter.innerHTML = '가까운 대피소 : ' + data.facility_name
+            }
+        })
+      })
+      document.getElementById('searchButton').addEventListener('click', () => {
+        let searchInput = document.getElementById('searchInput').value
+        let url = `./destination-detail.html?destination=${encodeURIComponent(searchInput)}`
+        window.location.href = url
+      })
+    })
+
+    </script>
   </head>
   <body>
     <header>
@@ -102,7 +161,7 @@
 
       <div id="user-location">나의 현재 위치 : 종로구</div>
 
-      <div id="user-location">가까운 대피소 : 종로중학교</div>
+      <div id="closest-shelter">가까운 대피소 : 종로중학교</div>
 
       <h2>매우 안전</h2>
       <img
@@ -114,28 +173,28 @@
       <table>
         <tr>
           <th>인구 밀집</th>
-          <th>재난 현황</th>
           <th>인구 추이</th>
+          <th>재난 현황</th>
           <th>사건 / 사고</th>
         </tr>
 
         <tr>
-          <td>매우 낮음</td>
+          <td id="congest">매우 낮음</td>
+          <td id="transition">약 2천명</td>
           <td>0건</td>
-          <td>약 2천명</td>
           <td>5건</td>
         </tr>
       </table>
-      <div style="color: gray">위험도 측정 기준 : 2024-03-27 15:34:52 기준</div>
+      <div style="color: gray" id="time">위험도 측정 기준 : 2024-03-27 15:34:52 기준</div>
     </main>
 
     <form action="">
       <input
         type="text, submit"
-        id="search-box"
+        id="searchInput"
         placeholder="이동할 목적지를 입력해주세요."
       />
-      <button type="submit">검색</button>
+      <button id="searchButton" type="button" ><a href="./destination-detail.html">검색</a></button>
     </form>
 
     <footer>
