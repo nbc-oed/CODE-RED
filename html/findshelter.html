@@ -29,14 +29,13 @@
         margin-bottom: 20px;
       }
 
-      /*header*/
-
       header {
         color: red;
         padding: 20px;
         text-align: center;
         display: flex;
         padding-bottom: 0px;
+        padding-left: 10px;
       }
 
       #sos {
@@ -81,22 +80,332 @@
 
       #message-form {
         display: flex;
+        min-width: 450px;
       }
-      #message-input {
+      #searchInput {
         flex-grow: 1;
         margin-right: 10px;
       }
 
-      #send-box {
+      #searchButton {
         width: 100px;
       }
 
       #map {
-        width: 440px;
+        width: 438.4px;
         height: 300px;
+        left: 5px;
         border: solid 1px black;
       }
+
+      .detail-content {
+        background-color: white;
+        border: 1px solid black;
+        border-radius: 7px;
+        width : 300px;
+        height : 80px;
+        text-align: start;
+        font-size: 10px;
+        font-weight: bold;
+        padding : 3px;
+        box-shadow: 0 1px 1px rgb(0 0 0), 1px 1px 1px rgba(0, 0, 0);
+        padding-bottom: 0px;
+      }
+      .detail-content .facility-name {
+        font-size: 14px;
+        color: red;
+        width: 300px;
+        padding: 3px;
+      }
+      .detail-content .address {
+        width: 300px;
+        padding: 3px;
+      }
+      .detail-content .facility-area {
+        width: 300px;
+        padding: 3px;
+      }
+      .detail-content .department-number {
+        width: 300px;
+        padding: 3px;
+        text-align: end;
+      }
+
+      .overlay {
+        background-color: white;
+        border: 5px solid white;
+        border-radius: 7px;
+        text-align: center;
+        display: inline;
+        min-width: 140px;
+        max-width: 200px;
+        padding: 0px;
+        box-shadow: 0 1px 1px rgb(0 0 0), 0 3px 6px rgba(0, 0, 0)
+      }
+
+      #searchResultList {
+        min-width: 445px;
+        max-width: 500px;
+        max-height: 290px;
+        overflow-y: auto;
+        text-align: start;
+        padding-top: 7px;
+        padding-left: 0px;
+        margin-left: 5px;
+      }
+      .list-item {
+        border: 1px solid black;
+        height: 90px;
+        max-width: 430px;
+        margin-left: 2px;
+        border-radius: 7px;
+        margin-bottom: 4px 
+      }
+      .list-facility-name {
+        font-weight: bold;
+        font-size: 17px;
+        color: red;
+        text-shadow: 0 0 black;
+      }
+      .list-department-number {
+        font-weight: bold;
+      }
     </style>
+    <script
+    type="text/javascript"
+    src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=45e973ac009f5ac6bf6e02707d6f4e30&libraries=services"
+  ></script>
+  <script>
+    // 이 스크립트 태그가 head에 위치 하는 이유: head속 script는 주로 페이지 로딩된 후 페이지 설정, 초기화 작업, 외부 리소스 로딩 등을 맡기 때문. body속 script 태그 보다 늦게 실행됨
+    // document.addEventListener : 'DOMContentLoaded'이벤트를 처리하기 위한 메서드
+    document.addEventListener('DOMContentLoaded', function () {
+      let mapContainer = document.getElementById('map');
+
+      // 지도 생성에 들어갈 옵션 설정. center:지도 초기 중심 좌표 설정하는 속성, level:지도 확대수준. 낮을수록 zoom-in
+      let mapOption = {
+        center: new kakao.maps.LatLng(37.502391, 127.044501),
+        level: 3,
+      };
+
+      let map = new kakao.maps.Map(mapContainer, mapOption); // kakao.maps.Map : 지도 객체 생성 메서드. 지도 표시 DOM객체인 mapContainer와 지도 옵션 객체인 mapOption을 매개변수로 받음
+
+      // 마커를 담을 배열 생성
+      let markers = [];
+      // detailCustomOverlay를 저장할 배열 생성
+      let detailOverlays = [];
+
+      // 지도 클릭 시 모든 detailCustomOverlay 숨김 처리
+      kakao.maps.event.addListener(map, 'click', function () {
+        detailOverlays.forEach(function (overlay) {
+          overlay.setMap(null);
+        });
+      });
+
+      navigator.geolocation
+        .getCurrentPosition(function (position) {
+          let lat = position.coords.latitude, // 위도
+              lon = position.coords.longitude; // 경도
+
+          const url = `http://localhost:3000/shelters/around?x=${lon}&y=${lat}`;
+          fetch(url)
+            .then((response) => {
+              return response.json();
+            })
+            .then((data) => {
+              if (!data.length) {
+                alert('1000m이내에 대피소가 없습니다.');
+              } else {
+                let bounds = new kakao.maps.LatLngBounds();
+
+                // 기존 마커 제거 및 배열 초기화. setMap(null):기존에 생성된 마커들 모두 제거
+                for (let i = 0; i < markers.length; i++) {
+                  markers[i].setMap(null);
+                }
+                markers = [];
+
+                // 기존 디테일 커스텀 오버레이 제거 및 배열 초기화
+                detailOverlays.forEach(overlay => {
+                  overlay.setMap(null);
+                });
+                detailOverlays = [];
+
+                // 검색 결과에 따른 마커 생성.
+                data.forEach(item => {
+                  // 검색된 주소 좌표 할당
+                  let positions = { x: item.longitude, y: item.latitude };
+ 
+                  // kakao.maps.Marker: 마커 생성 메서드(객체), .LatLng:좌표를 품은 객체 생성 메서드(해당 코드에선 검색 결과의 좌표를 할당)
+                  let marker = new kakao.maps.Marker({
+                    map,
+                    position: new kakao.maps.LatLng(positions.y, positions.x),
+                  });
+
+                  markers.push(marker);
+
+                  // 커스텀 오버레이에 들어갈 컨텐츠 채워 넣기
+                  let content = `<div class ="overlay">${item.facility_name}</div>`;
+                  let detailContent = `
+                  <div class ="detail-content">
+                    <div class = "facility-name">${item.facility_name}</div>
+                    <div class = "address">${item.address}</div>
+                    <div class = "facility-area">면적:${item.facility_area}㎡</div>
+                    <div class = "department-number">☎ ${item.department_number}</div>
+                  </div>`;
+
+                  // 커스텀 오버레이 생성
+                  let customOverlay = new kakao.maps.CustomOverlay({
+                    position: marker.getPosition(),
+                    content,
+                  });
+                  let detailCustomOverlay = new kakao.maps.CustomOverlay({
+                    position: marker.getPosition(),
+                    content: detailContent,
+                    yAnchor: 1.5,
+                  });
+
+                  // 커스텀 오버레이에 대한 이벤트 설정
+                  kakao.maps.event.addListener(
+                    marker,
+                    'mouseover',
+                    () => {
+                      customOverlay.setMap(map);
+                    },
+                  );
+                  kakao.maps.event.addListener(
+                    marker,
+                    'mouseout',
+                    () => {
+                      customOverlay.setMap(null);
+                    },
+                  );
+                  kakao.maps.event.addListener(marker, 'click', () => {
+                    // 클릭 이벤트가 발생하면 customOverlay를 숨김
+                    customOverlay.setMap(null);
+                    detailOverlays.forEach(overlay => {
+                      // 다른 overlay 숨김
+                      overlay.setMap(null);
+                    });
+                    detailCustomOverlay.setMap(map);
+                  });
+                  // 생성된 detailCustomOverlay를 배열에 추가
+                  detailOverlays.push(detailCustomOverlay);
+                  bounds.extend(
+                    new kakao.maps.LatLng(positions.y, positions.x),
+                  );
+                  map.setBounds(bounds);
+                });
+              }
+            }).catch(error => {
+          console.error('에러 발생:', error);
+        });
+      })
+      document
+      .getElementById('searchButton')
+      .addEventListener('click', function () {
+        let searchInput = document.getElementById('searchInput').value;
+        let url = `http://localhost:3000/shelters/searchMap?search=${searchInput}`
+        fetch(url)
+          .then(response =>{
+            return response.json();
+          })
+          .then(data => {
+            let bounds = new kakao.maps.LatLngBounds();
+
+            // 기존 마커 제거 및 배열 초기화. setMap(null):기존에 생성된 마커들 모두 제거
+            for (let i = 0; i < markers.length; i++) {
+              markers[i].setMap(null);
+            }
+            markers = [];
+
+            // 기존 디테일 커스텀 오버레이 제거 및 배열 초기화
+            detailOverlays.forEach(overlay => {
+              overlay.setMap(null);
+            });
+            detailOverlays = [];
+
+            // 검색 결과 목록 초기화
+            let searchResultList =
+              document.getElementById('searchResultList');
+            searchResultList.innerHTML = ''; // 이전 검색 결과를 비웁니다.
+
+            // 검색 결과에 따른 마커 생성.
+            data.forEach((item, index) => {
+              // 검색된 주소 좌표 할당
+              let positions = { x: item.longitude, y: item.latitude };
+              // kakao.maps.Marker: 마커 생성 메서드(객체), .LatLng:좌표를 품은 객체 생성 메서드(해당 코드에선 검색 결과의 좌표를 할당)
+              let marker = new kakao.maps.Marker({
+                map,
+                position: new kakao.maps.LatLng(positions.y, positions.x),
+              });
+
+              markers.push(marker);
+
+              // 커스텀 오버레이에 들어갈 컨텐츠 채워 넣기
+              let content = `<div class ="overlay">${item.facility_name}</div>`;
+              let detailContent = `
+                <div class ="detail-content">
+                  <div class = "facility-name">${item.facility_name}</div>
+                  <div class = "address">${item.address}</div>
+                  <div class = "facility-area">면적:${item.facility_area}㎡</div>
+                  <div class = "department-number">☎ ${item.department_number}</div>
+                </div>`;
+
+              // 커스텀 오버레이 생성
+              let customOverlay = new kakao.maps.CustomOverlay({
+                position: marker.getPosition(),
+                content,
+              });
+              let detailCustomOverlay = new kakao.maps.CustomOverlay({
+                position: marker.getPosition(),
+                content: detailContent,
+                yAnchor: 1.5,
+              });
+
+              // 커스텀 오버레이에 대한 이벤트 설정
+              kakao.maps.event.addListener(marker, 'mouseover', () => {
+                customOverlay.setMap(map);
+              });
+              kakao.maps.event.addListener(marker, 'mouseout', () => {
+                customOverlay.setMap(null);
+              });
+              kakao.maps.event.addListener(marker, 'click', () => {
+                // 클릭 이벤트가 발생하면 customOverlay를 숨김
+                customOverlay.setMap(null);
+                detailOverlays.forEach(function (overlay) {
+                  // 다른 overlay 숨김
+                  overlay.setMap(null);
+                });
+                detailCustomOverlay.setMap(map);
+              });
+              // 생성된 detailCustomOverlay를 배열에 추가
+              detailOverlays.push(detailCustomOverlay);
+              bounds.extend(new kakao.maps.LatLng(positions.y, positions.x));
+
+              // 검색 결과 목록에 항목 추가
+              let listItem = document.createElement('div');
+              listItem.classList.add('list-item');
+              listItem.innerHTML = `
+                <div class = "list-facility-name">${item.facility_name}</div>
+                <div class = "list-address">${item.address}</div>
+                <div class = "list-department-number">☎ ${item.department_number}</div>`;
+              // 검색 결과 목록 항목에 마우스 이벤트 리스너 추가
+              listItem.addEventListener('mouseover', () => {
+                customOverlay.setMap(map); // 마우스 오버 시 커스텀 오버레이 표시
+              });
+              listItem.addEventListener('mouseout', () => {
+                customOverlay.setMap(null); // 마우스 아웃 시 커스텀 오버레이 숨김
+              });
+              searchResultList.appendChild(listItem);
+              map.setBounds(bounds);
+            });
+          })
+          .catch(error => {
+            console.error('에러 발생:', error);
+          });
+      });
+    });
+    
+  </script>
   </head>
   <body>
     <header>
@@ -118,31 +427,14 @@
     <form id="message-form">
       <input
         type="text"
-        id="message-input"
+        id="searchInput"
         placeholder="지역명을 입력해주세요."
       />
-      <button id="send-box" type="submit">Send</button>
+      <button id="searchButton" type="button">검색</button>
     </form>
 
-    <div id="map">지도 들어갈 자리</div>
-    <br />
-    <table>
-      <tr>
-        <td>[종로초등학교]</td>
-        <td>종로구 어딘가</td>
-        <td>02-203-4429</td>
-      </tr>
-      <tr>
-        <td>[종로중학교]</td>
-        <td>종로구 어딘가</td>
-        <td>02-203-4429</td>
-      </tr>
-      <tr>
-        <td>[종로고등학교]</td>
-        <td>종로구 어딘가</td>
-        <td>02-203-4429</td>
-      </tr>
-    </table>
+    <div id="map"></div>
+    <div id="searchResultList"></div>
 
     <footer>
       <a href="./main.html"
