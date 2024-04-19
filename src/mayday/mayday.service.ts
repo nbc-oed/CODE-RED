@@ -12,6 +12,7 @@ import _ from 'lodash';
 import { Scores } from 'src/common/entities/scores.entity';
 import { RescueCompleteDto } from './dto/rescueCompleteDto.dto';
 import { SendRescueMessageDto } from './dto/sendRescueMessage.dto';
+import { Users } from 'src/common/entities/users.entity';
 
 @Injectable()
 export class MaydayService {
@@ -22,6 +23,8 @@ export class MaydayService {
     private readonly maydayRecordsRepository: Repository<MaydayRecords>,
     @InjectRepository(Scores)
     private readonly scoreRepository: Repository<Scores>,
+    @InjectRepository(Users)
+    private readonly userRepository: Repository<Users>,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -120,36 +123,33 @@ export class MaydayService {
        4. 그것들을 distance_meters순으로 오름차순 정렬
        5. 내위치 기반 1000m안에있는 사람들이 배열 형태로 나온 것이므로 배열의 길이 = 나를 구해줄수 있는 사람수 리턴
    */
-    try {
-      const distanceThreshold = 1000;
-      const queryBuilder = this.locationRepository
-        .createQueryBuilder('location')
-        .select([
-          'location.*',
-          `ST_Distance(ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)::geography,
+
+    const distanceThreshold = 1000;
+    const queryBuilder = this.locationRepository
+      .createQueryBuilder('location')
+      .select([
+        'location.*',
+        `ST_Distance(ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)::geography,
                              ST_SetSRID(location.location, 4326)::geography) AS distance_meters`,
-        ])
-        .setParameter('longitude', longitude)
-        .setParameter('latitude', latitude)
-        .where(
-          `ST_Distance(ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326), 
+      ])
+      .setParameter('longitude', longitude)
+      .setParameter('latitude', latitude)
+      .where(
+        `ST_Distance(ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326), 
                           ST_SetSRID(location.location, 4326)) <= :distanceThreshold`,
-          {
-            distanceThreshold,
-          },
-        )
-        .orderBy('distance_meters');
+        {
+          distanceThreshold,
+        },
+      )
+      .orderBy('distance_meters');
 
-      const helpersArray = await queryBuilder.getRawMany();
+    const helpersArray = await queryBuilder.getRawMany();
 
-      const helpers = helpersArray.filter(
-        (helper) => helper.distance_meters > 0,
-      );
-      return helpers;
-    } catch (err) {
-      console.error('An error occurred while finding helpers:', err);
-      return 'Failed';
-    }
+    const helpers = helpersArray.filter((helper) => helper.distance_meters > 0);
+    return {
+      helpers,
+      distanceThreshold: distanceThreshold / 1000,
+    };
   }
 
   // 구조 요청 보내기
@@ -157,15 +157,19 @@ export class MaydayService {
     userId: number,
     sendRescueMessageDto: SendRescueMessageDto,
   ) {
-    const { context } = sendRescueMessageDto;
-    // findHelper함수에서 헬퍼 프론트로 보내니 프론트에서 그대로 가져와도 될듯.
-    // 그대로 헬퍼 데려와서 있는지 인증만 시키면됌.
+    const { context, helpers } = sendRescueMessageDto;
 
     /*
       구조 요청 보내기 로직 추가해야함.
       구조 요청자(user), 구조 요청 수신할 유저들(receivers), 구조 요청 수락할 특정 유저(helper)
     */
+    const helpersId = helpers.map((user_id) => {
+      this.findUserId(+user_id);
+    });
+    const user = await this.userRepository.findOne({ where: { id: userId } });
     // 1km 사람에게 알림보내기 2명헬퍼 -> 메세지 보냄
+    // await this.sendPushNotification(userId, helpersId, context)
+
     await this.maydayRecordsRepository.insert({ user_id: userId, context });
 
     /*
