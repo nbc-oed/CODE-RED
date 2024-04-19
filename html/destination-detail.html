@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>목적지 검색 상세조회</title>
+    <style>
+      * {
+        width: 440px;
+        margin: 0 auto;
+        padding: 5px;
+      }
+
+      #divide {
+        height: 0px;
+        border-bottom: solid 2px red;
+      }
+
+      body {
+        font-family: sans-serif;
+        background-color: white;
+        color: black;
+        text-align: center;
+      }
+
+      #corong-image {
+        width: 170px;
+        height: 150px;
+        margin-bottom: 20px;
+        display: flex;
+      }
+
+      /*header*/
+
+      header {
+        color: red;
+        padding: 20px;
+        text-align: center;
+        display: flex;
+        padding-bottom: 0px;
+      }
+
+      #sos {
+        height: 30px;
+        background-color: red;
+        color: white;
+        width: 40px;
+        cursor: pointer;
+        border-radius: 5px;
+        margin-top: 5px;
+      }
+
+      .header-image {
+        width: 30px;
+        height: 30px;
+      }
+
+      /*footer*/
+      footer {
+        padding: 2px;
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        width: 440px;
+        height: 30px;
+        margin: 20px;
+      }
+
+      .button {
+        background-color: white;
+        color: black;
+        border: solid 1px black;
+        border-radius: 8px;
+        cursor: pointer;
+        width: 60px;
+      }
+
+      .footer-image {
+        width: 25px;
+        height: 25px;
+      }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search)
+            const destination = urlParams.get('destination')
+            console.log(destination)
+            if (destination) {
+                fetch (`http://localhost:3000/destination-risk/detail?destination=${destination}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if(!data['기준 장소']) {
+                            alert('해당 데이터를 찾지 못했습니다.')
+                        } else {
+                            console.log(data)
+                            let guide = document.getElementById('risk')
+                            guide.innerHTML = `현재 ${destination}와 가까운 ${data['기준 장소']}의 위험도`
+                            let message = document.getElementById('message')
+                            message.innerHTML = data['관련 안내사항']
+                            let destinationCongest = document.getElementById('congest')
+                            destinationCongest.innerHTML = data['실시간 장소 혼잡도']
+                            let destinationTransition = document.getElementById('transition')
+                            destinationTransition.innerHTML = data['예상 인구']
+                            let destinationWeather = document.getElementById('weather')
+                            destinationWeather.innerHTML = data['비,눈 관련 사항']
+                        }
+                    })
+            }
+        })
+    </script>
+  </head>
+  <body>
+    <header>
+      <image
+        src="./images/free-icon-notification-3119322.png"
+        class="header-image"
+      ></image>
+      <h1>CODE:RED</h1>
+      <button id="sos">sos</button>
+    </header>
+
+    <main>
+      <p id="divide"></p>
+      <form id="message-form">
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="목적지를 입력해주세요."
+        />
+        <button id="searchButton" type="button">검색</button>
+      </form>
+      <div style="color: gray" id="risk">현재 '목적지'와 가까운 '인근지역'의 위험도</div>
+      <h2>불안</h2>
+      <img
+        src="https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2FoFvs6%2FbtsGHblHYxt%2F1kXhsa7cOG2FcjC2UzUIF1%2Fimg.png"
+        alt="프로필 사진"
+        id="corong-image"
+      />
+    </main>
+    
+    <table>
+        <tr>
+          <th>인구 밀집</th>
+          <th>인구 추이</th>
+          <th>재난 현황</th>
+          <th>사건 / 사고</th>
+        </tr>
+        
+        <div style="color: rgb(1, 4, 15); font-size: 27px; font-weight: bold;" id="message">으.. 불안한 장소에요.</div>
+        <tr>
+          <td id="congest">매우 낮음</td>
+          <td id="transition">약 2천명</td>
+          <td>0건</td>
+          <td>5건</td>
+        </tr>
+      </table>
+      <div style="color: rgb(90, 76, 239)" id="weather">비 또는 눈 소식이 없어요.  , 2024-04-19 23:50 기준</div>
+      <div style="color: gray" id="time">위험도 측정 기준 : 2024-03-27 15:34:52 기준</div>
+      <br>
+      <table>
+        <th>위험도 측정 기준</th>
+        <tr>
+          <th>인구 밀집</th>
+          <td id="congest">매우 낮음</td>
+        </tr>
+        <tr>
+          <th>인구 추이</th>
+          <td id="transition">약 2천명</td>
+        </tr>
+        <tr>
+            <th>재난 현황</th>
+            <td>0건</td>
+        </tr>
+        <tr>
+            <th>사건 / 사고</th>
+            <td>5건</td>
+        </tr>
+        </table>
+    <footer>
+      <a href="./main.html"
+        ><image
+          src="./images/free-icon-home-4690939.png"
+          class="footer-image"
+        ></image
+      ></a>
+      <a href="./findshelter.html"
+        ><image
+          src="./images/free-icon-search-149852.png"
+          class="footer-image"
+        ></image
+      ></a>
+      <a href="./chat-list.html"
+        ><image
+          src="./images/free-icon-bubble-chat-2076218.png"
+          class="footer-image"
+        ></image
+      ></a>
+      <a href="./exchange.html"
+        ><image
+          src="./images/free-icon-exchange-9788303.png"
+          class="footer-image"
+        ></image
+      ></a>
+      <a href="./myinfo.html"
+        ><image
+          src="./images/free-icon-user-3856336.png"
+          class="footer-image"
+        ></image
+      ></a>
+    </footer>
+  </body>
+</html>
