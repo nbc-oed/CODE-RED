@@ -1,5 +1,7 @@
-document.querySelector('.btn').addEventListener('click', () => {
-  function saveLocation(latitude, longitude, timestamp) {
+document.querySelector('#acceptBtn').addEventListener('click', (e) => {
+  e.preventDefault();
+  function saveLocation(latitude, longitude) {
+    console.log(latitude, longitude);
     fetch('/mayday/accept-rescue', {
       method: 'POST',
       headers: {
