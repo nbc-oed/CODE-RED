@@ -9,8 +9,6 @@ import { UtilsModule } from './utils/utils.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { PostsModule } from './posts/posts.module';
-import { NewsModule } from './news/news.module';
-import { CrawlingModule } from './crawling/crawling.module';
 import { MaydayModule } from './mayday/mayday.module';
 import { ChatModule } from './chat/chat.module';
 import { SheltersModule } from './shelters/shelters.module';
@@ -27,7 +25,7 @@ import { Shelters } from './common/entities/shelters.entity';
 import { EmergencyData } from './common/entities/emergency-data.entity';
 import { DisasterData } from './common/entities/disaster-data.entity';
 import { NotificationMessages } from './common/entities/notification-messages.entity';
-import { News } from './news/entities/news.entity';
+import { News } from './common/entities/news.entity';
 import { Location } from './mayday/entities/location.entity';
 import { DirectMessages } from './common/entities/direct-messages.entity';
 
@@ -95,9 +93,7 @@ const typeOrmModuleOptions = {
     AwsModule,
     UtilsModule,
     PostsModule,
-    NewsModule,
     NotificationsModule,
-    CrawlingModule,
     ChatModule,
     MaydayModule,
     SheltersModule,
