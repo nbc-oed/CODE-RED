@@ -2,5 +2,5 @@ import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class SmsService {
-  async sendSms(userId, content) {}
+  async sendSmsNotification(userId, content) {}
 }

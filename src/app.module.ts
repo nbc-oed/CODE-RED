@@ -24,7 +24,6 @@ import { Follows } from './common/entities/follows.entity';
 import { Scores } from './common/entities/scores.entity';
 import { MaydayRecords } from './mayday/entities/mayday-records.entity';
 import { Shelters } from './common/entities/shelters.entity';
-import { EmergencyData } from './common/entities/emergency-data.entity';
 import { DisasterData } from './common/entities/disaster-data.entity';
 import { NotificationMessages } from './common/entities/notification-messages.entity';
 import { News } from './news/entities/news.entity';
@@ -59,7 +58,6 @@ const typeOrmModuleOptions = {
       Scores,
       MaydayRecords,
       Shelters,
-      EmergencyData,
       DisasterData,
       NotificationMessages,
       News,

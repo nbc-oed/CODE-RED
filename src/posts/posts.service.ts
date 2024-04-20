@@ -12,7 +12,7 @@ import { AwsService } from 'src/aws/aws.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { Posts } from 'src/common/entities/posts.entity';
 import { TokenExpiredError } from '@nestjs/jwt';
-import { FcmService } from 'src/notifications/messing-services/firebase/fcm.service';
+import { FcmService } from 'src/notifications/messaging-services/firebase/fcm.service';
 
 @Injectable()
 export class PostsService {

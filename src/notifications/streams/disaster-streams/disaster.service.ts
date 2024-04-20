@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { RedisService } from '../../redis/redis.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
@@ -8,38 +8,40 @@ import { Repository } from 'typeorm';
 import axios from 'axios';
 import convert from 'xml-js';
 import { RedisKeys } from 'src/notifications/redis/redis.keys';
+import { RealtimeNotificationService } from '../realtime-notifications.service';
 
 @Injectable()
 export class DisasterService {
   private lastFetchedTime: Date;
+  private readonly logger = new Logger(DisasterService.name);
 
   constructor(
     @InjectRepository(DisasterData)
     private disasterRepository: Repository<DisasterData>,
     private configService: ConfigService,
     private redisService: RedisService,
+    private realtimeNotificationsService: RealtimeNotificationService,
   ) {
     this.lastFetchedTime = new Date();
   }
 
   /**
    * Producer - 공공데이터 재난 문자 모니터링 (지속적으로 데이터 수집 -> Disaster-Streams 적재)
-   *
-   * 추가 변경사항
-   * - any 타입 -> 명확한 타입 사용으로 개선.
-   * - saveDisasterData 메서드 추가
-   * - 중복 데이터 저장 이슈 해결. but Cron 30초 주기에 따라 계속되는 DB 작업의 성능 이슈가 발생할 것으로 예상됨.
-   * - fetch 주기를 10분으로 조정하고, 해당 이슈를 '배치 처리'로 해결해보려고함.
-   *
-   * TODO:
-   * - 왜 DB에 저장해야하는지?
+   * TODO: 왜 DB에 저장해야하는지?
    *    : 주기적으로 DB에 저장하는 것으로 장기적인 데이터 보관 및 통계분석 작업이 가능해진다?
    * - 다른 대체 저장 수단은 없는지?
    *    : AWS S3를 백업 저장소처럼 사용?
+   * 
+   * Redis Stream 기본 명령어
+      XADD: 스트림에 새 메시지 추가
+      XREAD / XREADGROUP: 스트림에서 메시지 읽기
+      XREADGROUP: 컨슈머 그룹을 사용하여 메시지를 처리
+      XACK: 메시지 처리를 확인
+      XGROUP: 컨슈머 그룹을 생성하거나 관리
    */
 
-  @Cron(CronExpression.EVERY_10_MINUTES) //EVERY_30_SECONDS
-  async handleCron() {
+  @Cron(CronExpression.EVERY_30_SECONDS) //EVERY_30_SECONDS EVERY_10_MINUTES
+  public async handleCron() {
     const disasterDataList = await this.fetchDisasterData();
     for (const disasterData of disasterDataList) {
       await this.sendDisasterInfoToStreams(disasterData);
@@ -75,8 +77,8 @@ export class DisasterService {
         !disasterDataJson['DisasterMsg2'] ||
         !disasterDataJson['DisasterMsg2']['row']
       ) {
-        console.error(
-          'Invalid data structure:',
+        this.logger.error(
+          'API 응답 구조 에러, Invalid data structure:',
           disasterDataJson.OpenAPI_ServiceResponse.cmmMsgHeader.errMsg,
           disasterDataJson.OpenAPI_ServiceResponse.cmmMsgHeader.returnAuthMsg,
         );
@@ -112,65 +114,46 @@ export class DisasterService {
             messageDate === currentDateString
           );
         });
-      //console.log('result----------------------', result);
+      this.logger.log('재난 문자 발송현황 데이터 수집 성공');
 
       return result;
     } catch (error) {
-      console.log('axios 에러', error);
+      this.logger.log('AXIOS 에러, Fetching Disaster Data', error);
       return [];
     }
   }
 
   // 1-2. 재난 문자 데이터를 Redis Stream에서 관리
-  async sendDisasterInfoToStreams(disasterData: DisasterData) {
+  private async sendDisasterInfoToStreams(disasterData: DisasterData) {
     for (const area of disasterData.locationName) {
       const disasterStreamKey = RedisKeys.disasterStream(area);
+      await this.initializeStreamIfNeeded(disasterStreamKey);
+      await this.addLatestDataToExistingStream(disasterData, area);
 
-      try {
-        const streamExists =
-          await this.redisService.client.exists(disasterStreamKey);
-        if (streamExists) {
-          // 존재한다면, 가장 최신의 데이터를 추가
-          await this.addLatestDataToExistingStream(disasterData, area);
-        } else {
-          // 존재하지 않는다면, 자동으로 데이터를 추가
-          await this.addDataToStream(disasterData, area);
-        }
-      } catch (error) {
-        // NOKEY 에러가 발생할 경우, 더미 데이터를 추가한 다음부터 수신한 데이터 추가
-        if (error.message.includes('NOKEY')) {
-          await this.initializeStream(disasterStreamKey);
-          await this.addDataToStream(disasterData, area);
-        } else {
-          throw error;
-        }
-      }
+      // 스트림에 데이터를 추가했다면, 해당 지역에 대한 모니터링 시작
+      await this.realtimeNotificationsService.realTimeMonitoringStartAndProcessPushMessages(
+        area,
+      );
     }
   }
 
-  async initializeStream(streamKey: string) {
-    await this.redisService.client.xadd(streamKey, '*', 'init', '1');
+  // 스트림이 존재하지 않을 때에만, 자동으로 지역명 스트림 생성
+  private async initializeStreamIfNeeded(disasterStreamKey: string) {
+    const existingStream =
+      await this.redisService.client.exists(disasterStreamKey);
+
+    if (!existingStream) {
+      await this.redisService.client.xgroup(
+        'CREATE',
+        disasterStreamKey,
+        'notificationGroup',
+        '$',
+        'MKSTREAM',
+      );
+    }
   }
 
-  async addDataToStream(disasterData: DisasterData, area: string) {
-    const disasterStreamKey = RedisKeys.disasterStream(area);
-    await this.redisService.client.xadd(
-      disasterStreamKey,
-      '*',
-      'message',
-      JSON.stringify(disasterData),
-    );
-    await this.updateLastTimestamp(
-      disasterStreamKey,
-      new Date(disasterData.send_datetime).toISOString(),
-    );
-  }
-
-  async updateLastTimestamp(streamKey: string, timestamp: string) {
-    const lastTimestampKey = RedisKeys.lastTimestamp(streamKey);
-    await this.redisService.client.set(lastTimestampKey, timestamp);
-  }
-
+  // 스트림이 존재한다면, 저장된 마지막 스탬프를 확인/업데이트하고 최신 데이터인지 검증하면서 추가
   async addLatestDataToExistingStream(
     disasterData: DisasterData,
     area: string,
@@ -188,6 +171,10 @@ export class DisasterService {
         '*',
         'message',
         JSON.stringify(disasterData),
+      );
+
+      this.logger.log(
+        `${area} - 지역 재난 데이터 스트림 업데이트 완료,${new Date(lastTimestamp)}`,
       );
       await this.redisService.client.set(
         lastTimestampKey,
@@ -208,12 +195,9 @@ export class DisasterService {
 
       if (!existingData) {
         const newDisasterData = this.disasterRepository.create(disasterData);
-        try {
-          await this.disasterRepository.save(newDisasterData);
-        } catch (error) {
-          console.error('DisasterData 저장 에러', error);
-        }
+        await this.disasterRepository.save(newDisasterData);
       }
     }
+    this.logger.log(`DisasterData 백업 완료...`);
   }
 }
