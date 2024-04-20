@@ -28,6 +28,7 @@
         height: 150px;
         margin-bottom: 20px;
         display: flex;
+        padding-top: 20px;
       }
 
       /*header*/
@@ -43,6 +44,7 @@
       h2 {
         font-size: 24px;
         color: green;
+        padding-top: 20px;
       }
 
       #sos {
@@ -64,6 +66,40 @@
         width: 440px;
         height: 30px;
         margin: 20px;
+      }
+
+      #user-location, #closest-shelter {
+        font-weight: bold;
+        font-size: 17px;
+      }
+      #population, #disaster, #accident {
+        font-size: 19px;
+      }
+      #time {
+        text-align: end;
+      }
+      
+      #inputButton {
+        display: flex;
+        gap: 5px;
+        margin-top: 15px
+      }
+      #searchInput {
+        background-color: #2196F3;
+        border-radius: 7px;
+        border: 1px solid white;
+      }
+      #searchInput::placeholder {
+        color : white;
+        padding-left: 5px;
+      }
+      #searchButton {
+        width: 100px;
+        height: 50px;
+        background-color: #2196F3;
+        border-radius: 7px;
+        border: 1px solid white;
+        color : white;
       }
 
       .button {
@@ -131,6 +167,36 @@
                     }
                     console.log(congestScore)
 
+                    // 점수에 따른 문구 변경
+                    let riskLevelElement = document.getElementById('riskLevel')
+                    let corongImage = document.getElementById('corong-image')
+                    let congestStyle = document.getElementById('congest')
+                    if (congestScore !== null) {
+                      if (congestScore >= 0 && congestScore <= 3) {
+                        riskLevelElement.innerHTML = '안전'
+                        riskLevelElement.style.color = 'green'
+                        corongImage.src = 'https://postfiles.pstatic.net/MjAyNDA0MjBfMTgg/MDAxNzEzNjA2NDg3MzI3.sKvYltmXJ46If2ypG6IBHs8DKf22ogQWF8W9DwbKp7Mg.Hx7frtbDo3Lt2WDbaAwb5p1EhQhh_-CbshWOHSEwh40g.PNG/%EC%BD%94%EB%A1%B1%EC%9D%B4_%EA%B7%B8%EB%A6%B0.png?type=w580';
+                        congestStyle.style.color = 'green'
+                      } else if (congestScore >= 4 && congestScore <= 5) {
+                        riskLevelElement.innerHTML = '보통'
+                        riskLevelElement.style.color = 'blue'
+                        corongImage.src = 'https://postfiles.pstatic.net/MjAyNDA0MjBfMjQg/MDAxNzEzNjA2NDkyNDI2.tR15Dv8bUiN8O6wEuuUkRgRtdxjv3yYSwTPRz-4G66gg.y9_pGy2eZ4o1ISoLhQzC1itG7HyktBmH3n2oj5LV36wg.PNG/%EC%BD%94%EB%A1%B1%EC%9D%B4_%EC%8A%A4%EC%B9%B4%EC%9D%B4%EB%B8%94%EB%A3%A8.png?type=w580';
+                        congestStyle.style.color = 'deepskyblue'
+                      } else if (congestScore >= 6 && congestScore <= 7) {
+                        riskLevelElement.innerHTML = '약간 위험'
+                        riskLevelElement.style.color = 'orange'
+                        corongImage.src = 'https://postfiles.pstatic.net/MjAyNDA0MjBfNjQg/MDAxNzEzNjA2NDk3NDY0.OfArP4BsxiSy79JghC6OOcxLO3lUqzo5QGuzeZMwTXsg.7AsKH6ExROwijk092ZrPbAu_kiRSHENPB56lL-MuHDgg.PNG/%EC%BD%94%EB%A1%B1%EC%9D%B4_%EC%98%A4%EB%A0%8C%EC%A7%80.png?type=w580'
+                        congestStyle.style.color = 'orange'
+                      } else if (congestScore >= 8) {
+                        riskLevelElement.innerHTML = '매우 위험'
+                        riskLevelElement.style.color = 'red'
+                        corongImage.src = 'https://postfiles.pstatic.net/MjAyNDA0MjBfMTA2/MDAxNzEzNjA2NDk5Nzk2.RFnFMYJw-yNigAbQXpE9n4oHzhQDZVYYZwRcvy51m0sg.U8rK9fI9Tbd7VP3KsCI4M8-DyMUhLH4gIWPRScnVZM4g.PNG/%EC%BD%94%EB%A1%B1%EC%9D%B4_%EB%A0%88%EB%93%9C.png?type=w580'
+                        congestStyle.style.color = 'red'
+                      }
+                    } else {
+                      console.log('유효하지 않은 congestScore 값입니다.')
+                    }
+
                     let closestLocationCongest = document.getElementById('congest')
                     closestLocationCongest.innerHTML = indicators['실시간 장소 혼잡도']
                     let populationTransition = document.getElementById('transition')
@@ -166,7 +232,7 @@
     </script>
   </head>
   <body>
-    <header>
+    <header><!-- sos,notification과 연결하는 파일 못찾아서 추가 해야함-->
       <image
         src="./images/free-icon-notification-3119322.png"
         class="header-image"
@@ -179,11 +245,11 @@
       <p id="divide"></p>
       <br />
 
-      <div id="user-location">나의 현재 위치 : 종로구</div>
+      <div id="user-location">나의 현재 위치 : </div>
 
-      <div id="closest-shelter">가까운 대피소 : 종로중학교</div>
+      <div id="closest-shelter">가까운 대피소 : </div>
 
-      <h2>매우 안전</h2>
+      <h2 id="riskLevel">CODE : RED</h2>
       <img
         src="https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2FoFvs6%2FbtsGHblHYxt%2F1kXhsa7cOG2FcjC2UzUIF1%2Fimg.png"
         alt="프로필 사진"
@@ -192,29 +258,29 @@
 
       <table>
         <tr>
-          <th>인구 밀집</th>
-          <th>인구 추이</th>
-          <th>재난 현황</th>
-          <th>사건 / 사고</th>
+          <th id="population">인구 밀집</th>
+          <th id="population">인구 추이</th>
+          <th id="disaster">재난 현황</th>
+          <th id="accident">사건 / 사고</th>
         </tr>
 
         <tr>
-          <td id="congest">매우 낮음</td>
-          <td id="transition">약 2천명</td>
-          <td>0건</td>
-          <td>5건</td>
+          <td id="congest">CODE : RED</td>
+          <td id="transition">CODE : RED</td>
+          <td>CODE : RED</td>
+          <td>CODE : RED</td>
         </tr>
       </table>
-      <div style="color: gray" id="time">위험도 측정 기준 : 2024-03-27 15:34:52 기준</div>
+      <div style="color: gray" id="time">위험도 측정 기준 : CODE : RED</div>
     </main>
 
-    <form action="">
+    <form action="" id="inputButton">
       <input
         type="text, submit"
         id="searchInput"
         placeholder="이동할 목적지를 입력해주세요."
       />
-      <button id="searchButton" type="button" ><a href="./destination-detail.html">검색</a></button>
+      <button id="searchButton" type="button" >검색</button>
     </form>
 
     <footer>
