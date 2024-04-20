@@ -268,35 +268,62 @@ export class MaydayService {
   }
 
   // 알림 받은 유저 정보 저장 및 거리 계산
-  async acceptRescue(
-    userId: number,
-    helperId: number,
-    locationDto: LocationDto,
-  ) {
-    const { latitude, longitude } = locationDto;
+  async acceptRescue(helperId: number, locationDto: LocationDto) {
+    const { latitude, longitude, userName } = locationDto;
 
-    const user = await this.findUserId(userId);
-    const distanceMeter = await this.shortestDistance(
-      latitude,
-      longitude,
-      user.latitude,
-      user.longitude,
-    );
+    const user = await this.userRepository
+      .createQueryBuilder('users')
+      .leftJoinAndSelect('users.location', 'location')
+      .select('users.id')
+      .addSelect('location.latitude')
+      .addSelect('location.longitude')
+      .where('users.name = :userName', { userName })
+      .getOne();
 
-    const distance = distanceMeter.shortest_distance / 1000;
-
-    const latestRecord = await this.findGetMaydayRecord(userId);
+    const latestRecord = await this.findGetMaydayRecord(user.id);
 
     if (!_.isNil(latestRecord.helper_id)) {
       throw new BadRequestException('이미 헬퍼가 배정되었습니다.');
     }
+
+    const distanceMeter = await this.shortestDistance(
+      latitude,
+      longitude,
+      user.location.latitude,
+      user.location.longitude,
+    );
+
+    const helper = await this.userRepository.findOne({
+      where: { id: helperId },
+    });
+
+    const distance = distanceMeter.shortest_distance / 1000;
 
     await this.maydayRecordsRepository.update(
       { id: latestRecord.id },
       { helper_id: helperId, distance: distance },
     );
 
-    return Number(distance.toFixed(1));
+    return {
+      distance: Number(distance.toFixed(1)),
+      helperName: helper.name,
+      message: latestRecord.context,
+    };
+  }
+
+  // 유저 기록 확인
+  async matchInfo(userId: number) {
+    const rescueRecord = await this.findGetMaydayRecord(userId);
+
+    const helper = await this.userRepository.findOne({
+      where: { id: rescueRecord.helper_id },
+    });
+    const distance = +rescueRecord.distance;
+    return {
+      distance: Number(distance.toFixed(1)),
+      helperName: helper.name,
+      message: rescueRecord.context,
+    };
   }
 
   // 구조 요청 완료(포인트 및 구조 요청완료 하기)

@@ -1,26 +1,44 @@
-document.querySelector('#acceptBtn').addEventListener('click', (e) => {
+document.querySelector('#acceptBtn').addEventListener('click', async (e) => {
   e.preventDefault();
-  function saveLocation(latitude, longitude) {
-    console.log(latitude, longitude);
-    fetch('/mayday/accept-rescue', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        latitude,
-        longitude,
-      }),
-    }).then(() => {
-      console.log('최단거리 출력성공');
-    });
+  const username = document.getElementById('username').value;
+
+  async function saveLocation(latitude, longitude, username) {
+    try {
+      const response = await fetch('/mayday/accept-rescue', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          latitude: 37.437669048891394,
+          longitude: 127.14049889407856,
+          userName: username,
+        }),
+      });
+
+      if (response.ok) {
+        const responseData = await response.json();
+        console.log(responseData);
+        const distance = `distance=${responseData.distance}`;
+        const helperName = `helperName=${responseData.helperName}`;
+        const message = `message=${responseData.message}`;
+        const url = `/mayday/matchHelper?${distance}&${helperName}&${message}`;
+        window.location.href = url;
+      } else if (!response.ok) {
+        const responseData = await response.json();
+        const errorMessage = responseData.message;
+        alert(errorMessage); // 에러 메시지 alert 창에 표시
+      }
+    } catch (error) {
+      console.error('요청 실패:', error);
+    }
   }
 
   navigator.geolocation.getCurrentPosition(function (pos) {
     const latitude = pos.coords.latitude;
     const longitude = pos.coords.longitude;
 
-    saveLocation(latitude, longitude);
+    saveLocation(latitude, longitude, username);
   });
 });
 /* getCurrentPosition

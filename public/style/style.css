@@ -23,6 +23,10 @@ a {
   color: black;
 }
 
+.none {
+  display: none;
+}
+
 /*header*/
 
 header {
@@ -136,6 +140,8 @@ nav {
 #loadingcontainer {
   width: 440px;
   margin: 0 auto;
+  position: absolute;
+  top: 100px;
 }
 
 #loadingText {
@@ -383,17 +389,29 @@ nav {
   animation: loading-text-opacity 2s linear 0s infinite normal;
   color: black;
   font-family: 'Helvetica Neue, ' Helvetica ', ' 'arial';
-  font-size: 10px;
+  font-size: 12px;
   font-weight: bold;
   margin-top: 28px;
   opacity: 0;
   position: absolute;
   text-align: center;
   text-transform: uppercase;
-  top: 0;
+  top: 16px;
   width: 100px;
 }
 /* 로딩중 끝 */
+
+#matchInfo {
+  font-weight: 600;
+  border: none;
+  border-radius: 5px;
+  background-color: rgb(79, 161, 255);
+  color: white;
+  margin: 20px auto;
+  padding: 20px 0px;
+  font-size: 20px;
+  width: 440px;
+}
 
 /* footer */
 /* footer {

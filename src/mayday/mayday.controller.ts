@@ -60,11 +60,14 @@ export class MaydayController {
   }
 
   // 헬퍼 구조 요청 페이지
+  //localhost:3000/mayday/help-request?distance=1&username=홍길동&message=살려주세요..
   @Get('help-request')
   @Render('rescue/helper')
-  helper(@Query() rescue: string[]) {
-    console.log(rescue);
-  } // 수락  거절
+  helperPage(@Query() rescue: any) {
+    const { distance, username, message } = rescue;
+
+    return { distance: distance, username: username, message: message };
+  }
 
   // 알림 받은 유저 정보 저장 및 거리 계산
   /* 알림 보낼때 세션같은걸로 유저 아이디 받아와야함 userId = 1 */
@@ -78,18 +81,44 @@ export class MaydayController {
     @UserInfo() helper: Users,
     @Body() locationDto: LocationDto,
   ) {
-    const distance = await this.maydayService.acceptRescue(
-      1,
+    const result = await this.maydayService.acceptRescue(
       helper.id,
       locationDto,
     );
 
-    return { message: `유저와 헬퍼의 최단 거리 ${distance}Km` };
+    return {
+      distance: result.distance,
+      helperName: result.helperName,
+      message: result.message,
+    };
   }
 
-  @Get('rescue-request-loading')
-  @Render('rescue/rescue-request-loading')
-  loading() {}
+  @Get('matchHelper')
+  @Render('rescue/matchHelper')
+  matchHelperPage(@Query() helpeInfo: any) {
+    console.log('@@@@@@@@@@@@@helpeInfo => ', helpeInfo);
+
+    const { distance, helperName, message } = helpeInfo;
+    console.log('@@@@@@@@@@@@@distance => ', distance);
+    console.log('@@@@@@@@@@@@@helperName => ', helperName);
+    console.log('@@@@@@@@@@@@@message => ', message);
+
+    return { distance: distance, helperName: helperName, message: message };
+  }
+
+  @Get('match')
+  @Render('rescue/matchHelper')
+  async matchUserPage(@UserInfo() user: Users) {
+    console.log('@@@@@@@@@@@user@@@@@@', user);
+
+    const matchInfo = await this.maydayService.matchInfo(user.id);
+
+    return {
+      distance: matchInfo.distance,
+      helperName: matchInfo.helperName,
+      message: matchInfo.message,
+    };
+  }
 
   // 구조 요청 완료 하기
   @Post('rescue-complete')
