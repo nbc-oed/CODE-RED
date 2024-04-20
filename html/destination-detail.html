@@ -105,7 +105,34 @@
                             destinationWeather.innerHTML = data['비,눈 관련 사항']
                         }
                     })
+            } else {
+                alert('다시 입력 해주세요.')
             }
+            document.getElementById('searchButton').addEventListener('click', () => {
+                let searchInput = document.getElementById('searchInput').value;
+                let url = `http://localhost:3000/destination-risk/detail?destination=${searchInput}`
+                fetch(url)
+                .then(response => {
+                    return response.json()
+                })
+                .then(data => {
+                    console.log(data)
+                    if(!data['기준 장소']) {
+                        alert('해당 데이터를 찾지 못했습니다.')
+                    } else {
+                        let guide = document.getElementById('risk')
+                        guide.innerHTML = `현재 ${searchInput}와 가까운 ${data['기준 장소']}의 위험도`
+                        let message = document.getElementById('message')
+                        message.innerHTML = data['관련 안내사항']
+                        let destinationCongest = document.getElementById('congest')
+                        destinationCongest.innerHTML = data['실시간 장소 혼잡도']
+                        let destinationTransition = document.getElementById('transition')
+                        destinationTransition.innerHTML = data['예상 인구']
+                        let destinationWeather = document.getElementById('weather')
+                        destinationWeather.innerHTML = data['비,눈 관련 사항']
+                    }
+                })
+            })
         })
     </script>
   </head>
