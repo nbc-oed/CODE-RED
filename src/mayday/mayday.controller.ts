@@ -6,6 +6,7 @@ import {
   Render,
   UseGuards,
   Redirect,
+  Query,
 } from '@nestjs/common';
 import { MaydayService } from './mayday.service';
 import { AuthGuard } from '@nestjs/passport';
@@ -50,13 +51,20 @@ export class MaydayController {
     console.log('@@@@@@@@@@@@sendRescueMessageDto => ', sendRescueMessageDto);
     console.log('@@@@@@@@@@@@@@@user => ', user);
 
-    await this.maydayService.sendRequestRescue(user.id, sendRescueMessageDto);
+    const message = await this.maydayService.sendRequestRescue(
+      user.id,
+      sendRescueMessageDto,
+    );
+    console.log('sos 컨트롤러에서 받은 message => ', message);
+    return message;
   }
 
   // 헬퍼 구조 요청 페이지
   @Get('help-request')
   @Render('rescue/helper')
-  helper() {} // 수락  거절
+  helper(@Query() rescue: string[]) {
+    console.log(rescue);
+  } // 수락  거절
 
   // 알림 받은 유저 정보 저장 및 거리 계산
   /* 알림 보낼때 세션같은걸로 유저 아이디 받아와야함 userId = 1 */

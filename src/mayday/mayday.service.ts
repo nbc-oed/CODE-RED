@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Location } from './entities/location.entity';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, Double, Repository } from 'typeorm';
 import { LocationDto } from './dto/location.dto';
 import { MaydayRecords } from './entities/mayday-records.entity';
 import _ from 'lodash';
@@ -13,6 +13,8 @@ import { Scores } from 'src/common/entities/scores.entity';
 import { RescueCompleteDto } from './dto/rescueCompleteDto.dto';
 import { SendRescueMessageDto } from './dto/sendRescueMessage.dto';
 import { Users } from 'src/common/entities/users.entity';
+import { Cron } from '@nestjs/schedule';
+import { number } from 'joi';
 
 @Injectable()
 export class MaydayService {
@@ -27,6 +29,7 @@ export class MaydayService {
     private readonly userRepository: Repository<Users>,
     private readonly dataSource: DataSource,
   ) {}
+  private setIntervalId: NodeJS.Timeout;
 
   // 내위치 정보 저장
   async saveMyLocation(location: LocationDto, userId: number) {
@@ -124,31 +127,17 @@ export class MaydayService {
        5. 내위치 기반 1000m안에있는 사람들이 배열 형태로 나온 것이므로 배열의 길이 = 나를 구해줄수 있는 사람수 리턴
    */
 
-    const distanceThreshold = 1000;
-    const queryBuilder = this.locationRepository
-      .createQueryBuilder('location')
-      .select([
-        'location.*',
-        `ST_Distance(ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)::geography,
-                             ST_SetSRID(location.location, 4326)::geography) AS distance_meters`,
-      ])
-      .setParameter('longitude', longitude)
-      .setParameter('latitude', latitude)
-      .where(
-        `ST_Distance(ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326), 
-                          ST_SetSRID(location.location, 4326)) <= :distanceThreshold`,
-        {
-          distanceThreshold,
-        },
-      )
-      .orderBy('distance_meters');
+    const distance = 1000;
 
-    const helpersArray = await queryBuilder.getRawMany();
+    const helpers = await this.findHelperDistance(
+      distance,
+      latitude,
+      longitude,
+    );
 
-    const helpers = helpersArray.filter((helper) => helper.distance_meters > 0);
     return {
       helpers,
-      distanceThreshold: distanceThreshold / 1000,
+      distanceThreshold: distance / 1000,
     };
   }
 
@@ -157,25 +146,125 @@ export class MaydayService {
     userId: number,
     sendRescueMessageDto: SendRescueMessageDto,
   ) {
-    const { context, helpers } = sendRescueMessageDto;
-
-    /*
-      구조 요청 보내기 로직 추가해야함.
-      구조 요청자(user), 구조 요청 수신할 유저들(receivers), 구조 요청 수락할 특정 유저(helper)
-    */
-    const helpersId = helpers.map((user_id) => {
-      this.findUserId(+user_id);
-    });
-    const user = await this.userRepository.findOne({ where: { id: userId } });
-    // 1km 사람에게 알림보내기 2명헬퍼 -> 메세지 보냄
-    // await this.sendPushNotification(userId, helpersId, context)
+    const { context } = sendRescueMessageDto;
+    const user = await this.userRepository
+      .createQueryBuilder('users')
+      .leftJoinAndSelect('users.location', 'location')
+      .select('users.name')
+      .addSelect('location.latitude')
+      .addSelect('location.longitude')
+      .where('users.id = :userId', { userId })
+      .getOne();
 
     await this.maydayRecordsRepository.insert({ user_id: userId, context });
 
     /*
-      프론트 쪽임.
-      세션이나 헤더 같은곳에 구조자의 id가 들어가야 할것 같음.
-    */
+      1. 1km안에 있는 헬퍼들에게 알림 보내기
+      2. 헬퍼들이 수락을 누르게 되면 디비에 정보가 쌓임
+      3. 정보가 쌓이지 않으면 헬퍼들이 수락을 누르지 않은 것임
+      4. 첫번째알림을 보낸지 3분이 지나도 수락이 쌓이지 않았는지 확인
+      5. 2km로 거리를 늘려 2km안에 있는 헬퍼들에게 알림을 다시보냄
+      6. 3분동안 DB를 확인하면서 DB에 helper_id가 null이 아닌지 확인
+      7. 총 6분이 지났는데도 안잡힌다면 다시 3km로 거리를 늘려 알림을 다시보냄
+      8. 마지막으로 9분이 지났는데도 잡히지 않는다면 알림 보내는 것을 멈춘다.
+      */
+    // 즉, sos api안에서 다 해결해버리기.
+
+    // 1km안에 있는 헬퍼들에게 알림 보내기
+    let currentDistance = 1000;
+    await this.sendAlert(
+      currentDistance,
+      user.location.latitude,
+      user.location.longitude,
+      user.name,
+      context,
+    );
+
+    const checkHelperResponsePromise = (
+      userId: number,
+      currentDistance: number,
+      latitude: number,
+      longitude: number,
+      name: string,
+      context: string,
+    ) => {
+      return new Promise((resolve) => {
+        const setIntervalId = setInterval(async () => {
+          currentDistance += 1000;
+          const message = await this.checkHelperResponse(
+            userId,
+            currentDistance,
+            latitude,
+            longitude,
+            name,
+            context,
+            setIntervalId,
+          );
+          if (message) {
+            resolve(message); // Promise 완료
+          }
+        }, 30 * 1000);
+      });
+    };
+    return await checkHelperResponsePromise(
+      userId,
+      currentDistance,
+      user.location.latitude,
+      user.location.longitude,
+      user.name,
+      context,
+    );
+  }
+
+  // 푸시 알림 보내기
+  async sendAlert(
+    distance: number,
+    latitude: number,
+    longitude: number,
+    name: string,
+    message: string,
+  ) {
+    // 헬퍼 구조 요청 페이지에 가야할 것들유저닉네임, 거리, 메세지
+    // localhost:3000/mayday/help-request?name=곽곽&distance=1km&message='살려주세요'
+    const helpers = await this.findHelperDistance(
+      distance,
+      latitude,
+      longitude,
+    );
+    console.log('helpers => ', helpers);
+    // await this.fcmService.sendPushNotification(title = "구조요청", message = context, userId = helpers.user_id);
+    console.log(`푸시 알림 보냄`);
+  }
+
+  // 요청 수락했는지  확인하기
+  async checkHelperResponse(
+    userId: number,
+    distance: number,
+    latitude: number,
+    longitude: number,
+    name: string,
+    message: string,
+    setIntervalId: NodeJS.Timeout,
+  ) {
+    // 여기서는 DB를 확인하여 헬퍼들의 응답을 확인하는 작업을 구현합니다.
+    const record = await this.findGetMaydayRecord(userId);
+    console.log('distance => ', distance);
+
+    if (record.helper_id) {
+      // 헬퍼아이디가 있다면 setInterval멈추기
+      clearInterval(setIntervalId);
+      console.log('헬퍼아이디가 있다면 setInterval멈추기 진입');
+      return { message: 'Accepted' };
+    } else if (distance > 3000) {
+      // 거리가 3000이상이라면 총 9분이 지난것이므로 멈춘다. 1km 3분뒤 2km 3분뒤 3km 3분귀 4km
+      clearInterval(setIntervalId);
+      console.log('총 9분이 지나 setInterval멈추기 진입');
+      return { message: 'NotAccept' };
+    } else if (_.isNil(record.helper_id)) {
+      // 만약 응답이 없으면 거리를 늘려 다시 알림을 보냄
+      await this.sendAlert(distance, latitude, longitude, name, message);
+      console.log('시간도 안지났고 헬퍼아이디도 없어서 재알림 보냄');
+    }
   }
 
   // 알림 받은 유저 정보 저장 및 거리 계산
@@ -239,6 +328,34 @@ export class MaydayService {
     } finally {
       await queryRunner.release();
     }
+  }
+
+  // 거리순 주변 인물.대피소 찾기
+  async findHelperDistance(distance, latitude, longitude) {
+    const distanceThreshold = distance;
+    const queryBuilder = this.locationRepository
+      .createQueryBuilder('location')
+      .select([
+        'location.*',
+        `ST_Distance(ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)::geography,
+                             ST_SetSRID(location.location, 4326)::geography) AS distance_meters`,
+      ])
+      .setParameter('longitude', longitude)
+      .setParameter('latitude', latitude)
+      .where(
+        `ST_Distance(ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)::geography, 
+                          ST_SetSRID(location.location, 4326)::geography)<= :distanceThreshold`,
+        {
+          distanceThreshold,
+        },
+      )
+      .orderBy('distance_meters');
+
+    const helpersArray = await queryBuilder.getRawMany();
+    console.log('helpersArray => ', helpersArray);
+
+    const helpers = helpersArray.filter((helper) => helper.distance_meters > 0);
+    return helpers;
   }
 
   // 거리 계산
