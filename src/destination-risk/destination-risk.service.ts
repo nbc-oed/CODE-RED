@@ -33,9 +33,9 @@ export class DestinationRiskService {
         // 중간에 클라이언트한테 리턴 하는 로직 전에 db에 저장-> 키워드 검색 로직
         const realTimeDestinationRiskData = {
              '기준 장소' : areaName,
-             '실시간 장소 혼잡도' : `${areaCongestLvlMsg.AREA_CONGEST_LVL._text}, (${areaName} 기준 )`,
+             '실시간 장소 혼잡도' : areaCongestLvlMsg.AREA_CONGEST_LVL._text,
              '관련 안내사항' : areaCongestLvlMsg.AREA_CONGEST_MSG._text,
-             '예상 인구' : `약 ${predictedPopulation}명 `,
+             '예상 인구' : `약 ${predictedPopulation}명,  (${areaName} 기준 )`,
              '기준 시간' : `${populationTrends.FCST_TIME._text}기준`
         }
         return realTimeDestinationRiskData
@@ -61,9 +61,9 @@ export class DestinationRiskService {
         // 중간에 클라이언트한테 리턴 하는 로직 전에 db에 저장-> 키워드 검색 로직
         const realTimeDestinationRiskDetailInquiry = {
              '기준 장소' : areaName,
-             '실시간 장소 혼잡도' : `${areaCongestLvlMsg.AREA_CONGEST_LVL._text}, (${areaName} 기준 )`,
+             '실시간 장소 혼잡도' : areaCongestLvlMsg.AREA_CONGEST_LVL._text,
              '관련 안내사항' : areaCongestLvlMsg.AREA_CONGEST_MSG._text,
-             '예상 인구' : `약 ${minPredictedPopulation}명 ~ ${maxPredictedPopulation}명`,
+             '예상 인구' : `약 ${minPredictedPopulation}명 ~ ${maxPredictedPopulation}명, (${areaName} 기준 )`,
              '기준 시간' : `${populationTrends.FCST_TIME._text}기준`,
              '비,눈 관련 사항' : ` ${destinationRainOrSnowNews.PCP_MSG._text}  , ${destinationRainOrSnowNews.WEATHER_TIME._text} 기준`
         }
