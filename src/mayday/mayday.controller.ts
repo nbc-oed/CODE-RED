@@ -5,7 +5,6 @@ import {
   Body,
   Render,
   UseGuards,
-  Redirect,
   Query,
 } from '@nestjs/common';
 import { MaydayService } from './mayday.service';
@@ -15,7 +14,7 @@ import { Users } from 'src/common/entities/users.entity';
 import { LocationDto } from './dto/location.dto';
 import { RescueCompleteDto } from './dto/rescueCompleteDto.dto';
 import { SendRescueMessageDto } from './dto/sendRescueMessage.dto';
-import { query } from 'express';
+
 @Controller('mayday')
 @UseGuards(AuthGuard('jwt'))
 export class MaydayController {
@@ -48,19 +47,15 @@ export class MaydayController {
     @UserInfo() user: Users,
     @Body() sendRescueMessageDto: SendRescueMessageDto,
   ) {
-    console.log('@@@@@@@@@@@@sendRescueMessageDto => ', sendRescueMessageDto);
-    console.log('@@@@@@@@@@@@@@@user => ', user);
-
     const message = await this.maydayService.sendRequestRescue(
       user.id,
       sendRescueMessageDto,
     );
-    console.log('sos 컨트롤러에서 받은 message => ', message);
+
     return message;
   }
 
   // 헬퍼 구조 요청 페이지
-  //localhost:3000/mayday/help-request?distance=1&username=홍길동&message=살려주세요..
   @Get('help-request')
   @Render('rescue/helper')
   helperPage(@Query() rescue: any) {
@@ -69,13 +64,6 @@ export class MaydayController {
     return { distance: distance, username: username, message: message };
   }
 
-  // 알림 받은 유저 정보 저장 및 거리 계산
-  /* 알림 보낼때 세션같은걸로 유저 아이디 받아와야함 userId = 1 */
-  /* 이곳은 helper가 수락 버튼을 누르면 작동되는 곳
-    user = 도움 요청하는 사람 = userID 1
-    helper = 도움 주는 사람 = helperID 2
-    locationDto = 도움 주는 사람의 현재 위치 정보 가져오기(확실하게 하기 위하여)
-  */
   @Post('accept-rescue')
   async acceptRescue(
     @UserInfo() helper: Users,
@@ -96,12 +84,7 @@ export class MaydayController {
   @Get('matchHelper')
   @Render('rescue/matchHelper')
   matchHelperPage(@Query() helpeInfo: any) {
-    console.log('@@@@@@@@@@@@@helpeInfo => ', helpeInfo);
-
     const { distance, helperName, message } = helpeInfo;
-    console.log('@@@@@@@@@@@@@distance => ', distance);
-    console.log('@@@@@@@@@@@@@helperName => ', helperName);
-    console.log('@@@@@@@@@@@@@message => ', message);
 
     return { distance: distance, helperName: helperName, message: message };
   }
@@ -109,10 +92,7 @@ export class MaydayController {
   @Get('match')
   @Render('rescue/matchHelper')
   async matchUserPage(@UserInfo() user: Users) {
-    console.log('@@@@@@@@@@@user@@@@@@', user);
-
     const matchInfo = await this.maydayService.matchInfo(user.id);
-
     return {
       distance: matchInfo.distance,
       helperName: matchInfo.helperName,
