@@ -258,13 +258,14 @@ export class MaydayService {
         { is_completed: true },
       );
 
-      // point db에는 점수를 부여해야함..(1~10점 => 프론트에서 선택할수있도록 해야할듯.)
       await this.scoreRepository.insert({
-        user_id: userId,
+        user_id: latestRecord.helper_id,
         record_id: latestRecord.id,
         reason,
         score,
       });
+
+      return 'success';
     } catch (err) {
       console.log('Rollback 실행..');
       await queryRunner.rollbackTransaction();

@@ -6,6 +6,7 @@ import {
   Render,
   UseGuards,
   Query,
+  Patch,
 } from '@nestjs/common';
 import { MaydayService } from './mayday.service';
 import { AuthGuard } from '@nestjs/passport';
@@ -101,11 +102,15 @@ export class MaydayController {
   }
 
   // 구조 요청 완료 하기
-  @Post('rescue-complete')
+  @Patch('rescue-complete')
   async rescueComplete(
     @UserInfo() user: Users,
     @Body() rescueCompleteDto: RescueCompleteDto,
   ) {
-    await this.maydayService.rescueComplete(user.id, rescueCompleteDto);
+    const message = await this.maydayService.rescueComplete(
+      user.id,
+      rescueCompleteDto,
+    );
+    return { message: message };
   }
 }
