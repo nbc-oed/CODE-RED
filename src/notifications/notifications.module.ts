@@ -12,11 +12,9 @@ import { NotificationMessages } from 'src/common/entities/notification-messages.
 import { RealtimeNotificationService } from './streams/realtime-notifications.service';
 import { UtilsModule } from 'src/utils/utils.module';
 import { FcmService } from './messaging-services/firebase/fcm.service';
-import { SmsService } from './messaging-services/sms.service';
 import { BullModule } from '@nestjs/bull';
 import { UsersModule } from 'src/users/users.module';
 import { QueueModule } from './queue/queue.module';
-import { QueueService } from './queue/queue.service';
 import { AuthModule } from 'src/auth/auth.module';
 
 @Module({
@@ -44,7 +42,6 @@ import { AuthModule } from 'src/auth/auth.module';
     DisasterService,
     RealtimeNotificationService,
     FcmService,
-    SmsService,
     QueueModule,
   ],
   exports: [RedisService, GeoLocationService, FcmService, NotificationsService],

@@ -1,11 +1,14 @@
 import { HttpService } from '@nestjs/axios';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { RedisService } from '../../redis/redis.service';
 import { RedisKeys } from 'src/notifications/redis/redis.keys';
+import { Interval } from '@nestjs/schedule';
 
 @Injectable()
 export class GeoLocationService {
+  private readonly logger = new Logger(GeoLocationService.name);
+
   constructor(
     private httpService: HttpService,
     private configService: ConfigService,
@@ -40,11 +43,15 @@ export class GeoLocationService {
       const region2DepthName = response.data.documents[0].region_2depth_name;
 
       const area = `${region1DepthName} ${region2DepthName}`;
-      console.log('역지오코딩 완료', area);
+
       await this.addUserToLocationStream(area, user_id, client_id);
+      this.logger.log(
+        `역지오코딩-- ${user_id || client_id} 사용자 위치 정보 스트림 추가 성공`,
+        area,
+      );
       return area;
     } catch (error) {
-      console.error('사용자 위치 정보를 지역 스트림에 추가 실패:', error);
+      this.logger.error('사용자 위치 정보를 지역 스트림에 추가 실패:', error);
       throw error;
     }
   }
@@ -56,8 +63,8 @@ export class GeoLocationService {
     client_id?: string,
   ) {
     const userLocationsStreamKey = RedisKeys.userLocationsStream(area);
-    const userIdStr = user_id ? user_id.toString() : 'undefined'; // null이나 undefined인 경우 'undefined' 문자열 사용
-    const clientIdStr = client_id ? client_id : 'undefined'; // null이나 undefined인 경우 'undefined' 문자열 사용
+    const userIdStr = user_id ? user_id.toString() : 'undefined';
+    const clientIdStr = client_id ? client_id : 'undefined';
 
     await this.redisService.client.xadd(
       userLocationsStreamKey,
@@ -67,5 +74,28 @@ export class GeoLocationService {
       'client_id',
       clientIdStr,
     );
+  }
+
+  // 사용자 위치 정보 스트림 메세지 자동 정리
+  @Interval(86400000) // 24시간
+  async trimUserLocationStreams() {
+    let cursor = '0';
+    do {
+      // SCAN 명령을 사용하여 키를 검색
+      const reply = await this.redisService.client.scan(
+        cursor,
+        'MATCH',
+        'user-locationsStream:*',
+        'COUNT',
+        100,
+      );
+      cursor = reply[0]; // 새 커서 위치
+      const keys = reply[1]; // 발견된 키 목록
+
+      for (const streamKey of keys) {
+        await this.redisService.client.xtrim(streamKey, 'MAXLEN', '~', 1000); // 스트림 크기 조정
+        this.logger.log(`사용자 위치 정보 스트림 ${streamKey} 정리 완료.`);
+      }
+    } while (cursor !== '0');
   }
 }

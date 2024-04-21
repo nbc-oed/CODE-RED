@@ -16,3 +16,8 @@ export interface NotificationMessage {
   content: string;
   send_datetime: Date;
 }
+
+export interface ClientsInfo {
+  user_id?: number;
+  client_id?: string;
+}

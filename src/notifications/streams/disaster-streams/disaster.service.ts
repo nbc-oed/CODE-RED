@@ -42,6 +42,7 @@ export class DisasterService {
 
   @Cron(CronExpression.EVERY_30_SECONDS) //EVERY_30_SECONDS EVERY_10_MINUTES
   public async handleCron() {
+    this.logger.log(`지역 재난 데이터 수집 시작`);
     const disasterDataList = await this.fetchDisasterData();
     for (const disasterData of disasterDataList) {
       await this.sendDisasterInfoToStreams(disasterData);
@@ -70,20 +71,6 @@ export class DisasterService {
         spaces: 4,
       });
       const disasterDataJson = JSON.parse(xmlToJsonData);
-
-      //API 응답 구조 검증
-      if (
-        !disasterDataJson ||
-        !disasterDataJson['DisasterMsg2'] ||
-        !disasterDataJson['DisasterMsg2']['row']
-      ) {
-        this.logger.error(
-          'API 응답 구조 에러, Invalid data structure:',
-          disasterDataJson.OpenAPI_ServiceResponse.cmmMsgHeader.errMsg,
-          disasterDataJson.OpenAPI_ServiceResponse.cmmMsgHeader.returnAuthMsg,
-        );
-        return;
-      }
 
       let resultInRow = disasterDataJson['DisasterMsg2']['row'];
       if (!Array.isArray(resultInRow)) {
@@ -114,8 +101,8 @@ export class DisasterService {
             messageDate === currentDateString
           );
         });
+      console.log('result', result);
       this.logger.log('재난 문자 발송현황 데이터 수집 성공');
-
       return result;
     } catch (error) {
       this.logger.log('AXIOS 에러, Fetching Disaster Data', error);
@@ -125,12 +112,14 @@ export class DisasterService {
 
   // 1-2. 재난 문자 데이터를 Redis Stream에서 관리
   private async sendDisasterInfoToStreams(disasterData: DisasterData) {
+    this.logger.log(`재난 데이터 스트림 가동...`);
     for (const area of disasterData.locationName) {
       const disasterStreamKey = RedisKeys.disasterStream(area);
       await this.initializeStreamIfNeeded(disasterStreamKey);
       await this.addLatestDataToExistingStream(disasterData, area);
 
       // 스트림에 데이터를 추가했다면, 해당 지역에 대한 모니터링 시작
+      this.logger.log(`지역별 모니터링 시작...`);
       await this.realtimeNotificationsService.realTimeMonitoringStartAndProcessPushMessages(
         area,
       );

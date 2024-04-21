@@ -2,11 +2,11 @@ import { Injectable, Logger } from '@nestjs/common';
 import { RedisService } from '../redis/redis.service';
 import { DisasterMessageParserService } from 'src/utils/disaster-message.parser.service';
 import {
+  ClientsInfo,
   DisasterMessage,
   RedisStreamResult,
 } from 'src/common/types/disaster-message.interface';
 import { FcmService } from '../messaging-services/firebase/fcm.service';
-import { SmsService } from '../messaging-services/sms.service';
 import { RedisKeys } from '../redis/redis.keys';
 import { Interval } from '@nestjs/schedule';
 
@@ -18,7 +18,6 @@ export class RealtimeNotificationService {
     private redisService: RedisService,
     private parserService: DisasterMessageParserService,
     private fcmService: FcmService,
-    private smsService: SmsService,
   ) {}
 
   /** 실시간 모니터링 - 가상 시나리오
@@ -48,11 +47,13 @@ export class RealtimeNotificationService {
     await this.ensureStreamAndConsumerGroupExist(disasterStreamKey);
 
     // 2. 모니터링 시작
-    this.logger.log('모니터링 시작, Starting message monitoring service...');
+    this.logger.log(
+      '1. 모니터링 시작, Starting message monitoring service...' + area,
+    );
 
     try {
       this.logger.log(
-        '스트림 메세지 읽기 시도 중, Attempting to read from stream...',
+        '2. 스트림 메세지 읽기 시도 중, Attempting to read from stream...',
       );
 
       // 재난 데이터 스트림에서 메시지 읽기
@@ -72,17 +73,17 @@ export class RealtimeNotificationService {
       // 3. 새 메세지 수신 성공 -> 파싱 -> 알림 전송
       if (messages && messages.length > 0) {
         this.logger.log(
-          `메세지 수신 성공, Received ${messages.length} messages from stream.`,
+          `3. 메세지 수신 성공: Received ${messages.length} messages from stream.`,
         );
-        await this.NewStreamMessageParsingAndProcessing(messages);
+        await this.NewStreamMessageParsingAndProcessing(messages, area);
       } else {
-        // 4. 수신할 메세지 없다면 모니터링 종료
+        // 4. 수신한 메세지 없으면 모니터링 종료
         this.logger.log(
-          '수신할 메세지 없음 ---- 모니터링 종료: No messages received.',
+          '모니터링 종료-- 수신 메세지 없음❎ : No new messages in the stream.',
         );
       }
     } catch (error) {
-      this.logger.error('모니터링 및 메세지 수신 에러:', error);
+      this.logger.error('재난 데이터 스트림 모니터링 에러: ' + error.message);
     }
   }
 
@@ -104,45 +105,40 @@ export class RealtimeNotificationService {
   }
 
   // 3. 새 메세지 수신 성공 -> 파싱 -> 알림 전송
-  async NewStreamMessageParsingAndProcessing(messages: RedisStreamResult[]) {
+  async NewStreamMessageParsingAndProcessing(
+    messages: RedisStreamResult[],
+    area: string,
+  ) {
+    // 3-1. 이미 XACK 처리된 메세지인지 조회
     for (const [stream, streamMessages] of messages) {
       for (const [messageId, messageFields] of streamMessages) {
-        // 3-1. 이미 XACK 처리된 메세지인지 조회
         const isProcessed = await this.isMessageProcessed(messageId);
         if (!isProcessed) {
-          try {
-            this.logger.log(
-              `메시지 처리, Processing message ID ${messageId} from stream ${stream}.`,
-            );
+          this.logger.log(
+            `메시지 처리 중... Processing message ID ${messageId} from stream ${stream}.`,
+          );
 
-            // 3-2. Stream 메세지를 DisasterMessage 인터페이스에 맞게 파싱 작업
-            const parsedMessage =
-              this.parserService.parseDisasterMessage(messageFields);
-            console.log('parsedMessage:', parsedMessage);
+          // 3-2. Stream 메세지를 DisasterMessage 인터페이스에 맞게 파싱 작업
+          const parsedMessage =
+            this.parserService.parseDisasterMessage(messageFields);
+          console.log('parsedMessage:', parsedMessage);
 
-            // 3-3. 푸시 알림 전송 처리
-            await this.processPushNotificationMessage(parsedMessage);
+          // 3-3. 푸시 알림 전송 처리
+          await this.processPushNotificationMessage(area, parsedMessage);
 
-            // 3-4. 메세지 확인 처리
-            await this.redisService.client.xack(
-              stream,
-              'notificationGroup',
-              messageId,
-            );
+          // 3-4. 메세지 확인 처리
+          await this.redisService.client.xack(
+            stream,
+            'notificationGroup',
+            messageId,
+          );
 
-            // 3-5. XACK 중복 처리 방지
-            await this.checkingMessageAsProcessed(messageId);
+          // 3-5. XACK 중복 처리 방지
+          await this.checkingMessageAsProcessed(messageId);
 
-            this.logger.log(
-              `메시지 확인 처리(XACK), Message ID ${messageId} acknowledged.`,
-            );
-          } catch (error) {
-            this.logger.error(
-              '모니터링 및 메세지 처리 에러 발생, Error in monitoring disaster streams',
-              error,
-              error.message,
-            );
-          }
+          this.logger.log(
+            `메시지 확인 처리(XACK), Message ID ${messageId} acknowledged.`,
+          );
         } else {
           this.logger.log(
             `메시지 중복 처리 건너뛰기, Skipping duplicated message ID ${messageId}.`,
@@ -162,65 +158,60 @@ export class RealtimeNotificationService {
   }
 
   // 3-3. 알림 전송 처리
-  private async processPushNotificationMessage(message: DisasterMessage) {
+  private async processPushNotificationMessage(
+    area: string,
+    disasterData: DisasterMessage,
+  ) {
     // 회원/비회원 ID 미식별시 Early Return
-    if (!message.user_id && !message.client_id) {
+    if (!disasterData.user_id && !disasterData.client_id) {
       this.logger.error(
-        `알림 전송 실패 - 회원/비회원 ID 없음: ${JSON.stringify(message)}`,
+        `알림 전송 실패 - 회원/비회원 ID 없음: ${JSON.stringify(disasterData)}`,
       );
       return;
     }
 
-    // ID 유무에 따른 알림 전송 함수 호출
+    // 사용자 위치 정보 스트림 조회 후 지역별 사용자 그룹에 알림 전송
+    const clientsInfoList = await this.getClientsInfoInArea(area);
     const title = '긴급 재난 경보';
-    try {
-      const notificationPromises = [];
-
-      if (message.user_id) {
-        notificationPromises.push(
-          this.fcmService.sendPushNotification(
-            title,
-            message.content,
-            message.user_id,
-          ),
-        );
-        this.logger.log(
-          `회원 FCM 푸시 알림 전송 시작 : ${JSON.stringify(message)}`,
-        );
-        notificationPromises.push(
-          this.smsService.sendSmsNotification(title, message.content),
+    const message = disasterData.content;
+    for (const clientsInfo of clientsInfoList) {
+      if (clientsInfo.user_id || clientsInfo.client_id) {
+        this.fcmService.sendPushNotification(
+          title,
+          message,
+          clientsInfo.user_id || undefined,
+          clientsInfo.client_id,
         );
       }
-      if (message.client_id) {
-        notificationPromises.push(
-          this.fcmService.sendPushNotification(
-            title,
-            message.content,
-            undefined,
-            message.client_id,
-          ),
-        );
-        this.logger.log(
-          `비회원 FCM 푸시 알림 전송 시작 : ${JSON.stringify(message)}`,
-        );
-      }
-
-      await Promise.all(notificationPromises);
-      this.logger.log(
-        `알림 전송 성공... Notifications sent successfully for user ${message.user_id || message.client_id}.`,
-      );
-    } catch (error) {
-      this.logger.error(
-        `알림 전송 실패... Error sending notifications for user ${message.user_id || message.client_id}: ${error.message}`,
-      );
     }
+  }
+
+  private async getClientsInfoInArea(area: string): Promise<ClientsInfo[]> {
+    const userLocationsStreamKey = RedisKeys.userLocationsStream(area);
+    const messages = await this.redisService.client.xrange(
+      userLocationsStreamKey,
+      '-',
+      '+',
+    );
+
+    return messages.map(([id, fields]) => {
+      const clientsInfo: ClientsInfo = {};
+      for (const [key, value] of fields) {
+        if (key === 'user_id' && value !== 'undefined') {
+          clientsInfo.user_id = parseInt(value);
+        } else if (key === 'client_id' && value !== 'undefined') {
+          clientsInfo.client_id = value;
+        }
+      }
+      return clientsInfo;
+    });
   }
 
   // 3-5. XACK 중복처리 방지하기 위해 Set 형태로 저장하고, 만료시간을 두어 자동 정리
   private async checkingMessageAsProcessed(messageId: string): Promise<void> {
     console.log('XACK 처리 확인 messageId', messageId);
     await this.redisService.client.sadd('processedMessages', messageId);
-    await this.redisService.client.expire(messageId, 3600);
+    await this.redisService.client.expire(messageId, 3600); // 1시간 만료
   }
 
   // 5-1. 오래된 메세지 정리 로직 : 실시간 모니터링으로 읽고 Set으로 관리되는 메세지를 24시간 마다 정리
@@ -235,15 +226,26 @@ export class RealtimeNotificationService {
     }
   }
 
-  // 5-2. 스트림 메세지 자동 정리
+  // 5-2. 재난 데이터 스트림 메세지 자동 정리
   @Interval(86400000) // 24시간
-  async trimStreams() {
-    const streams = [
-      RedisKeys.disasterStream('area1'),
-      RedisKeys.disasterStream('area2'),
-    ];
-    for (const stream of streams) {
-      await this.redisService.client.xtrim(stream, 'MAXLEN', '~', 1000);
-    }
+  async trimDisasterStreams() {
+    let cursor = '0';
+    do {
+      // SCAN 명령을 사용하여 키를 검색
+      const reply = await this.redisService.client.scan(
+        cursor,
+        'MATCH',
+        'disasterStream:*',
+        'COUNT',
+        100,
+      );
+      cursor = reply[0]; // 새 커서 위치
+      const keys = reply[1]; // 발견된 키 목록
+
+      for (const streamKey of keys) {
+        await this.redisService.client.xtrim(streamKey, 'MAXLEN', '~', 1000); // 스트림 크기 조정
+        this.logger.log(`재난 데이터 스트림 ${streamKey} 정리 완료.`);
+      }
+    } while (cursor !== '0');
   }
 }
