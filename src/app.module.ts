@@ -36,6 +36,7 @@ import { DestinationRiskController } from './destination-risk/destination-risk.c
 import { DestinationRiskService } from './destination-risk/destination-risk.service';
 import { DestinationRiskModule } from './destination-risk/destination-risk.module';
 import { AppController } from './app.controller';
+import { NewsModule } from './news/news.module';
 
 const typeOrmModuleOptions = {
   useFactory: async (
@@ -99,6 +100,7 @@ const typeOrmModuleOptions = {
     SheltersModule,
     DestinationRiskModule,
     DmModule,
+    NewsModule,
   ],
   controllers: [DestinationRiskController, AppController],
   providers: [DestinationRiskService],
