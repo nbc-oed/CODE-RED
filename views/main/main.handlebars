@@ -1,0 +1,29 @@
+<main>
+
+  <div id='user-location'>나의 현재 위치 : 종로구</div>
+
+  <div id='user-location'>가까운 대피소 : 종로중학교</div>
+
+  <h2>매우 안전</h2>
+
+  <img src='img/greenCorong.png' alt='안전' id='corongImage_green' />
+
+  <table class='real_time_data'>
+    <tr>
+      <th>인구 밀집</th>
+      <td>매우 낮음</td>
+      <th>인구 추이</th>
+      <td>약 2천명</td>
+    </tr>
+
+    <tr>
+      <th>재난 현황</th>
+      <td>0건</td>
+      <th>사건 / 사고</th>
+      <td>{{lengthOfList news }}건</td>
+    </tr>
+  </table>
+  <div style='color: gray'>위험도 측정 기준 : 2024-03-27 15:34:52 기준</div>
+</main>
+
+<script src="/js/location.js"></script>

@@ -23,20 +23,20 @@ export class SheltersService {
 
   async getShelters() {
     const seoulShelter = await this.configService.get('SHELTER_API');
-    const totalData = []
+    const totalData = [];
     let response = await axios.get(
       `http://openapi.seoul.go.kr:8088/${seoulShelter}/xml/TbEqkShelter/1/1000/`, // 1/1000 , 1001/1552 등 데이터 숫자에 따라 변동 가능. 한번에 1000개까지만 가능.
     );
-    
-      // 공공데이터라 그런지 JSON이 아닌 XML 방식
-      let xmlData = response.data;
 
-      // 받아온 xml 방식의 데이터를 json으로 변환
-      // compact : true는 압축된 json 형식이고, space는 json 출력시 들여쓰기 칸 수
-      let xmlToJsonData = convert.xml2json(xmlData, {
-        compact: true,
-        spaces: 4,
-      });
+    // 공공데이터라 그런지 JSON이 아닌 XML 방식
+    let xmlData = response.data;
+
+    // 받아온 xml 방식의 데이터를 json으로 변환
+    // compact : true는 압축된 json 형식이고, space는 json 출력시 들여쓰기 칸 수
+    let xmlToJsonData = convert.xml2json(xmlData, {
+      compact: true,
+      spaces: 4,
+    });
 
       // json 문자열을 자바스크립트 객체로 변환
       let shelterDataJsonVer = JSON.parse(xmlToJsonData);
@@ -120,9 +120,9 @@ export class SheltersService {
 
   async updateShelter(shelterId: number, shelterData: any) {
     const findShelterData = await this.sheltersRepository.findOne({
-      where : {
-        shelter_id : shelterId
-      }
+      where: {
+        shelter_id: shelterId,
+      },
     });
     if (!findShelterData) {
       throw new NotFoundException('Shelter not found');
@@ -131,29 +131,30 @@ export class SheltersService {
     const updatesNeeded = {};
 
     // 기존 데이터와 받아온 데이터의 키 값들 끼리 비교.. 해서 다르다면 그 값들만 updatesNeeded 배열에 할당
-    Object.keys(shelterData).forEach(key => {
-      const apiValue = shelterData[key]
-      const dbValue = findShelterData[key]
+    Object.keys(shelterData).forEach((key) => {
+      const apiValue = shelterData[key];
+      const dbValue = findShelterData[key];
 
       // 위도 경도가 key값에 존재 하는지 확인. 그렇다면 비교한뒤 다르다면 받아온 값을 업데이트가 필요한 부분에 할당
       if (['longitude', 'latitude'].includes(key)) {
-        if(parseFloat(apiValue) !== parseFloat(dbValue)) {
-          updatesNeeded[key] = apiValue
+        if (parseFloat(apiValue) !== parseFloat(dbValue)) {
+          updatesNeeded[key] = apiValue;
         }
       } else if (apiValue !== dbValue) {
-        updatesNeeded[key] = apiValue
+        updatesNeeded[key] = apiValue;
       }
     });
 
     // 업데이트가 필요한 값들(updatesNeeded)이 있다면 그대로 업데이트 진행
     if (Object.keys(updatesNeeded).length > 0) {
-      await this.sheltersRepository.createQueryBuilder()
+      await this.sheltersRepository
+        .createQueryBuilder()
         .update(Shelters)
         .set(updatesNeeded)
-        .where("shelter_id = :shelter_id", { shelter_id: shelterId })
+        .where('shelter_id = :shelter_id', { shelter_id: shelterId })
         .execute();
     }
-    console.log(updatesNeeded)
+    console.log(updatesNeeded);
   }
 
   // 검색칸의 값이 포함된 대피소 불러오기

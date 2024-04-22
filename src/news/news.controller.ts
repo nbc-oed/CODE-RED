@@ -8,8 +8,6 @@ export class NewsController {
   @Get()
   @Render('news/news')
   async findAllNews(@Query('pagenum') pagenum: number) {
-    console.log('pagenum controller =>', pagenum);
-
     const news = await this.newsService.findAllNews(pagenum);
     return { news: news };
   }

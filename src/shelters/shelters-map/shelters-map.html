@@ -14,6 +14,7 @@
       document.addEventListener('DOMContentLoaded', function () {
         let mapContainer = document.getElementById('map');
 
+
         // 지도 생성에 들어갈 옵션 설정. center:지도 초기 중심 좌표 설정하는 속성, level:지도 확대수준. 낮을수록 zoom-in
         let mapOption = {
           center: new kakao.maps.LatLng(37.502391, 127.044501),
@@ -21,6 +22,7 @@
         };
 
         let map = new kakao.maps.Map(mapContainer, mapOption); // kakao.maps.Map : 지도 객체 생성 메서드. 지도 표시 DOM객체인 mapContainer와 지도 옵션 객체인 mapOption을 매개변수로 받음
+
 
         // 마커를 담을 배열 생성
         let markers = [];

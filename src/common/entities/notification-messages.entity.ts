@@ -1,56 +1,33 @@
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  OneToMany,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
-import { NotificationCategory } from '../types/notification-messages-category.type';
+import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
+import { BaseModel } from './base-model.entity';
+import { NotificationStatus } from '../types/notification-status.type';
 import { Users } from './users.entity';
-import { EmergencyData } from './emergency-data.entity';
-import { DisasterData } from './disaster-data.entity';
 
 @Entity({ name: 'notification_messages' })
-export class NotificationMessages {
-  @PrimaryGeneratedColumn()
-  id: number;
+export class NotificationMessages extends BaseModel {
+  @Column({ type: 'int', nullable: true })
+  user_id?: number;
 
-  @Column({ type: 'text', nullable: false })
-  region: string;
+  @Column({ type: 'varchar', nullable: true })
+  client_id?: string;
 
-  @Column({ type: 'text', nullable: false })
-  content: string;
+  @Column({ type: 'varchar', nullable: false })
+  title: string;
 
-  @Column({ type: 'timestamp', nullable: false })
-  send_datetime: Date;
+  @Column({ type: 'varchar', nullable: false })
+  message: string;
 
-  // user_id
-  @Column({ name: 'user_id', type: 'int', nullable: false })
-  user_id: number;
+  @Column({
+    type: 'enum',
+    enum: NotificationStatus,
+    nullable: false,
+    default: NotificationStatus.UnRead,
+  })
+  status: NotificationStatus;
 
-  @ManyToOne(() => Users, (user) => user.messages)
-  @JoinColumn({ name: 'user_id' })
+  @ManyToOne(() => Users, (user) => user.messages, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'user_id', referencedColumnName: 'id' })
   user: Users;
-
-  @CreateDateColumn()
-  created_at: Date;
-
-  // emergency_data_id
-  @Column({ name: 'emergency_data_id', type: 'int', nullable: true })
-  emergency_data_id: number;
-
-  @ManyToOne(() => EmergencyData, (emergency) => emergency.messages)
-  @JoinColumn({ name: 'emergency_data_id' })
-  emergency: EmergencyData;
-
-  // disaster_data_id
-
-  @Column({ name: 'disaster_data_id', type: 'int', nullable: true })
-  disaster_data_id: number;
-
-  @ManyToOne(() => DisasterData, (disaster) => disaster.messages)
-  @JoinColumn({ name: 'disaster_data_id' })
-  disaster: DisasterData;
 }

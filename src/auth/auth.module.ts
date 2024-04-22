@@ -1,7 +1,7 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { AuthService, KakaoLogin } from './auth.service';
 import { AuthController } from './auth.controller';
-import { JwtModule } from '@nestjs/jwt';
+import { JwtModule, JwtService } from '@nestjs/jwt';
 import { UsersModule } from 'src/users/users.module';
 import { ConfigService } from '@nestjs/config';
 import { PassportModule } from '@nestjs/passport';
@@ -10,6 +10,10 @@ import { Users } from 'src/common/entities/users.entity';
 import { AwsModule } from 'src/aws/aws.module';
 import { HttpModule } from '@nestjs/axios';
 import { ConfigModule } from '@nestjs/config';
+import { JwtAuthGuard } from './guard/client-custom.guard';
+import { UtilsModule } from 'src/utils/utils.module';
+import { NotificationsModule } from 'src/notifications/notifications.module';
+
 @Module({
   imports: [
     HttpModule,
@@ -21,11 +25,14 @@ import { ConfigModule } from '@nestjs/config';
       }),
       inject: [ConfigService],
     }),
-    UsersModule,
+    forwardRef(() => UsersModule),
+    forwardRef(() => NotificationsModule),
     TypeOrmModule.forFeature([Users]),
     AwsModule,
+    UtilsModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, KakaoLogin],
+  providers: [AuthService, KakaoLogin, JwtAuthGuard, JwtService],
+  exports: [JwtAuthGuard, JwtService],
 })
 export class AuthModule {}
