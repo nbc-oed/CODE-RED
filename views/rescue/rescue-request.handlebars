@@ -13,26 +13,33 @@
     </div>
     <form>
       <input type='text' name='context' id='SendRescueMessage' placeholder='구조요청 메세지를 적어주세요' value="" />
-
-      {{#each helpers}}
-      <input type="hidden" name="HelperId" value="{{user_id}}">
-      {{/each}}
-
-
       <button id='sendHelpBtn' type='submit'>구조요청 보내기</button>
     </form>
+  </div>
+
+  <div id="loadingcontainer" class="none">
+    <div class="loading-container">
+      <div class="loading"></div>
+      <div id="loading-text">loading</div>
+    </div>
+    <div id="loadingText">
+      요청 수락 대기중 <br />
+      잠시만 기다려주세요
+    </div>
   </div>
 </main>
 
 <script>
-
-
   document.querySelector('#sendHelpBtn').addEventListener('click', async (e) => {
     e.preventDefault();
 
+    const rescueRequest = document.querySelector('#rescueRequestContainer')
+    const loading = document.querySelector('#loadingcontainer')
+
+    rescueRequest.classList.add('none')
+    loading.classList.remove('none')
+
     const context = document.querySelector('#SendRescueMessage').value;
-    const helperIdInputs = document.getElementsByName('HelperId');
-    const helperIds = Array.from(helperIdInputs).map(input => input.value);
     try {
       const response = await fetch('/mayday/sos', {
         method: 'POST',
@@ -41,16 +48,25 @@
         },
         body: JSON.stringify({
           context: context,
-          helpers: helperIds
         }),
       });
 
       if (response.ok) {
-        alert('요청을 보냈습니다.')
-        window.location.href = '/mayday/rescue-request-loading'
+        const responseData = await response.json();
+
+        if (responseData.message === 'NotAccept') {
+          alert('요청이 수락되지 않았습니다..')
+          window.location.href = '/mayday/findHelper'
+
+        } else if (responseData.message === 'Accepted') {
+          alert('헬퍼가 수락을 하였습니다.!!')
+          window.location.href = '/mayday/match'
+        }
+
       } else {
         console.error('요청 실패:', response.statusText);
         alert('요청 실패하였습니다..')
+        window.location.href = '/mayday/findHelper'
       }
     } catch (error) {
       console.error('요청 실패:', error);

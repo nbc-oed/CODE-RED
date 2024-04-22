@@ -5,7 +5,8 @@ import {
   Body,
   Render,
   UseGuards,
-  Redirect,
+  Query,
+  Patch,
 } from '@nestjs/common';
 import { MaydayService } from './mayday.service';
 import { AuthGuard } from '@nestjs/passport';
@@ -14,7 +15,7 @@ import { Users } from 'src/common/entities/users.entity';
 import { LocationDto } from './dto/location.dto';
 import { RescueCompleteDto } from './dto/rescueCompleteDto.dto';
 import { SendRescueMessageDto } from './dto/sendRescueMessage.dto';
-import { query } from 'express';
+
 @Controller('mayday')
 @UseGuards(AuthGuard('jwt'))
 export class MaydayController {
@@ -47,48 +48,69 @@ export class MaydayController {
     @UserInfo() user: Users,
     @Body() sendRescueMessageDto: SendRescueMessageDto,
   ) {
-    console.log('@@@@@@@@@@@@sendRescueMessageDto => ', sendRescueMessageDto);
-    console.log('@@@@@@@@@@@@@@@user => ', user);
+    const message = await this.maydayService.sendRequestRescue(
+      user.id,
+      sendRescueMessageDto,
+    );
 
-    await this.maydayService.sendRequestRescue(user.id, sendRescueMessageDto);
+    return message;
   }
 
   // 헬퍼 구조 요청 페이지
   @Get('help-request')
   @Render('rescue/helper')
-  helper() {} // 수락  거절
+  helperPage(@Query() rescue: any) {
+    const { distance, username, message } = rescue;
 
-  // 알림 받은 유저 정보 저장 및 거리 계산
-  /* 알림 보낼때 세션같은걸로 유저 아이디 받아와야함 userId = 1 */
-  /* 이곳은 helper가 수락 버튼을 누르면 작동되는 곳
-    user = 도움 요청하는 사람 = userID 1
-    helper = 도움 주는 사람 = helperID 2
-    locationDto = 도움 주는 사람의 현재 위치 정보 가져오기(확실하게 하기 위하여)
-  */
+    return { distance: distance, username: username, message: message };
+  }
+
   @Post('accept-rescue')
   async acceptRescue(
     @UserInfo() helper: Users,
     @Body() locationDto: LocationDto,
   ) {
-    const distance = await this.maydayService.acceptRescue(
-      1,
+    const result = await this.maydayService.acceptRescue(
       helper.id,
       locationDto,
     );
 
-    return { message: `유저와 헬퍼의 최단 거리 ${distance}Km` };
+    return {
+      distance: result.distance,
+      helperName: result.helperName,
+      message: result.message,
+    };
   }
 
-  @Get('rescue-request-loading')
-  @Render('rescue/rescue-request-loading')
-  loading() {}
+  @Get('matchHelper')
+  @Render('rescue/matchHelper')
+  matchHelperPage(@Query() helpeInfo: any) {
+    const { distance, helperName, message } = helpeInfo;
+
+    return { distance: distance, helperName: helperName, message: message };
+  }
+
+  @Get('match')
+  @Render('rescue/matchHelper')
+  async matchUserPage(@UserInfo() user: Users) {
+    const matchInfo = await this.maydayService.matchInfo(user.id);
+    return {
+      distance: matchInfo.distance,
+      helperName: matchInfo.helperName,
+      message: matchInfo.message,
+    };
+  }
 
   // 구조 요청 완료 하기
-  @Post('rescue-complete')
+  @Patch('rescue-complete')
   async rescueComplete(
     @UserInfo() user: Users,
     @Body() rescueCompleteDto: RescueCompleteDto,
   ) {
-    await this.maydayService.rescueComplete(user.id, rescueCompleteDto);
+    const message = await this.maydayService.rescueComplete(
+      user.id,
+      rescueCompleteDto,
+    );
+    return { message: message };
   }
 }
