@@ -31,10 +31,11 @@ export class UsersController {
   }
 
   // 유저 상세 조회
-  @Get(':id')
+  @Get('/myinfo')
+  @UseGuards(AuthGuard('jwt'))
   @Render('member/myinfo')
-  async getOneUsers(@Param('id') id: number) {
-    return await this.usersService.findOne(id);
+  async getOneUsers(@UserInfo() user: Users) {
+    return await this.usersService.findOne(user.id);
   }
 
   // 유저 수정
