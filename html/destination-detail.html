@@ -38,6 +38,7 @@
         text-align: center;
         display: flex;
         padding-bottom: 0px;
+        padding-top: 10px;
       }
 
       #sos {
@@ -79,60 +80,372 @@
         width: 25px;
         height: 25px;
       }
+
+      #inputButton {
+        display: flex;
+        gap: 5px;
+        margin-top: 15px
+      }
+      #searchInput {
+        background-color: #2196F3;
+        border-radius: 7px;
+        border: 1px solid white;
+      }
+      #searchInput::placeholder {
+        color : white;
+        padding-left: 5px;
+      }
+      #searchButton {
+        width: 100px;
+        height: 50px;
+        background-color: #2196F3;
+        border-radius: 7px;
+        border: 1px solid white;
+        color : white;
+      }
+
+      #message {
+        color: rgb(1, 4, 15);
+        font-size: 18px;
+        font-weight: bold;
+      }
+
+      #standard {
+        padding: 0px;
+      }
     </style>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const urlParams = new URLSearchParams(window.location.search)
-            const destination = urlParams.get('destination')
-            console.log(destination)
+        // 메인 페이지에서의 검색어(목적지)를 이어받아서 목적지 검색 실행
+        document.addEventListener('DOMContentLoaded', async () => {
+          let congestScore;
+          let disasterScore;
+          let riskLevelElement = document.getElementById('riskLevel')
+          let corongImage = document.getElementById('corong-image');
+          let relatedMessage = document.getElementById('message')
+          let congestStyle = document.getElementById('congest')
+          let transitionStyle = document.getElementById('transition')
+          let congestStandardStyle = document.getElementById('congestStandard')
+          let transitionStandardStyle = document.getElementById('transitionStandard')
+
+          const urlParams = new URLSearchParams(window.location.search)
+          const destination = urlParams.get('destination')
+          try{  
             if (destination) {
-                fetch (`http://localhost:3000/destination-risk/detail?destination=${destination}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if(!data['기준 장소']) {
-                            alert('해당 데이터를 찾지 못했습니다.')
-                        } else {
-                            console.log(data)
-                            let guide = document.getElementById('risk')
-                            guide.innerHTML = `현재 ${destination}와 가까운 ${data['기준 장소']}의 위험도`
-                            let message = document.getElementById('message')
-                            message.innerHTML = data['관련 안내사항']
-                            let destinationCongest = document.getElementById('congest')
-                            destinationCongest.innerHTML = data['실시간 장소 혼잡도']
-                            let destinationTransition = document.getElementById('transition')
-                            destinationTransition.innerHTML = data['예상 인구']
-                            let destinationWeather = document.getElementById('weather')
-                            destinationWeather.innerHTML = data['비,눈 관련 사항']
-                        }
-                    })
+              const url = `http://localhost:3000/destination-risk/detail?destination=${destination}`
+              const response = await fetch (url)
+              const populationData = await response.json()
+              if(!populationData['기준 장소']) {
+                alert('해당 데이터를 찾지 못했습니다.')
+              } else {
+                congestScore = 0
+
+                // '실시간 장소 혼잡도' 값에 따라 점수 부여
+                switch(populationData['실시간 장소 혼잡도']) {
+                  case '여유': congestScore = 0
+                  congestStyle.style.color = 'green'
+                  transitionStyle.style.color = 'green'
+                  relatedMessage.style.color = 'green'
+                  congestStandardStyle.style.color = 'green'
+                  transitionStandardStyle.style.color = 'green'
+                  break
+                  case '보통': congestScore = 1
+                  congestStyle.style.color = 'deepskyblue'
+                  transitionStyle.style.color = 'deepskyblue'
+                  relatedMessage.style.color = 'deepskyblue'
+                  congestStandardStyle.style.color = 'deepskyblue'
+                  transitionStandardStyle.style.color = 'deepskyblue'
+                  break
+                  case '약간 붐빔': congestScore = 3
+                  congestStyle.style.color = 'orange'
+                  transitionStyle.style.color = 'orange'
+                  relatedMessage.style.color = 'orange'
+                  congestStandardStyle.style.color = 'orange'
+                  transitionStandardStyle.style.color = 'orange'
+                  break
+                  case '붐빔': congestScore = 5
+                  congestStyle.style.color = 'red'
+                  transitionStyle.style.color = 'red'
+                  relatedMessage.style.color = 'red'
+                  congestStandardStyle.style.color = 'red'
+                  transitionStandardStyle.style.color = 'red'
+                  break
+                  default: congestScore = null,
+                  console.log('알 수 없는 혼잡도 상태입니다.')
+                }
+                console.log("--congestScore--",congestScore)
+
+                let guide = document.getElementById('risk')
+                guide.innerHTML = `목적지 ${destination}에서 가까운 ${populationData['기준 장소']}의 위험도`
+                let message = document.getElementById('message')
+                message.innerHTML = populationData['관련 안내사항']
+                let destinationCongest = document.getElementById('congest')
+                let congestStandard = document.getElementById('congestStandard')
+                destinationCongest.innerHTML = populationData['실시간 장소 혼잡도']
+                congestStandard.innerHTML = populationData['실시간 장소 혼잡도']
+                let destinationTransition = document.getElementById('transition')
+                let transitionStandard = document.getElementById('transitionStandard')
+                destinationTransition.innerHTML = populationData['예상 인구']
+                transitionStandard.innerHTML = populationData['예상 인구']
+                let destinationWeather = document.getElementById('weather')
+                destinationWeather.innerHTML = populationData['비,눈 관련 사항']
+              }
+
+              // 재난 현황
+              const disasterUrl = `http://localhost:3000/disaster/data`
+              const responseDisaster = await fetch(disasterUrl)
+              let disasterData = await responseDisaster.json()
+
+              const filteredDisasterData = disasterData.filter(data => {
+              const hasSeoul = data.locationName.includes('서울특별시')
+              const keywords = ['지진', '산불', '태풍', '홍수', '지진해일', '전염병', '테러', '폭동'];
+              const containsKeyword = keywords.some(keyword => data.message.includes(keyword));
+              return hasSeoul && containsKeyword;
+              })
+              // 필터링 된 재난 데이터가 없을 경우
+              if (!filteredDisasterData.length) {
+                let emptyDisaster = document.getElementById('calamity')
+                let emptyDisasterStandard = document.getElementById('calamityStandard')
+                disasterScore = 0
+                emptyDisaster.innerHTML = '0건'
+                emptyDisaster.style.color = 'green'
+                emptyDisasterStandard.innerHTML = '0건'
+                emptyDisasterStandard.style.color = 'green'
+                let totalScore = congestScore + disasterScore;
+                console.log("---totalScore---",totalScore)
+
+                if (totalScore >= 0 && congestScore <= 3) {
+                  riskLevelElement.innerHTML = '안전'
+                  riskLevelElement.style.color = 'darkolivegreen'
+                  corongImage.src = 'https://postfiles.pstatic.net/MjAyNDA0MjBfMTgg/MDAxNzEzNjA2NDg3MzI3.sKvYltmXJ46If2ypG6IBHs8DKf22ogQWF8W9DwbKp7Mg.Hx7frtbDo3Lt2WDbaAwb5p1EhQhh_-CbshWOHSEwh40g.PNG/%EC%BD%94%EB%A1%B1%EC%9D%B4_%EA%B7%B8%EB%A6%B0.png?type=w580';
+                } else if (totalScore >= 4 && congestScore <= 6) {
+                    riskLevelElement.innerHTML = '보통'
+                    riskLevelElement.style.color = 'deepskyblue'
+                    corongImage.src = 'https://postfiles.pstatic.net/MjAyNDA0MjBfMjQg/MDAxNzEzNjA2NDkyNDI2.tR15Dv8bUiN8O6wEuuUkRgRtdxjv3yYSwTPRz-4G66gg.y9_pGy2eZ4o1ISoLhQzC1itG7HyktBmH3n2oj5LV36wg.PNG/%EC%BD%94%EB%A1%B1%EC%9D%B4_%EC%8A%A4%EC%B9%B4%EC%9D%B4%EB%B8%94%EB%A3%A8.png?type=w580';
+                  } else if (totalScore >= 7 && congestScore <= 11) {
+                    riskLevelElement.innerHTML = '약간 위험'
+                    riskLevelElement.style.color = 'orange'
+                    corongImage.src = 'https://postfiles.pstatic.net/MjAyNDA0MjBfNjQg/MDAxNzEzNjA2NDk3NDY0.OfArP4BsxiSy79JghC6OOcxLO3lUqzo5QGuzeZMwTXsg.7AsKH6ExROwijk092ZrPbAu_kiRSHENPB56lL-MuHDgg.PNG/%EC%BD%94%EB%A1%B1%EC%9D%B4_%EC%98%A4%EB%A0%8C%EC%A7%80.png?type=w580'
+                  } else if (totalScore >= 12) {
+                    riskLevelElement.innerHTML = '매우 위험'
+                    riskLevelElement.style.color = 'red'
+                    corongImage.src = 'https://postfiles.pstatic.net/MjAyNDA0MjBfMTA2/MDAxNzEzNjA2NDk5Nzk2.RFnFMYJw-yNigAbQXpE9n4oHzhQDZVYYZwRcvy51m0sg.U8rK9fI9Tbd7VP3KsCI4M8-DyMUhLH4gIWPRScnVZM4g.PNG/%EC%BD%94%EB%A1%B1%EC%9D%B4_%EB%A0%88%EB%93%9C.png?type=w580'
+                  } else {
+                  console.log('유효하지 않은 totalScore 값입니다.')
+                  }
+              }
+              // 필터링된 데이터가 존재할 경우
+              else {
+              const scoreDisasterData = filteredDisasterData.map(data => {
+                disasterScore = 0
+                if (data.message.includes('산불')) {
+                  disasterScore += 4
+                }
+                if (data.message.includes('태풍') || data.message.includes('홍수')) {
+                  disasterScore += 6
+                }
+                if (data.message.includes('지진') || data.message.includes('전염병')) {
+                  disasterScore += 8
+                }
+                if (data.message.includes('지진해일')) {
+                  disasterScore += 10
+                }
+                return {...data, disasterScore}
+              })
+              console.log("--scoreDisasterData--",scoreDisasterData.disasterScore)
+              // 점수 합산, 문구 변경, 안전:0~3점, 보통:4~6점, 약간위험: 7~11점, 매우위험:12~ 로 설정
+              let totalScore = congestScore + disasterScore;
+              console.log("---total---",totalScore)
+
+              if (totalScore >= 1 && totalScore <= 3) {
+                riskLevelElement.innerHTML = '안전'
+                riskLevelElement.style.color = 'green'
+                corongImage.src = 'https://postfiles.pstatic.net/MjAyNDA0MjBfMTgg/MDAxNzEzNjA2NDg3MzI3.sKvYltmXJ46If2ypG6IBHs8DKf22ogQWF8W9DwbKp7Mg.Hx7frtbDo3Lt2WDbaAwb5p1EhQhh_-CbshWOHSEwh40g.PNG/%EC%BD%94%EB%A1%B1%EC%9D%B4_%EA%B7%B8%EB%A6%B0.png?type=w580';
+                relatedMessage.style.color = 'green'
+              } else if (totalScore >= 4 && totalScore <= 6) {
+                riskLevelElement.innerHTML = '보통'
+                riskLevelElement.style.color = 'blue'
+                corongImage.src = 'https://postfiles.pstatic.net/MjAyNDA0MjBfMjQg/MDAxNzEzNjA2NDkyNDI2.tR15Dv8bUiN8O6wEuuUkRgRtdxjv3yYSwTPRz-4G66gg.y9_pGy2eZ4o1ISoLhQzC1itG7HyktBmH3n2oj5LV36wg.PNG/%EC%BD%94%EB%A1%B1%EC%9D%B4_%EC%8A%A4%EC%B9%B4%EC%9D%B4%EB%B8%94%EB%A3%A8.png?type=w580';
+                relatedMessage.style.color = 'blue'
+              } else if (totalScore >= 7 && totalScore <= 11) {
+                riskLevelElement.innerHTML = '약간 위험'
+                riskLevelElement.style.color = 'orange'
+                corongImage.src = 'https://postfiles.pstatic.net/MjAyNDA0MjBfNjQg/MDAxNzEzNjA2NDk3NDY0.OfArP4BsxiSy79JghC6OOcxLO3lUqzo5QGuzeZMwTXsg.7AsKH6ExROwijk092ZrPbAu_kiRSHENPB56lL-MuHDgg.PNG/%EC%BD%94%EB%A1%B1%EC%9D%B4_%EC%98%A4%EB%A0%8C%EC%A7%80.png?type=w580'
+                relatedMessage.style.color = 'orange'
+              } else if (totalScore >= 12) {
+                riskLevelElement.innerHTML = '매우 위험'
+                riskLevelElement.style.color = 'red'
+                corongImage.src = 'https://postfiles.pstatic.net/MjAyNDA0MjBfMTA2/MDAxNzEzNjA2NDk5Nzk2.RFnFMYJw-yNigAbQXpE9n4oHzhQDZVYYZwRcvy51m0sg.U8rK9fI9Tbd7VP3KsCI4M8-DyMUhLH4gIWPRScnVZM4g.PNG/%EC%BD%94%EB%A1%B1%EC%9D%B4_%EB%A0%88%EB%93%9C.png?type=w580'
+                relatedMessage.style.color = 'red'
+              } else {
+                totalScore = '알 수 없는 점수';
+              }
+              }
             } else {
                 alert('다시 입력 해주세요.')
             }
-            document.getElementById('searchButton').addEventListener('click', () => {
-                let searchInput = document.getElementById('searchInput').value;
-                let url = `http://localhost:3000/destination-risk/detail?destination=${searchInput}`
-                fetch(url)
-                .then(response => {
-                    return response.json()
-                })
-                .then(data => {
-                    console.log(data)
-                    if(!data['기준 장소']) {
-                        alert('해당 데이터를 찾지 못했습니다.')
-                    } else {
-                        let guide = document.getElementById('risk')
-                        guide.innerHTML = `현재 ${searchInput}와 가까운 ${data['기준 장소']}의 위험도`
-                        let message = document.getElementById('message')
-                        message.innerHTML = data['관련 안내사항']
-                        let destinationCongest = document.getElementById('congest')
-                        destinationCongest.innerHTML = data['실시간 장소 혼잡도']
-                        let destinationTransition = document.getElementById('transition')
-                        destinationTransition.innerHTML = data['예상 인구']
-                        let destinationWeather = document.getElementById('weather')
-                        destinationWeather.innerHTML = data['비,눈 관련 사항']
-                    }
-                })
-            })
+
+            // 상세 페이지에서의 검색 로직
+            document.getElementById('searchButton').addEventListener('click', async () => {
+              let searchInput = document.getElementById('searchInput').value;
+              const url = `http://localhost:3000/destination-risk/detail?destination=${searchInput}`
+              const response = await fetch(url)
+              const populationData = await response.json()
+              if(!populationData['기준 장소']) {
+                alert('해당 데이터를 찾지 못했습니다.')
+              } else {
+                let congestScore = 0
+
+                // '실시간 장소 혼잡도' 값에 따라 점수 부여
+                switch(populationData['실시간 장소 혼잡도']) {
+                  case '여유': congestScore = 0
+                  congestStyle.style.color = 'green'
+                  transitionStyle.style.color = 'green'
+                  relatedMessage.style.color = 'green'
+                  congestStandardStyle.style.color = 'green'
+                  transitionStandardStyle.style.color = 'green'
+                  break
+                  case '보통': congestScore = 1
+                  congestStyle.style.color = 'deepskyblue'
+                  transitionStyle.style.color = 'deepskyblue'
+                  relatedMessage.style.color = 'deepskyblue'
+                  congestStandardStyle.style.color = 'deepskyblue'
+                  transitionStandardStyle.style.color = 'deepskyblue'
+                  break
+                  case '약간 붐빔': congestScore = 3
+                  congestStyle.style.color = 'orange'
+                  transitionStyle.style.color = 'orange'
+                  relatedMessage.style.color = 'orange'
+                  congestStandardStyle.style.color = 'orange'
+                  transitionStandardStyle.style.color = 'orange'
+                  break
+                  case '붐빔': congestScore = 5
+                  congestStyle.style.color = 'red'
+                  transitionStyle.style.color = 'red'
+                  relatedMessage.style.color = 'red'
+                  congestStandardStyle.style.color = 'red'
+                  transitionStandardStyle.style.color = 'red'
+                  break
+                  default: congestScore = null,
+                  console.log('알 수 없는 혼잡도 상태입니다.')
+                }
+                console.log("--congestScore--",congestScore)
+
+                let guide = document.getElementById('risk')
+                guide.innerHTML = `목적지 ${searchInput}에서 가까운 ${populationData['기준 장소']}의 위험도`
+                let message = document.getElementById('message')
+                message.innerHTML = populationData['관련 안내사항']
+                let destinationCongest = document.getElementById('congest')
+                let congestStandard = document.getElementById('congestStandard')
+                destinationCongest.innerHTML = populationData['실시간 장소 혼잡도']
+                congestStandard.innerHTML = populationData['실시간 장소 혼잡도']
+                let destinationTransition = document.getElementById('transition')
+                let transitionStandard = document.getElementById('transitionStandard')
+                destinationTransition.innerHTML = populationData['예상 인구']
+                transitionStandard.innerHTML = populationData['예상 인구']
+                let destinationWeather = document.getElementById('weather')
+                destinationWeather.innerHTML = populationData['비,눈 관련 사항']
+              }
+
+              // 재난 현황
+              const disasterUrl = `http://localhost:3000/disaster/data`
+              const responseDisaster = await fetch(disasterUrl)
+              let disasterData = await responseDisaster.json()
+
+              const filteredDisasterData = disasterData.filter(data => {
+              const hasSeoul = data.locationName.includes('서울특별시')
+              const keywords = ['지진', '산불', '태풍', '홍수', '지진해일', '전염병', '테러', '폭동'];
+              const containsKeyword = keywords.some(keyword => data.message.includes(keyword));
+              return hasSeoul && containsKeyword;
+              })
+              // 필터링 된 재난 데이터가 없을 경우
+              if (!filteredDisasterData.length) {
+                let emptyDisaster = document.getElementById('calamity')
+                let emptyDisasterStandard = document.getElementById('calamityStandard')
+                disasterScore = 0
+                emptyDisaster.innerHTML = '0건'
+                emptyDisaster.style.color = 'green'
+                emptyDisasterStandard.innerHTML = '0건'
+                emptyDisasterStandard.style.color = 'green'
+                let totalScore = congestScore + disasterScore;
+                console.log("---total---",totalScore)
+
+                if (totalScore >= 0 && congestScore <= 3) {
+                  riskLevelElement.innerHTML = '안전'
+                  riskLevelElement.style.color = 'darkolivegreen'
+                  corongImage.src = 'https://postfiles.pstatic.net/MjAyNDA0MjBfMTgg/MDAxNzEzNjA2NDg3MzI3.sKvYltmXJ46If2ypG6IBHs8DKf22ogQWF8W9DwbKp7Mg.Hx7frtbDo3Lt2WDbaAwb5p1EhQhh_-CbshWOHSEwh40g.PNG/%EC%BD%94%EB%A1%B1%EC%9D%B4_%EA%B7%B8%EB%A6%B0.png?type=w580';
+                } else if (totalScore >= 4 && congestScore <= 6) {
+                    riskLevelElement.innerHTML = '보통'
+                    riskLevelElement.style.color = 'deepskyblue'
+                    corongImage.src = 'https://postfiles.pstatic.net/MjAyNDA0MjBfMjQg/MDAxNzEzNjA2NDkyNDI2.tR15Dv8bUiN8O6wEuuUkRgRtdxjv3yYSwTPRz-4G66gg.y9_pGy2eZ4o1ISoLhQzC1itG7HyktBmH3n2oj5LV36wg.PNG/%EC%BD%94%EB%A1%B1%EC%9D%B4_%EC%8A%A4%EC%B9%B4%EC%9D%B4%EB%B8%94%EB%A3%A8.png?type=w580';
+                  } else if (totalScore >= 7 && congestScore <= 11) {
+                    riskLevelElement.innerHTML = '약간 위험'
+                    riskLevelElement.style.color = 'orange'
+                    corongImage.src = 'https://postfiles.pstatic.net/MjAyNDA0MjBfNjQg/MDAxNzEzNjA2NDk3NDY0.OfArP4BsxiSy79JghC6OOcxLO3lUqzo5QGuzeZMwTXsg.7AsKH6ExROwijk092ZrPbAu_kiRSHENPB56lL-MuHDgg.PNG/%EC%BD%94%EB%A1%B1%EC%9D%B4_%EC%98%A4%EB%A0%8C%EC%A7%80.png?type=w580'
+                  } else if (totalScore >= 12) {
+                    riskLevelElement.innerHTML = '매우 위험'
+                    riskLevelElement.style.color = 'red'
+                    corongImage.src = 'https://postfiles.pstatic.net/MjAyNDA0MjBfMTA2/MDAxNzEzNjA2NDk5Nzk2.RFnFMYJw-yNigAbQXpE9n4oHzhQDZVYYZwRcvy51m0sg.U8rK9fI9Tbd7VP3KsCI4M8-DyMUhLH4gIWPRScnVZM4g.PNG/%EC%BD%94%EB%A1%B1%EC%9D%B4_%EB%A0%88%EB%93%9C.png?type=w580'
+                  } else {
+                  console.log('유효하지 않은 totalScore 값입니다.')
+                  }
+              }
+              else {
+              const scoreDisasterData = filteredDisasterData.map(data => {
+                disasterScore = 0
+                if (data.message.includes('산불')) {
+                  disasterScore += 4
+                }
+                if (data.message.includes('태풍') || data.message.includes('홍수')) {
+                  disasterScore += 6
+                }
+                if (data.message.includes('지진') || data.message.includes('전염병')) {
+                  disasterScore += 8
+                }
+                if (data.message.includes('지진해일')) {
+                  disasterScore += 10
+                }
+                return {...data, disasterScore}
+              })
+              console.log("--scoreDisasterData--",scoreDisasterData.disasterScore)
+              // 점수 합산, 문구 변경, 안전:0~3점, 보통:4~6점, 약간위험: 7~11점, 매우위험:12~ 로 설정
+              let totalScore = congestScore + disasterScore;
+              console.log("---total---",totalScore)
+
+              if (totalScore >= 1 && totalScore <= 3) {
+                riskLevelElement.innerHTML = '안전'
+                riskLevelElement.style.color = 'green'
+                corongImage.src = 'https://postfiles.pstatic.net/MjAyNDA0MjBfMTgg/MDAxNzEzNjA2NDg3MzI3.sKvYltmXJ46If2ypG6IBHs8DKf22ogQWF8W9DwbKp7Mg.Hx7frtbDo3Lt2WDbaAwb5p1EhQhh_-CbshWOHSEwh40g.PNG/%EC%BD%94%EB%A1%B1%EC%9D%B4_%EA%B7%B8%EB%A6%B0.png?type=w580';
+                relatedMessage.style.color = 'green'
+              } else if (totalScore >= 4 && totalScore <= 6) {
+                riskLevelElement.innerHTML = '보통'
+                riskLevelElement.style.color = 'blue'
+                corongImage.src = 'https://postfiles.pstatic.net/MjAyNDA0MjBfMjQg/MDAxNzEzNjA2NDkyNDI2.tR15Dv8bUiN8O6wEuuUkRgRtdxjv3yYSwTPRz-4G66gg.y9_pGy2eZ4o1ISoLhQzC1itG7HyktBmH3n2oj5LV36wg.PNG/%EC%BD%94%EB%A1%B1%EC%9D%B4_%EC%8A%A4%EC%B9%B4%EC%9D%B4%EB%B8%94%EB%A3%A8.png?type=w580';
+                relatedMessage.style.color = 'blue'
+              } else if (totalScore >= 7 && totalScore <= 11) {
+                riskLevelElement.innerHTML = '약간 위험'
+                riskLevelElement.style.color = 'orange'
+                corongImage.src = 'https://postfiles.pstatic.net/MjAyNDA0MjBfNjQg/MDAxNzEzNjA2NDk3NDY0.OfArP4BsxiSy79JghC6OOcxLO3lUqzo5QGuzeZMwTXsg.7AsKH6ExROwijk092ZrPbAu_kiRSHENPB56lL-MuHDgg.PNG/%EC%BD%94%EB%A1%B1%EC%9D%B4_%EC%98%A4%EB%A0%8C%EC%A7%80.png?type=w580'
+                relatedMessage.style.color = 'orange'
+              } else if (totalScore >= 12) {
+                riskLevelElement.innerHTML = '매우 위험'
+                riskLevelElement.style.color = 'red'
+                corongImage.src = 'https://postfiles.pstatic.net/MjAyNDA0MjBfMTA2/MDAxNzEzNjA2NDk5Nzk2.RFnFMYJw-yNigAbQXpE9n4oHzhQDZVYYZwRcvy51m0sg.U8rK9fI9Tbd7VP3KsCI4M8-DyMUhLH4gIWPRScnVZM4g.PNG/%EC%BD%94%EB%A1%B1%EC%9D%B4_%EB%A0%88%EB%93%9C.png?type=w580'
+                relatedMessage.style.color = 'red'
+              } else {
+                totalScore = '알 수 없는 점수';
+              }
+              // 지진,전염병,지진해일 발생시 메세지 표시
+              filteredDisasterData.forEach(data => {
+              if (data.message.includes('지진') || data.message.includes('전염병') || data.message.includes('지진해일')) {
+                const emergencyElement = document.getElementById('emergency')
+                emergencyElement.innerHTML = data.message + '<br>'
+              }
+            });
+              }         
+            }) 
+          } catch (error) {
+            console.error('An error occurred:', error);
+          } 
         })
     </script>
   </head>
@@ -148,7 +461,7 @@
 
     <main>
       <p id="divide"></p>
-      <form id="message-form">
+      <form id="inputButton">
         <input
           type="text"
           id="searchInput"
@@ -156,8 +469,11 @@
         />
         <button id="searchButton" type="button">검색</button>
       </form>
-      <div style="color: gray" id="risk">현재 '목적지'와 가까운 '인근지역'의 위험도</div>
-      <h2>불안</h2>
+      <div style="color: gray; font-size: 12px" id="risk">목적지 '장소'에서 가까운 '인근지역'의 위험도</div>
+
+      <div id="emergency" style="width: 450px; max-height: 120px; font-weight: bold; font-size: 24px; color: red;"></div>
+
+      <h2 id="riskLevel">CODE : RED</h2>
       <img
         src="https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2FoFvs6%2FbtsGHblHYxt%2F1kXhsa7cOG2FcjC2UzUIF1%2Fimg.png"
         alt="프로필 사진"
@@ -173,36 +489,36 @@
           <th>사건 / 사고</th>
         </tr>
         
-        <div style="color: rgb(1, 4, 15); font-size: 27px; font-weight: bold;" id="message">으.. 불안한 장소에요.</div>
+        <div id="message">CODE : RED</div>
         <tr>
-          <td id="congest">매우 낮음</td>
-          <td id="transition">약 2천명</td>
-          <td>0건</td>
-          <td>5건</td>
+          <td id="congest">CODE : RED</td>
+          <td id="transition">CODE : RED</td>
+          <td id="calamity">CODE : RED</td>
+          <td>CODE : RED</td>
         </tr>
-      </table>
-      <div style="color: rgb(90, 76, 239)" id="weather">비 또는 눈 소식이 없어요.  , 2024-04-19 23:50 기준</div>
-      <div style="color: gray" id="time">위험도 측정 기준 : 2024-03-27 15:34:52 기준</div>
-      <br>
-      <table>
+    </table>
+      <div style="color: rgb(90, 76, 239)" id="weather">비 또는 눈 소식 CODE : RED</div>
+      <div style="color: gray; font-size: 12px;" id="time">위험도 측정 기준 : CODE : RED</div>
+
+      <table id="standard">
         <th>위험도 측정 기준</th>
         <tr>
           <th>인구 밀집</th>
-          <td id="congest">매우 낮음</td>
+          <td id="congestStandard">CODE : RED</td>
         </tr>
         <tr>
           <th>인구 추이</th>
-          <td id="transition">약 2천명</td>
+          <td id="transitionStandard">CODE : RED</td>
         </tr>
         <tr>
             <th>재난 현황</th>
-            <td>0건</td>
+            <td id="calamityStandard">CODE : RED</td>
         </tr>
         <tr>
             <th>사건 / 사고</th>
-            <td>5건</td>
+            <td>CODE : RED</td>
         </tr>
-        </table>
+      </table>
     <footer>
       <a href="./main.html"
         ><image
