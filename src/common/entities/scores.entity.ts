@@ -35,7 +35,9 @@ export class Scores {
   @Column({ name: 'record_id', type: 'int', nullable: false })
   record_id: number;
 
-  @OneToOne(() => MaydayRecords, (record) => record.score)
+  @OneToOne(() => MaydayRecords, (record) => record.score, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'record_id' })
   record: MaydayRecords;
 }

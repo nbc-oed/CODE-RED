@@ -48,6 +48,7 @@ async function bootstrap() {
   const helpers = {
     eq: (val1, val2) => val1 === val2,
     lengthOfList: (list = []) => list.length,
+    dateString: (isoString) => new Date(isoString).toLocaleDateString(),
   };
 
   const hbsInstance = exphbs.create({

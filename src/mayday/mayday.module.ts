@@ -4,12 +4,13 @@ import { MaydayController } from './mayday.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Location } from './entities/location.entity';
 import { MaydayRecords } from './entities/mayday-records.entity';
-import { QueueModule } from 'src/notifications/queue/queue.module';
+import { JwtService } from '@nestjs/jwt';
+import { Scores } from 'src/common/entities/scores.entity';
+import { Users } from 'src/common/entities/users.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Location, MaydayRecords]), QueueModule],
+  imports: [TypeOrmModule.forFeature([Location, MaydayRecords, Scores, Users])],
   controllers: [MaydayController],
-  providers: [MaydayService],
-  exports: [MaydayService],
+  providers: [MaydayService, JwtService],
 })
 export class MaydayModule {}

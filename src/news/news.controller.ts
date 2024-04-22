@@ -1,28 +1,19 @@
-import { Controller, Get, Post, Query } from '@nestjs/common';
+import { Controller, Get, Query, Render } from '@nestjs/common';
 import { NewsService } from './news.service';
-import { Cron } from '@nestjs/schedule';
 
 @Controller('news')
 export class NewsController {
   constructor(private readonly newsService: NewsService) {}
 
   @Get()
-  async getNews() {
-    return await this.newsService.getNews();
+  @Render('news/news')
+  async findAllNews(@Query('pagenum') pagenum: number) {
+    const news = await this.newsService.findAllNews(pagenum);
+    return { news: news };
   }
 
-  @Post()
-  async saveNews() {
-    await this.newsService.saveNews();
-  }
-
-  @Cron('0 */5 9-23 * * *')
-  async cronNews() {
-    await this.newsService.saveNews();
-  }
-
-  @Post('accident')
-  async findAccident() {
-    return await this.newsService.findAccident();
+  @Get('accident')
+  async findAccidentNews() {
+    return await this.newsService.findAccidentNews();
   }
 }
