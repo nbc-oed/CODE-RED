@@ -11,6 +11,8 @@
     <div style="border-bottom: 1px solid black;">
       구조 메세지 : {{message}}
     </div>
+    {{type}}
+    {{#if (eq type 'user')}}
     <form id="evaluateForm">
       <div>
         <span>score : </span><select name="score" id="score">
@@ -29,6 +31,7 @@
       </div>
       <button id="rescueCompleteBtn" type="submit">구조 완료</button>
     </form>
+    {{/if}}
   </div>
 
 

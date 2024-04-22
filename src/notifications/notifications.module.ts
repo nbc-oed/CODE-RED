@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 import { NotificationsController } from './notifications.controller';
 import { RedisService } from './redis/redis.service';
@@ -9,12 +9,30 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { DisasterData } from 'src/common/entities/disaster-data.entity';
 import { HttpModule } from '@nestjs/axios';
 import { NotificationMessages } from 'src/common/entities/notification-messages.entity';
+import { RealtimeNotificationService } from './streams/realtime-notifications.service';
+import { UtilsModule } from 'src/utils/utils.module';
+import { FcmService } from './messaging-services/firebase/fcm.service';
+import { BullModule } from '@nestjs/bull';
+import { UsersModule } from 'src/users/users.module';
+import { QueueModule } from './queue/queue.module';
+import { AuthModule } from 'src/auth/auth.module';
 
 @Module({
   imports: [
     ScheduleModule.forRoot(),
     TypeOrmModule.forFeature([DisasterData, NotificationMessages]),
+    BullModule.registerQueue(
+      {
+        name: 'rescueServiceQueue',
+      },
+      {
+        name: 'chatServiceQueue',
+      },
+    ),
     HttpModule,
+    UtilsModule,
+    forwardRef(() => UsersModule),
+    forwardRef(() => AuthModule),
   ],
   controllers: [NotificationsController],
   providers: [
@@ -22,7 +40,10 @@ import { NotificationMessages } from 'src/common/entities/notification-messages.
     RedisService,
     GeoLocationService,
     DisasterService,
+    RealtimeNotificationService,
+    FcmService,
+    QueueModule,
   ],
-  exports: [RedisService, GeoLocationService],
+  exports: [RedisService, GeoLocationService, FcmService, NotificationsService],
 })
 export class NotificationsModule {}

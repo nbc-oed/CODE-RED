@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>CODE:RED</title>
+    <script src="https://www.gstatic.com/firebasejs/8.2.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.2.0/firebase-messaging.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        // FCM 연동을 위한 서비스 계정 정보
+        const firebaseConfig = {
+          apiKey: 'FIREBASE_API_KEY',
+          authDomain: 'FIREBASE_AUTH_DOMAIN',
+          projectId: 'FIREBASE_PROJECT_ID',
+          storageBucket: 'FIREBASE_STORAGEBUCKET',
+          messagingSenderId: 'FIREBASE_MESSAGING_SENDER_ID',
+          appId: 'FIREBASE_APP_ID',
+          measurementId: 'FIREBASE_MEASUREMENT_ID',
+        };
+
+        // Firebase 초기화
+        firebase.initializeApp(firebaseConfig);
+        const messaging = firebase.messaging();
+
+        // 푸시 알림 권한 요청 및 토큰 획득
+        function requestPermission() {
+          console.log('허가를 요청하는 중...');
+
+          // 푸시 알림 권한 요청
+          Notification.requestPermission().then((permission) => {
+            if (permission === 'granted') {
+              messaging
+                .getToken({
+                  vapidKey: 'VAPID_PUBLIC_KEY',
+                })
+                .then((currentToken) => {
+                  if (currentToken) {
+                    console.log('Token:', currentToken);
+                    sendTokenToServer(currentToken);
+                  } else {
+                    console.log(
+                      '사용 가능한 등록 토큰이 없습니다. 생성하려면 권한을 요청하세요.',
+                    );
+                  }
+                })
+                .catch((error) => {
+                  console.log('토큰을 검색하는 중에 오류가 발생:', error);
+                });
+
+              // 클라이언트의 푸시 토큰 획득!!!!!
+              console.log('알림 권한이 부여되었습니다.');
+            } else {
+              console.log('알림 권한을 얻을 수 없습니다.');
+            }
+          });
+        }
+
+        // clientId와 pushToken을 서버에 전송
+        function sendTokenToServer(token) {
+          console.log('token => ', token);
+          // 로컬스토리지에서 clientId 조회
+          const clientId = localStorage.getItem('clientId') || null;
+          // clientId(null일 수 있음), pushToken을 body에 할당
+          const body = { push_token: token, client_id: clientId };
+          // 서버에 전송_usersController
+          fetch('/users/register-token', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ push_token: token, client_id: clientId }),
+          })
+            .then((response) => response.json())
+            // 서버에서 DB 저장 후 다시 전달받은 clientId를 로컬스토리지에서 조회, 없다면 저장, 변경됐다면 업데이트
+            .then((data) => {
+              console.log(
+                '---------------클라이언트 clientsInfo',
+                data.clientsInfo.client_id,
+              );
+              if (
+                data.clientsInfo.client_id ||
+                !localStorage.getItem('clientId')
+              ) {
+                localStorage.setItem('clientId', data.clientsInfo.client_id);
+              }
+              console.log(
+                'Token registered with server, clientId:',
+                data.clientsInfo.client_id,
+                data.clientsInfo.push_token,
+              );
+            })
+            .catch((error) =>
+              console.log('Error sending token to server:', error),
+            );
+        }
+
+        function getLocationPermission(position) {
+          if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(showPosition, showError);
+          } else {
+            console.error('Geolocation is not supported by this browser.');
+          }
+        }
+
+        function showPosition(position) {
+          console.log('position', position.coords);
+          console.log(
+            'Latitude: ' +
+              position.coords.latitude +
+              '\nLongitude: ' +
+              position.coords.longitude,
+          );
+          saveUserLocation(position.coords.latitude, position.coords.longitude);
+        }
+
+        function saveUserLocation(latitude, longitude) {
+          const clientId = localStorage.getItem('clientId') || null;
+          const body = {
+            latitude: latitude,
+            longitude: longitude,
+            client_id: clientId,
+          };
+          // 서버에 전송_usersController
+          fetch('/users/register-location', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              latitude: latitude,
+              longitude: longitude,
+              client_id: clientId,
+            }),
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              if (
+                data.clientsInfo.client_id ||
+                !localStorage.getItem('clientId')
+              ) {
+                localStorage.setItem('clientId', data.clientsInfo.client_id);
+              }
+            })
+            .catch((error) =>
+              console.log('Error sending token to server:', error),
+            );
+        }
+
+        function showError(error) {
+          switch (error.code) {
+            case error.PERMISSION_DENIED:
+              console.error('User denied the request for Geolocation.');
+              break;
+            case error.POSITION_UNAVAILABLE:
+              console.error('Location information is unavailable.');
+              break;
+            case error.TIMEOUT:
+              console.error('The request to get user location timed out.');
+              break;
+            case error.UNKNOWN_ERROR:
+              console.error('An unknown error occurred.');
+              break;
+          }
+        }
+
+        document
+          .getElementById('permissionBtn')
+          .addEventListener('click', requestPermission);
+
+        document
+          .getElementById('permissionBtn1')
+          .addEventListener('click', getLocationPermission);
+
+        // 서비스 워커등록
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker
+            .register('/firebase-messaging-sw.js')
+            .then(function (registration) {
+              console.log(
+                'Service Worker registered with scope:',
+                registration.scope,
+              );
+              messaging.useServiceWorker(registration);
+            })
+            .catch(function (err) {
+              console.log('Service worker registration failed:', err);
+            });
+        }
+      });
+    </script>
+  </head>
+  <body>
+    <h1>FCM 알림 전송 테스트</h1>
+    <button id="permissionBtn">알림 허용하기</button>
+    <h1>위치 정보 활용 동의</h1>
+    <button id="permissionBtn1">활용 동의</button>
+  </body>
+</html>

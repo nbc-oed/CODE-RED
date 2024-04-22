@@ -94,7 +94,10 @@ export class MaydayController {
   @Render('rescue/matchHelper')
   async matchUserPage(@UserInfo() user: Users) {
     const matchInfo = await this.maydayService.matchInfo(user.id);
+    console.log('@@@@@@@@@@@@@@@@@@', matchInfo.userType);
+
     return {
+      type: matchInfo.userType,
       distance: matchInfo.distance,
       helperName: matchInfo.helperName,
       message: matchInfo.message,

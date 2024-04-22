@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Location } from './entities/location.entity';
-import { DataSource, Double, Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { LocationDto } from './dto/location.dto';
 import { MaydayRecords } from './entities/mayday-records.entity';
 import _ from 'lodash';
@@ -236,6 +236,7 @@ export class MaydayService {
     });
     const distance = +rescueRecord.distance;
     return {
+      userType: 'user',
       distance: Number(distance.toFixed(1)),
       helperName: helper.name,
       message: rescueRecord.context,

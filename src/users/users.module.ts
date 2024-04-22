@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -8,6 +8,9 @@ import { JwtStrategy } from 'src/auth/guard/jwt.strategy';
 import { ConfigService } from '@nestjs/config';
 import { NotificationsModule } from 'src/notifications/notifications.module';
 import { AwsModule } from 'src/aws/aws.module';
+import { Clients } from 'src/common/entities/clients.entity';
+import { UtilsModule } from 'src/utils/utils.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -17,9 +20,11 @@ import { AwsModule } from 'src/aws/aws.module';
       }),
       inject: [ConfigService],
     }),
-    TypeOrmModule.forFeature([Users]),
+    TypeOrmModule.forFeature([Users, Clients]),
     AwsModule,
-    NotificationsModule,
+    forwardRef(() => NotificationsModule),
+    UtilsModule,
+    ScheduleModule,
   ],
   exports: [UsersService, JwtStrategy],
   controllers: [UsersController],
