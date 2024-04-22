@@ -65,7 +65,7 @@ export class DestinationRiskService {
              '관련 안내사항' : areaCongestLvlMsg.AREA_CONGEST_MSG._text,
              '예상 인구' : `약 ${minPredictedPopulation}명 ~ ${maxPredictedPopulation}명, (${areaName} 기준 )`,
              '기준 시간' : `${populationTrends.FCST_TIME._text}기준`,
-             '비,눈 관련 사항' : ` ${destinationRainOrSnowNews.PCP_MSG._text}  , ${destinationRainOrSnowNews.WEATHER_TIME._text} 기준`
+             '비,눈 관련 사항' : ` ${destinationRainOrSnowNews.PCP_MSG._text}   ${destinationRainOrSnowNews.WEATHER_TIME._text} 기준`
         }
         return realTimeDestinationRiskDetailInquiry
       } catch (error) {
@@ -74,12 +74,14 @@ export class DestinationRiskService {
       }  
     }
 
-    // 목적지(와 가장 가까운 곳의) 위험도 조회 (메인화면 : 인구 밀집도, 인구 추이)
-    // 목적지를 값으로 받고, 그 값을 getCoordinate 함수로 보내서 경도,위도를 받아옴(키워드 검색-> 유사 값의 경도,위도 추출)
-    // 받은 경도,위도와 미리 DB에 다운 받은 데이터를 바탕으로 서울시에서 정한 115곳 중 1000m 이내에 있으면서 가장 가까운 장소를 가져옴
-    // 가장 가까운 장소를 받았으면 findRisk 함수로 장소 이름을 보낸 다음 findRisk는 seoulCityDataXmlToJson로 목적지를 보내서 json으로 변환후 findRisk로 리턴,
-    // 리턴 받은 받은 findRisk는 데이터 가공 후 checkDestinationRisk로 반환
-    // 남양주에서 테스트 때문에 임시로 30km로 설정
+    /**
+     * 목적지(와 가장 가까운 곳의) 위험도 조회 (메인화면 : 인구 밀집도, 인구 추이)
+     * 목적지를 값으로 받고, 그 값을 getCoordinate 함수로 보내서 경도,위도를 받아옴(키워드 검색-> 유사 값의 경도,위도 추출)
+     * 받은 경도,위도와 미리 DB에 다운 받은 데이터를 바탕으로 서울시에서 정한 115곳 중 1000m 이내에 있으면서 가장 가까운 장소를 가져옴
+     * 가장 가까운 장소를 받았으면 findRisk 함수로 장소 이름을 보낸 다음 findRisk는 seoulCityDataXmlToJson로 목적지를 보내서 json으로 변환후 findRisk로 리턴,
+     * 리턴 받은 받은 findRisk는 데이터 가공 후 checkDestinationRisk로 반환
+     * 남양주에서의 테스트 때문에 임시로 30km로 설정
+    */
     async checkDestinationRisk (destination : string) {
     const coordinate = await this.getCoordinate(destination)
     const { longitude, latitude } = coordinate
@@ -221,8 +223,58 @@ export class DestinationRiskService {
         const realTimeDataJsonVer = await this.seoulCityDataXmlToJson(destination)
         const areaName = realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['AREA_NM']['_text'];
         const areaCode = realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['AREA_CD']['_text'];
-        console.log("-------------------",realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['SUB_STTS']['SUB_STTS'][0])
-        if (realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['SUB_STTS']['SUB_STTS'][0] === undefined) {
+        //console.log("-------------------",realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['SUB_STTS']['SUB_STTS'][0])
+        // 지하철 좌표가 없고 정류장이 하나라면
+        if (realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['SUB_STTS'] === undefined ||
+          Object.keys(realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['SUB_STTS']).length === 0 ||
+          realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['BUS_STN_STTS']['BUS_STN_STTS'][0] === undefined)
+          {
+          const areaLongitude = realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['BUS_STN_STTS']['BUS_STN_STTS']['BUS_STN_X']['_text']
+          const areaLatitude = realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['BUS_STN_STTS']['BUS_STN_STTS']['BUS_STN_Y']['_text']
+          const savedDestination = {
+            areaName, areaCode, areaLongitude, areaLatitude
+          }
+          const findDestination = await this.destinationRepository.findOne({ 
+            where : {
+              area_code : savedDestination.areaCode
+            }
+          })
+          if (findDestination) {
+            await this.updatedDestination(findDestination.area_code)
+          } else {
+            await this.destinationRepository.save({
+            area_name : areaName,
+            area_code : areaCode,
+            longitude : parseFloat(areaLongitude),
+            latitude : parseFloat(areaLatitude)
+            })
+          }
+        } else if (realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['SUB_STTS'] === undefined ||
+        Object.keys(realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['SUB_STTS']).length === 0 ||
+        realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['BUS_STN_STTS']['BUS_STN_STTS'][0])
+        {
+          const areaLongitude = realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['BUS_STN_STTS']['BUS_STN_STTS'][0]['BUS_STN_X']['_text']
+          const areaLatitude = realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['BUS_STN_STTS']['BUS_STN_STTS'][0]['BUS_STN_Y']['_text']
+          const savedDestination = {
+            areaName, areaCode, areaLongitude, areaLatitude
+          }
+          const findDestination = await this.destinationRepository.findOne({ 
+            where : {
+              area_code : savedDestination.areaCode
+            }
+          })
+          if (findDestination) {
+            await this.updatedDestination(findDestination.area_code)
+          } else {
+            await this.destinationRepository.save({
+            area_name : areaName,
+            area_code : areaCode,
+            longitude : parseFloat(areaLongitude),
+            latitude : parseFloat(areaLatitude)
+          })
+          }
+        } else if (realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['SUB_STTS']['SUB_STTS'][0] === undefined)
+          {
           const areaLongitude = realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['SUB_STTS']['SUB_STTS']['SUB_STN_X']['_text'];
           const areaLatitude = realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['SUB_STTS']['SUB_STTS']['SUB_STN_Y']['_text'];
           const savedDestination = {
@@ -277,39 +329,130 @@ export class DestinationRiskService {
       const realTimeDataJsonVer = await this.seoulCityDataXmlToJson(destination)
       const areaName = realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['AREA_NM']['_text'];
       const areaCode = realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['AREA_CD']['_text'];
-      const areaLongitude = realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['SUB_STTS']['SUB_STTS'][0]['SUB_STN_X']['_text'];
-      const areaLatitude = realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['SUB_STTS']['SUB_STTS'][0]['SUB_STN_Y']['_text'];
-      const updatedDestination = {
+      if (realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['SUB_STTS'] === undefined ||
+      Object.keys(realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['SUB_STTS']).length === 0 ||
+      realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['BUS_STN_STTS']['BUS_STN_STTS'][0] === undefined)
+      {
+        const areaLongitude = realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['BUS_STN_STTS']['BUS_STN_STTS']['BUS_STN_X']['_text'];
+        const areaLatitude = realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['BUS_STN_STTS']['BUS_STN_STTS']['BUS_STN_Y']['_text'];
+        const updatedDestination = {
         areaName, areaCode, areaLongitude, areaLatitude
-      }
-      const findDestination = await this.destinationRepository.findOne({ 
+        }
+        const findDestination = await this.destinationRepository.findOne({ 
         where : {
           area_code : updatedDestination.areaCode
         }
       })
-      if (findDestination) {
-        await this.destinationRepository.update({area_code : updatedDestination.areaCode}, {
-        area_name : areaName,
-        area_code : areaCode,
-        longitude : areaLongitude,
-        latitude : areaLatitude
-      })
-      return { message : '업데이트 성공' }
-      } else {
-        await this.destinationRepository.save({
+        if (findDestination) {
+          await this.destinationRepository.update({area_code : updatedDestination.areaCode}, {
           area_name : areaName,
           area_code : areaCode,
-          longitude : parseFloat(areaLongitude),
-          latitude : parseFloat(areaLatitude)
+          longitude : areaLongitude,
+          latitude : areaLatitude
         })
-        return { message : '저장 성공'}
+        return { message : '업데이트 성공' }
+        } else {
+          await this.destinationRepository.save({
+            area_name : areaName,
+            area_code : areaCode,
+            longitude : parseFloat(areaLongitude),
+            latitude : parseFloat(areaLatitude)
+          })
+          return { message : '저장 성공'}
+        }
+      } else if (realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['SUB_STTS'] === undefined ||
+      Object.keys(realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['SUB_STTS']).length === 0 ||
+      realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['BUS_STN_STTS']['BUS_STN_STTS'][0])
+      {
+        const areaLongitude = realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['BUS_STN_STTS']['BUS_STN_STTS'][0]['BUS_STN_X']['_text'];
+        const areaLatitude = realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['BUS_STN_STTS']['BUS_STN_STTS'][0]['BUS_STN_Y']['_text'];
+        const updatedDestination = {
+        areaName, areaCode, areaLongitude, areaLatitude
+        }
+        const findDestination = await this.destinationRepository.findOne({ 
+          where : {
+            area_code : updatedDestination.areaCode
+          }
+        })
+        if (findDestination) {
+          await this.destinationRepository.update({area_code : updatedDestination.areaCode}, {
+          area_name : areaName,
+          area_code : areaCode,
+          longitude : areaLongitude,
+          latitude : areaLatitude
+        })
+        return { message : '업데이트 성공' }
+        } else {
+          await this.destinationRepository.save({
+            area_name : areaName,
+            area_code : areaCode,
+            longitude : parseFloat(areaLongitude),
+            latitude : parseFloat(areaLatitude)
+          })
+          return { message : '저장 성공'}
+        }
+      } else if (realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['SUB_STTS']['SUB_STTS'][0] === undefined)
+      {
+        const areaLongitude = realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['SUB_STTS']['SUB_STTS']['SUB_STN_X']['_text'];
+        const areaLatitude = realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['SUB_STTS']['SUB_STTS']['SUB_STN_Y']['_text'];
+        const updatedDestination = {
+          areaName, areaCode, areaLongitude, areaLatitude
+        }
+        const findDestination = await this.destinationRepository.findOne({ 
+          where : {
+            area_code : updatedDestination.areaCode
+          }
+        })
+        if (findDestination) {
+          await this.destinationRepository.update({area_code : updatedDestination.areaCode}, {
+          area_name : areaName,
+          area_code : areaCode,
+          longitude : areaLongitude,
+          latitude : areaLatitude
+        })
+        return { message : '업데이트 성공' }
+        } else {
+          await this.destinationRepository.save({
+            area_name : areaName,
+            area_code : areaCode,
+            longitude : parseFloat(areaLongitude),
+            latitude : parseFloat(areaLatitude)
+          })
+          return { message : '저장 성공'}
+        }
+      } else {
+        const areaLongitude = realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['SUB_STTS']['SUB_STTS'][0]['SUB_STN_X']['_text'];
+        const areaLatitude = realTimeDataJsonVer['SeoulRtd.citydata']['CITYDATA']['SUB_STTS']['SUB_STTS'][0]['SUB_STN_Y']['_text'];
+        const updatedDestination = {
+          areaName, areaCode, areaLongitude, areaLatitude
+        }
+        const findDestination = await this.destinationRepository.findOne({ 
+          where : {
+            area_code : updatedDestination.areaCode
+          }
+        })
+        if (findDestination) {
+          await this.destinationRepository.update({area_code : updatedDestination.areaCode}, {
+          area_name : areaName,
+          area_code : areaCode,
+          longitude : areaLongitude,
+          latitude : areaLatitude
+        })
+        return { message : '업데이트 성공' }
+        } else {
+          await this.destinationRepository.save({
+            area_name : areaName,
+            area_code : areaCode,
+            longitude : parseFloat(areaLongitude),
+            latitude : parseFloat(areaLatitude)
+          })
+          return { message : '저장 성공'}
+        }
       }
       } catch (error) {
         console.error('해당 데이터를 찾지 못했습니다.', error)
         throw error
       }
-      
-
     }
 
     // 서울시 주요 115곳 장소 데이터 받아와서 xml->json변환 함수
