@@ -1,4 +1,4 @@
-document.querySelector('.btn').addEventListener('click', () => {
+document.addEventListener('DOMContentLoaded', () => {
   async function saveLocation(latitude, longitude) {
     await fetch('/mayday', {
       method: 'POST',
@@ -9,7 +9,15 @@ document.querySelector('.btn').addEventListener('click', () => {
         latitude,
         longitude,
       }),
-    });
+    })
+      .then((res) => {
+        return res.json();
+      })
+      .then((data) => {
+        if (data.message === '위치정보 저장 성공') {
+          console.log(data.message);
+        }
+      });
   }
 
   let id;
@@ -36,8 +44,7 @@ document.querySelector('.btn').addEventListener('click', () => {
     console.error(`ERROR(${err.code}): ${err.message}`);
   }
 
-  id = navigator.geolocation.watchPosition(success, error, options);
-  console.log(id);
+  navigator.geolocation.watchPosition(success, error, options);
 });
 
 /* navigator.geolocation.watchPosition(success, error, options)

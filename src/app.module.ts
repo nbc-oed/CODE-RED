@@ -22,19 +22,22 @@ import { Follows } from './common/entities/follows.entity';
 import { Scores } from './common/entities/scores.entity';
 import { MaydayRecords } from './mayday/entities/mayday-records.entity';
 import { Shelters } from './common/entities/shelters.entity';
-import { EmergencyData } from './common/entities/emergency-data.entity';
 import { DisasterData } from './common/entities/disaster-data.entity';
 import { NotificationMessages } from './common/entities/notification-messages.entity';
 import { News } from './common/entities/news.entity';
 import { Location } from './mayday/entities/location.entity';
 import { DirectMessages } from './common/entities/direct-messages.entity';
-
 import { validationSchema } from './common/config/env.config';
 import { NotificationsModule } from './notifications/notifications.module';
 import * as redisStore from 'cache-manager-redis-store';
 import { DestinationRiskController } from './destination-risk/destination-risk.controller';
 import { DestinationRiskService } from './destination-risk/destination-risk.service';
 import { DestinationRiskModule } from './destination-risk/destination-risk.module';
+import { BullModule } from '@nestjs/bull';
+import { QueueModule } from './notifications/queue/queue.module';
+import { Clients } from './common/entities/clients.entity';
+import { AppController } from './app.controller';
+import { NewsModule } from './news/news.module';
 
 const typeOrmModuleOptions = {
   useFactory: async (
@@ -55,11 +58,11 @@ const typeOrmModuleOptions = {
       Scores,
       MaydayRecords,
       Shelters,
-      EmergencyData,
       DisasterData,
       NotificationMessages,
       News,
       Location,
+      Clients,
       DirectMessages,
     ],
     logging: true, // 데이터베이스 쿼리를 로깅할지 여부를 제어, 이 옵션을 true로 설정하면 TypeORM이 실행된 쿼리를 콘솔에 로그로 출력
@@ -74,6 +77,17 @@ const typeOrmModuleOptions = {
       validationSchema: validationSchema,
     }),
     TypeOrmModule.forRootAsync(typeOrmModuleOptions),
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        redis: {
+          host: configService.get('REDIS_HOST'),
+          port: configService.get('REDIS_PORT'),
+          password: configService.get('REDIS_PASSWORD'),
+        },
+      }),
+      inject: [ConfigService],
+    }),
     CacheModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
@@ -90,6 +104,7 @@ const typeOrmModuleOptions = {
     UsersModule,
     AuthModule,
     AwsModule,
+    UsersModule,
     UtilsModule,
     PostsModule,
     NotificationsModule,
@@ -97,9 +112,12 @@ const typeOrmModuleOptions = {
     MaydayModule,
     SheltersModule,
     DestinationRiskModule,
+    QueueModule,
     DmModule,
+    DmModule,
+    NewsModule,
   ],
-  controllers: [DestinationRiskController],
+  controllers: [DestinationRiskController, AppController],
   providers: [DestinationRiskService],
 })
 export class AppModule {}

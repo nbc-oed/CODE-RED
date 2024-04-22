@@ -1,0 +1,459 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+
+#divide {
+  height: 0px;
+  border-bottom: solid 2px red;
+}
+
+body {
+  font-family: sans-serif;
+  background-color: white;
+  color: black;
+  text-align: center;
+  width: 440px;
+  margin: 0 auto;
+  padding: 5px;
+}
+
+a {
+  text-decoration: none;
+  color: black;
+}
+
+.none {
+  display: none;
+}
+
+/*header*/
+
+header {
+  background-color: aquamarine;
+  color: red;
+  padding: 20px;
+  text-align: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+#sos {
+  height: 30px;
+  background-color: red;
+  color: white;
+  width: 50px;
+  cursor: pointer;
+  border-radius: 5px;
+  margin-top: 5px;
+}
+
+#sos a {
+  text-decoration: none;
+  color: rgb(245, 242, 242);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.header_image {
+  width: 30px;
+  height: 30px;
+}
+
+/*main*/
+
+#rescueRequestMainContainer {
+  text-align: center;
+  min-height: 500px;
+  position: relative;
+}
+
+#rescueRequestContainer {
+  line-height: 50px;
+  position: absolute;
+  top: 76px;
+}
+#corongImage_green {
+  width: 300px;
+  padding: 10px 0 20px 0;
+  display: flex;
+  margin: 0 auto;
+}
+
+.real_time_data {
+  margin: 0 auto;
+}
+
+.real_time_data tr td,
+.real_time_data tr th {
+  padding-left: 10px;
+}
+
+button {
+  background-color: white;
+  color: black;
+  border: solid 1px black;
+  border-radius: 8px;
+  cursor: pointer;
+  width: 60px;
+}
+
+nav {
+  background-color: brown;
+  margin-top: 10px;
+  display: flex;
+  justify-content: space-evenly;
+  /* fix 추가 + overflow 설정. */
+}
+
+.navImg {
+  width: 30px;
+}
+
+#helperInfo {
+  border: solid 1px black;
+  border-radius: 5px;
+  background-color: black;
+  color: white;
+  margin: 20px auto;
+  padding: 20px 0px;
+  font-size: 20px;
+  width: 400px;
+}
+
+#sendHelpBtn {
+  width: 80%;
+  height: 50px;
+  background-color: rgb(45, 45, 187);
+  font-size: 17px;
+  font-weight: 600;
+  color: white;
+}
+
+#SendRescueMessage {
+  width: 400px;
+  height: 30px;
+  font-size: 16px;
+  margin-bottom: 20px;
+}
+
+#loadingcontainer {
+  width: 440px;
+  margin: 0 auto;
+  position: absolute;
+  top: 100px;
+}
+
+#loadingText {
+  font-size: 24px;
+}
+
+/* 로딩중 */
+
+@keyframes rotate-loading {
+  0% {
+    transform: rotate(0deg);
+    -ms-transform: rotate(0deg);
+    -webkit-transform: rotate(0deg);
+    -o-transform: rotate(0deg);
+    -moz-transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+    -ms-transform: rotate(360deg);
+    -webkit-transform: rotate(360deg);
+    -o-transform: rotate(360deg);
+    -moz-transform: rotate(360deg);
+  }
+}
+
+@-moz-keyframes rotate-loading {
+  0% {
+    transform: rotate(0deg);
+    -ms-transform: rotate(0deg);
+    -webkit-transform: rotate(0deg);
+    -o-transform: rotate(0deg);
+    -moz-transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+    -ms-transform: rotate(360deg);
+    -webkit-transform: rotate(360deg);
+    -o-transform: rotate(360deg);
+    -moz-transform: rotate(360deg);
+  }
+}
+
+@-webkit-keyframes rotate-loading {
+  0% {
+    transform: rotate(0deg);
+    -ms-transform: rotate(0deg);
+    -webkit-transform: rotate(0deg);
+    -o-transform: rotate(0deg);
+    -moz-transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+    -ms-transform: rotate(360deg);
+    -webkit-transform: rotate(360deg);
+    -o-transform: rotate(360deg);
+    -moz-transform: rotate(360deg);
+  }
+}
+
+@-o-keyframes rotate-loading {
+  0% {
+    transform: rotate(0deg);
+    -ms-transform: rotate(0deg);
+    -webkit-transform: rotate(0deg);
+    -o-transform: rotate(0deg);
+    -moz-transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+    -ms-transform: rotate(360deg);
+    -webkit-transform: rotate(360deg);
+    -o-transform: rotate(360deg);
+    -moz-transform: rotate(360deg);
+  }
+}
+
+@keyframes rotate-loading {
+  0% {
+    transform: rotate(0deg);
+    -ms-transform: rotate(0deg);
+    -webkit-transform: rotate(0deg);
+    -o-transform: rotate(0deg);
+    -moz-transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+    -ms-transform: rotate(360deg);
+    -webkit-transform: rotate(360deg);
+    -o-transform: rotate(360deg);
+    -moz-transform: rotate(360deg);
+  }
+}
+
+@-moz-keyframes rotate-loading {
+  0% {
+    transform: rotate(0deg);
+    -ms-transform: rotate(0deg);
+    -webkit-transform: rotate(0deg);
+    -o-transform: rotate(0deg);
+    -moz-transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+    -ms-transform: rotate(360deg);
+    -webkit-transform: rotate(360deg);
+    -o-transform: rotate(360deg);
+    -moz-transform: rotate(360deg);
+  }
+}
+
+@-webkit-keyframes rotate-loading {
+  0% {
+    transform: rotate(0deg);
+    -ms-transform: rotate(0deg);
+    -webkit-transform: rotate(0deg);
+    -o-transform: rotate(0deg);
+    -moz-transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+    -ms-transform: rotate(360deg);
+    -webkit-transform: rotate(360deg);
+    -o-transform: rotate(360deg);
+    -moz-transform: rotate(360deg);
+  }
+}
+
+@-o-keyframes rotate-loading {
+  0% {
+    transform: rotate(0deg);
+    -ms-transform: rotate(0deg);
+    -webkit-transform: rotate(0deg);
+    -o-transform: rotate(0deg);
+    -moz-transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+    -ms-transform: rotate(360deg);
+    -webkit-transform: rotate(360deg);
+    -o-transform: rotate(360deg);
+    -moz-transform: rotate(360deg);
+  }
+}
+
+@keyframes loading-text-opacity {
+  0% {
+    opacity: 0;
+  }
+  20% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@-moz-keyframes loading-text-opacity {
+  0% {
+    opacity: 0;
+  }
+  20% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@-webkit-keyframes loading-text-opacity {
+  0% {
+    opacity: 0;
+  }
+  20% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@-o-keyframes loading-text-opacity {
+  0% {
+    opacity: 0;
+  }
+  20% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.loading-container,
+.loading {
+  height: 100px;
+  position: relative;
+  width: 100px;
+  border-radius: 100%;
+}
+
+.loading-container {
+  margin: 40px auto;
+}
+
+.loading {
+  border: 2px solid transparent;
+  border-color: transparent #e45635 transparent #e45635;
+  -moz-animation: rotate-loading 1.5s linear 0s infinite normal;
+  -moz-transform-origin: 50% 50%;
+  -o-animation: rotate-loading 1.5s linear 0s infinite normal;
+  -o-transform-origin: 50% 50%;
+  -webkit-animation: rotate-loading 1.5s linear 0s infinite normal;
+  -webkit-transform-origin: 50% 50%;
+  animation: rotate-loading 1.5s linear 0s infinite normal;
+  transform-origin: 50% 50%;
+}
+
+.loading-container:hover .loading {
+  border-color: transparent #e45635 transparent #e45635;
+}
+.loading-container:hover .loading,
+.loading-container .loading {
+  -webkit-transition: all 0.5s ease-in-out;
+  -moz-transition: all 0.5s ease-in-out;
+  -ms-transition: all 0.5s ease-in-out;
+  -o-transition: all 0.5s ease-in-out;
+  transition: all 0.5s ease-in-out;
+}
+
+#loading-text {
+  -moz-animation: loading-text-opacity 2s linear 0s infinite normal;
+  -o-animation: loading-text-opacity 2s linear 0s infinite normal;
+  -webkit-animation: loading-text-opacity 2s linear 0s infinite normal;
+  animation: loading-text-opacity 2s linear 0s infinite normal;
+  color: black;
+  font-family: 'Helvetica Neue, ' Helvetica ', ' 'arial';
+  font-size: 12px;
+  font-weight: bold;
+  margin-top: 28px;
+  opacity: 0;
+  position: absolute;
+  text-align: center;
+  text-transform: uppercase;
+  top: 16px;
+  width: 100px;
+}
+/* 로딩중 끝 */
+
+/* 매칭 */
+
+#matchInfo {
+  font-weight: 600;
+  border: none;
+  border-radius: 5px;
+  background-color: rgb(79, 161, 255);
+  color: white;
+  margin: 20px auto;
+  padding: 20px 0px;
+  font-size: 20px;
+  width: 440px;
+}
+
+/* 매칭 끝 */
+
+/* 뉴스 */
+
+#newsTable {
+  width: 440px;
+  text-align: center;
+}
+
+#newsTable tr :nth-child(1) {
+  max-width: 267px;
+  text-align: left;
+}
+
+#newsTable tr :nth-child(2) {
+  max-width: 81px;
+}
+#newsTable tr :nth-child(3) {
+  max-width: 91px;
+}
+
+.newsInfo td {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border-bottom: 1px solid rgba(100, 100, 100, 0.73);
+  padding: 5px 0 5px 0;
+}
+
+/* 뉴스 끝 */
+
+/* footer */
+/* footer {
+  background-color: thistle;
+  text-align: left;
+  font-size: 10px;
+  width: 440px;
+}
+footer p {
+  padding: 5px 0 0 0;
+  margin: 10px;
+} */

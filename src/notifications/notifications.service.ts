@@ -4,40 +4,75 @@ import { RedisService } from './redis/redis.service';
 import { Cache } from '@nestjs/cache-manager';
 import { InjectRepository } from '@nestjs/typeorm';
 import { NotificationMessages } from 'src/common/entities/notification-messages.entity';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { DisasterMessage } from 'src/common/types/disaster-message.interface';
+import { RedisKeys } from './redis/redis.keys';
+import { NotificationStatus } from 'src/common/types/notification-status.type';
 
 @Injectable()
 export class NotificationsService {
   constructor(
     @InjectRepository(NotificationMessages)
-    private notificationMessageRepository: Repository<NotificationMessages>,
+    private notificationMessagesRepository: Repository<NotificationMessages>,
     private redisService: RedisService,
     private cacheManager: Cache,
   ) {}
 
+  // 1. FCM 발송된 알림 목록 조회 API
+
+  async getAllNotifications(userId?: number, clientId?: string) {
+    const messageLists = await this.notificationMessagesRepository.find({
+      where: [
+        {
+          user_id: userId,
+          status: In([NotificationStatus.UnRead, NotificationStatus.Read]),
+        },
+        {
+          client_id: clientId,
+          status: In([NotificationStatus.UnRead, NotificationStatus.Read]),
+        },
+      ],
+      order: { created_at: 'DESC' },
+      take: 30, // 30개의 항목으로 제한
+    });
+    return messageLists;
+  }
+
+  // 2. 알림 목록 중 특정 알림 메세지 상세 조회 및 Read 상태 업데이트 API
+  async getNotificationByIdAndUpdateStatus(messageId: number) {
+    const readMessage = await this.notificationMessagesRepository.findOneBy({
+      id: messageId,
+    });
+    if (!readMessage) {
+      throw new NotFoundException('알림을 찾을 수 없습니다.');
+    }
+    readMessage.status = NotificationStatus.Read;
+    await this.notificationMessagesRepository.save(readMessage);
+    return readMessage;
+  }
+
   /**
-   * 특정 사용자 위치에 따른 알림 목록 조회
+   * 특정 사용자 위치에 따른 재난 문자 목록 조회
    *
    * 추가 변경사항
    * - saveNotification 메서드 추가 및 NotificationMessages 엔티티 수정
    * - any 타입 -> 명확한 타입 사용으로 개선.
-   *
-   */
-
-  // 1-0. Redis에 String으로 저장된 사용자 위치 <> Disaster-Streams 지역명 매칭시켜서 캐싱 후 알림 목록 반환
+   *  // 1-0. Redis에 String으로 저장된 사용자 위치 <> Disaster-Streams 지역명 매칭시켜서 캐싱 후 재난 문자 목록 반환
   async getUserNotifications(userId: number): Promise<DisasterMessage[]> {
-    const cacheKey = `user-notifications:${userId}`;
+    const userAreaCacheKey = RedisKeys.userNotificationsCache(userId);
     let notifications =
-      await this.cacheManager.get<DisasterMessage[]>(cacheKey);
+      await this.cacheManager.get<DisasterMessage[]>(userAreaCacheKey);
 
     // Cache Hit! 알림 목록 반환
     if (notifications) {
       return notifications;
     }
 
-    // Cache Miss!! -- 캐싱 후 알림 목록 반환
-    notifications = await this.retrieveAndCacheNotifications(userId, cacheKey);
+    // Cache Miss!! -- 캐싱 후 재난 문자 목록 반환
+    notifications = await this.retrieveAndCacheNotifications(
+      userId,
+      userAreaCacheKey,
+    );
     return notifications;
   }
 
@@ -58,7 +93,7 @@ export class NotificationsService {
   }
 
   private async getUserArea(userId: number): Promise<string> {
-    const areaKey = `user:${userId}:area`;
+    const areaKey = RedisKeys.userAreaCache(userId);
     const area = await this.redisService.client.get(areaKey);
 
     if (!area) {
@@ -72,7 +107,7 @@ export class NotificationsService {
 
   // 1-2. Disaster-Streams에서 재난 문자 데이터 메시지 읽어서 매핑
   private async getDisasterMessages(area: string): Promise<DisasterMessage[]> {
-    const disasterStreamKey = `disasterStream:${area}`;
+    const disasterStreamKey = RedisKeys.disasterStream(area);
     const rawMessages = await this.redisService.client.xrange(
       disasterStreamKey,
       '-',
@@ -103,7 +138,7 @@ export class NotificationsService {
     };
   }
 
-  // 1-4. 알림 목록 조회 기록 DB에 저장
+  // 1-4. 재난 문자 조회 기록 DB에 저장
   private async saveNotification(
     userId: number,
     message: DisasterMessage,
@@ -117,4 +152,5 @@ export class NotificationsService {
 
     await this.notificationMessageRepository.save(notification);
   }
+   */
 }
