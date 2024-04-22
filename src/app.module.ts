@@ -27,18 +27,16 @@ import { Shelters } from './common/entities/shelters.entity';
 import { EmergencyData } from './common/entities/emergency-data.entity';
 import { DisasterData } from './common/entities/disaster-data.entity';
 import { NotificationMessages } from './common/entities/notification-messages.entity';
-import { News } from './news/entities/news.entity';
 import { Location } from './mayday/entities/location.entity';
 import { DirectMessages } from './common/entities/direct-messages.entity';
-
 import { validationSchema } from './common/config/env.config';
 import { NotificationsModule } from './notifications/notifications.module';
 import * as redisStore from 'cache-manager-redis-store';
-import { DestinationRiskController } from './destination-risk/destination-risk.controller';
-import { DestinationRiskService } from './destination-risk/destination-risk.service';
 import { DestinationRiskModule } from './destination-risk/destination-risk.module';
 import { HttpModule } from '@nestjs/axios';
 import { Destination } from './common/entities/destination.entity';
+import { DisasterModule } from './notifications/streams/disaster-streams/disaster.module';
+import { News } from './common/entities/news.entity';
 
 const typeOrmModuleOptions = {
   useFactory: async (
@@ -105,7 +103,8 @@ const typeOrmModuleOptions = {
     SheltersModule,
     DestinationRiskModule,
     DmModule,
-    HttpModule
+    HttpModule,
+    DisasterModule
   ],
   controllers: [],
   providers: [],
