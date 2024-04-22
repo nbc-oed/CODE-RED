@@ -8,6 +8,7 @@ import { JwtStrategy } from 'src/auth/guard/jwt.strategy';
 import { ConfigService } from '@nestjs/config';
 import { NotificationsModule } from 'src/notifications/notifications.module';
 import { AwsModule } from 'src/aws/aws.module';
+import { AppModule } from 'src/app.module';
 
 @Module({
   imports: [

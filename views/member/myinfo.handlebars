@@ -1,0 +1,30 @@
+<section class='profile'>
+  <h2>내 정보</h2>
+  <p id='divide'></p>
+
+  <div id='profile'>
+    <img src='{{profile_image}}' alt='프로필 사진' id='infoProfileImage' />
+    <ul id='main-info'>
+      <br />
+      <h2>{{name}}</h2>
+    </ul>
+  </div>
+  <p id='divide'></p>
+  <table action='/users/{{id}}' method='get' id='userTable'>
+    <tr>
+      <th>이메일</th>
+      <th>닉네임</th>
+      <th>전화번호</th>
+    </tr>
+    <tr>
+
+      <td id='email'>{{email}}</td>
+      <td id='nickname'>{{nickname}}</td>
+      <td id='phone_number'>{{phone_number}}</td>
+    </tr>
+  </table>
+  <p id='divide'></p>
+  <br />
+  <div>score:{{score}}</div>
+
+</section>

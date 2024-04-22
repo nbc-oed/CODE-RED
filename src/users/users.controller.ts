@@ -9,6 +9,7 @@ import {
   UseGuards,
   UseInterceptors,
   UploadedFile,
+  Render,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -31,6 +32,7 @@ export class UsersController {
 
   // 유저 상세 조회
   @Get(':id')
+  @Render('member/myinfo')
   async getOneUsers(@Param('id') id: number) {
     return await this.usersService.findOne(id);
   }

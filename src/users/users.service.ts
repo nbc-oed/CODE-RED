@@ -49,7 +49,14 @@ export class UsersService {
   async findOne(id: number) {
     const users = await this.usersRepository.findOne({
       where: { id },
-      select: ['id', 'email', 'name', 'nickname', 'profile_image'],
+      select: [
+        'id',
+        'email',
+        'name',
+        'nickname',
+        'profile_image',
+        'phone_number',
+      ],
     });
 
     if (!users) {

@@ -36,6 +36,8 @@ import { DestinationRiskController } from './destination-risk/destination-risk.c
 import { DestinationRiskService } from './destination-risk/destination-risk.service';
 import { DestinationRiskModule } from './destination-risk/destination-risk.module';
 import { AppController } from './app.controller';
+import { SessionModule } from 'nestjs-session';
+import * as session from 'express-session';
 
 const typeOrmModuleOptions = {
   useFactory: async (
@@ -99,6 +101,17 @@ const typeOrmModuleOptions = {
     SheltersModule,
     DestinationRiskModule,
     DmModule,
+    SessionModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: async (configService: ConfigService) => ({
+        session: {
+          secret: configService.get('SESSION_SECRET'), // 세션 시크릿 키
+          resave: false,
+          saveUninitialized: false,
+        },
+      }),
+    }),
   ],
   controllers: [DestinationRiskController, AppController],
   providers: [DestinationRiskService],

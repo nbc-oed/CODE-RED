@@ -15,6 +15,8 @@ import { CreateUserDto } from 'src/users/dto/create-user.dto';
 import { ConfigService } from '@nestjs/config';
 import { AwsService } from 'src/aws/aws.service';
 import { HttpService } from '@nestjs/axios';
+import { Session } from 'express-session';
+import { LoginDto } from 'src/users/dto/login.dto';
 
 @Injectable()
 export class AuthService {
@@ -59,9 +61,9 @@ export class AuthService {
     return this.usersRepository.save(newUser);
   }
 
-  async signIn(email: string, password: string) {
+  async signIn(loginDto: LoginDto) {
+    const { email, password } = loginDto;
     const user = await this.usersRepository.findOne({
-      select: ['id', 'email', 'password'],
       where: { email },
     });
 

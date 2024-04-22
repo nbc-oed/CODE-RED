@@ -1,0 +1,48 @@
+    <!--Socket.IO 클라이언트 라이브러리 추가 -->
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const socket = io('/chat'); // '/chat' 네임스페이스에 연결
+        const roomButtons = document.querySelectorAll('.room-button');
+        const messageContainer = document.getElementById('message-container');
+        const messageForm = document.getElementById('message-form');
+        const messageInput = document.getElementById('message-input');
+
+        let currentRoomId = null;
+
+        roomButtons.forEach((button) => {
+          button.addEventListener('click', () => {
+            const roomId = button.getAttribute('roomId'); // roomId 속성 값 가져오기
+            if (roomId !== currentRoomId) {
+              if (currentRoomId) {
+                socket.emit('leaveRoom', currentRoomId); // 현재 룸에서 떠나기
+              }
+              currentRoomId = roomId;
+              messageContainer.innerHTML = ''; // 메시지 컨테이너 초기화
+              socket.emit('joinRoom', currentRoomId); // 새로운 룸에 참여하기
+            }
+          });
+        });
+
+        // 메시지 전송
+        messageForm.addEventListener('submit', (e) => {
+          e.preventDefault();
+          const message = messageInput.value.trim(); // 입력값 앞뒤 공백 제거
+          if (message === '') return; // 빈 메시지는 전송하지 않음
+
+          const clientId = socket.id; // 현재 클라이언트의 ID 가져오기
+          socket.emit('message', { message, clientId, roomId: currentRoomId }); // 서버에 메시지와 클라이언트 ID 전송
+          messageInput.value = ''; // 입력창 비우기
+        });
+
+        // 서버로부터 메시지 수신
+        socket.on('message', (data) => {
+          const messageElement = document.createElement('div');
+          messageElement.textContent = data; // 서버로부터 받은 메시지 표시
+          messageContainer.appendChild(messageElement); // 메시지를 컨테이너에 추가
+          messageContainer.scrollTop = messageContainer.scrollHeight; // 스크롤 자동 이동
+        });
+      });
+    </script>
+  </body>
+</html> 

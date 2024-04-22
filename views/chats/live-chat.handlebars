@@ -1,0 +1,14 @@
+<main>
+  <h2>지역별 실시간 채팅</h2>
+  <p>{{roomId.name}}</p>
+  <p id='divide'></p>
+</main>
+
+<div id='message-container'></div>
+<form id='message-form'>
+  <input type='text' id='message-input' placeholder='메세지를 입력해주세요.' />
+  <button id='send-box' type='submit'>Send</button>
+</form>
+
+<script src='https://cdn.socket.io/4.7.5/socket.io.min.js'></script>
+<script src='/js/live-chat.js'></script>
