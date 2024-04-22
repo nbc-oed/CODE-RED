@@ -141,4 +141,20 @@ export class AuthController {
         return res.send('LogOUT ERROR');
       });
   }
+
+  //@ApiOperation({ summary: '닉네임 변경', description: '업데이트' })
+  // @UseGuards(JwtOpAuthGuard)
+  // @Patch('')
+  // async userUpdate(@Body() updateDto: UpdateDto, @Req() req: IGuestRequest) {
+  //   const id = req.id;
+  //   const userUpdate = await this.usersService.userUpdate(
+  //     id,
+  //     updateDto.nickName,
+  //   );
+  //   return {
+  //     statusCode: HttpStatus.OK,
+  //     message: '닉네임 변경에 성공하였습니다.',
+  //     userUpdate,
+  //   };
+  // }
 }
