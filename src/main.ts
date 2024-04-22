@@ -29,9 +29,17 @@ async function bootstrap() {
   SwaggerModule.setup('api', app, document);
 
   app.enableCors({
-    origin: 'http://localhost:3000/chat', // 허용할 origin (클라이언트 주소)
+    origin: [
+      'http://localhost:3000/',
+      'http://localhost:3000/auth/sign-in',
+      'http://localhost:3000/notifications',
+      'http://localhost:3000/api/firebase-config',
+      'http://localhost:3000/save-token',
+      'http://localhost:3000/chat',
+      'http://localhost:3000/shelters/searchMap',
+    ], // 허용할 origin (클라이언트 주소)
     methods: ['GET', 'POST'], // 허용할 HTTP 메서드
-    allowedHeaders: ['Content-Type'], // 허용할 요청 헤더
+    allowedHeaders: ['Content-Type', '*'], // 허용할 요청 헤더
   });
 
   app.useStaticAssets(join(__dirname, '..', 'public'));
