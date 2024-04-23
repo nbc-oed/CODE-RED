@@ -1,5 +1,5 @@
 # 개발 환경 빌드 단계
-FROM node:18-alpine AS development
+FROM node:20.11.0-alpine AS development
 
 WORKDIR /usr/src/app
 
@@ -10,6 +10,7 @@ COPY tsconfig.json tsconfig.json
 COPY nest-cli.json nest-cli.json
 
 # 의존성 설치
+RUN npm ci
 RUN npm install
 
 # Nest.js 애플리케이션 빌드
@@ -18,7 +19,7 @@ COPY . .
 RUN npm run build
 
 # 프로덕션 환경 빌드 단계
-FROM node:18-alpine as production
+FROM node:20.11.0-alpine as production
 
 # NODE_ENV 설정
 ARG NODE_ENV=production
