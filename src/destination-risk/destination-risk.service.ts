@@ -86,7 +86,7 @@ export class DestinationRiskService {
     const coordinate = await this.getCoordinate(destination)
     const { longitude, latitude } = coordinate
     try {
-      const distanceThreshold = 30000;
+      const distanceThreshold = 1000;
       const closeToDestination = await this.destinationRepository
         .createQueryBuilder('destination')
         .select('destination.area_name', 'area_name')
@@ -165,7 +165,7 @@ export class DestinationRiskService {
     return myLocation
     }
 
-    // 역 지오코딩(좌표->지역명 변환) (from getUserCoordinate)
+    // 역 지오코딩(좌표->지역명(리,동) 변환) (from getUserCoordinate)
     async getAreaCoordinates(longitude: number, latitude: number ) {
         try {
             const apiKey = this.configService.get<string>('KAKAO_REST_API_KEY');
@@ -190,6 +190,37 @@ export class DestinationRiskService {
             console.error('지역명 변환 실패:', error);
             throw error;
           }
+    }
+
+    // 좌표로 지역명 받아오기 (서울이 아닐때 내 지역의 재난 메세지 출력을 위해)
+    async getUserRegionCoordinate (longitude : number, latitude : number) {
+    const myRegion = await this.getRegionCoordinates( longitude, latitude );
+    return myRegion 
+    }
+
+    // 역 지오코딩2 (좌표 -> 지역명(도,시) 변환) (from getUserRegionCoordinate)
+    async getRegionCoordinates (longitude: number, latitude: number ) {
+      try {
+          const apiKey = this.configService.get<string>('KAKAO_REST_API_KEY');
+          const response = await this.httpService
+            .get(
+              `https://dapi.kakao.com/v2/local/geo/coord2regioncode.json?x=${longitude}&y=${latitude}`,
+              {
+                headers: {
+                  Authorization: `KakaoAK ${apiKey}`,
+                },
+              },
+            )
+            .toPromise();
+          const region1DepthName = response.data.documents[0].region_1depth_name;
+          const region2DepthName = response.data.documents[0].region_2depth_name;
+          const region = `${region1DepthName} ${region2DepthName}`;
+          
+          return region;
+        } catch (error) {
+          console.error('지역명 변환 실패:', error);
+          throw error;
+        }
     }
 
     // 목적지의 위도,경도 추출

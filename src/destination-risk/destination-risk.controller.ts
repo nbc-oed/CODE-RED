@@ -35,6 +35,22 @@ export class DestinationRiskController {
     return myLocation
     }
 
+    // 역지오코딩2
+    @Get('regionCoordinate')
+    async getUserRegionCoordinate (@Query('x') x : string, @Query('y') y : string) {
+    const longitude = parseFloat(x)
+    const latitude = parseFloat(y)
+    const myRegion = await this.destinationRiskService.getUserRegionCoordinate(longitude, latitude)
+    return myRegion
+    }
+
+    @Get('get')
+    async getCoordinate (@Query('destination') destination : string) {
+    const getCoordinate = await this.destinationRiskService.getCoordinate(destination)
+    console.log("--returnCoordinate--",getCoordinate)
+    return getCoordinate
+    }
+
     // 서울시 주요 115곳 장소 데이터 저장
     @Post('save')
     async savedDestination (@Query('destination') destination : string) {
