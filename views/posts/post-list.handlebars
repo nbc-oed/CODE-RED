@@ -1,0 +1,23 @@
+<link rel='stylesheet' href='/style/post-list.css' />
+
+<div class="post-list">
+  <div class='search'>
+    <input type='text' placeholder='검색어를 입력하세요' />
+    <button type='submit'>검색</button>
+  </div>
+
+  <div class='posts'>
+    {{#each posts}}
+    <div class='post' id='{{id}}'>
+      <img src='{{post_image}}' />
+      <h3><a href='/posts/{{id}}'>{{title}}</a></h3>
+      <p>{{status}}</p>
+      <p>{{updated_at}}</p>
+    </div>
+    {{/each}}
+  </div>
+
+  <div class='writeBtn'><img class="writeImg" src='/img/pencil.png'></div>
+</div>
+
+<script src='/js/post/post-list.js'></script>

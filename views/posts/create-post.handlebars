@@ -1,0 +1,17 @@
+<link rel='stylesheet' href='/style/create-post.css' />
+
+
+<form id='post-form'>
+    <label for='title'></label>
+    <input type='text' id='title' name='title' required placeholder='제목을 입력하세요' /><br />
+
+    <label for='image'></label>
+    <input type='file' id='image' name='image' accept='image/*' /><br />
+
+    <label for='content'></label>
+    <textarea id='content' name='content' rows='4' cols='50' required placeholder='내용을 입력하세요'></textarea><br />
+
+    <button class='writeBtn' type='submit'></button>
+</form>
+
+<script src='/js/post/create-post.js'></script>

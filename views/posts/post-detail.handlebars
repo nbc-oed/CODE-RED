@@ -1,0 +1,18 @@
+<link rel='stylesheet' href='/style/post-detail.css' />
+
+<div class='post' id='{{id}}'>
+  <img src='{{post_image}}' />
+  <h3><a href='/posts/{{id}}'>{{title}}</a></h3>
+  <div class='post-container'>
+    <p class='status'>{{status}}</p>
+    <p class='time'>{{updated_at}} {{#if isUpdated}}(수정됨){{/if}}</p>
+    <p class='content'>{{content}}</p>
+  </div>
+  <div class='user' id='{{user.id}}'>
+    <img src='{{user.profile_image}}' />
+    <p>{{user.nickname}}</p>
+    <button class='dmBtn'>교환 요청</button>
+  </div>
+</div>
+
+<script src='/js/post/post-detail.js'></script>
