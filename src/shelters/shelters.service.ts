@@ -181,7 +181,7 @@ export class SheltersService {
   // 사용자 위치로 부터 가장 가까운 대피소 조회 (메인화면 표시용), 남양주에서 테스트를 위해 1000->20000(20km)로 변경
   async closeToShelter(longitude : number, latitude : number) {
     try {
-      const distanceThreshold = 20000;
+      const distanceThreshold = 1000;
       const closeToShelter = await this.sheltersRepository
         .createQueryBuilder('shelters')
         .select('shelters.facility_name', 'facility_name')
