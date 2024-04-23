@@ -11,7 +11,6 @@ COPY nest-cli.json nest-cli.json
 
 # 의존성 설치
 RUN npm ci
-RUN npm install
 
 # Nest.js 애플리케이션 빌드
 COPY . .
