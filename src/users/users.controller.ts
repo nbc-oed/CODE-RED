@@ -39,7 +39,7 @@ export class UsersController {
   }
 
   // 유저 수정
-  @Patch(':id')
+  @Patch('/myinfo')
   @UseGuards(AuthGuard('jwt'))
   @UseInterceptors(FileInterceptor('image'))
   async update(
@@ -52,7 +52,7 @@ export class UsersController {
   }
 
   //유저 삭제
-  @Delete(':id')
+  @Delete('/myinfo')
   @UseGuards(AuthGuard('jwt'))
   async remove(@Param('id') id: number, @UserInfo() user: Users) {
     return await this.usersService.remove(id, user);

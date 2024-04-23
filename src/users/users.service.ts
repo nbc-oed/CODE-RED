@@ -18,10 +18,6 @@ import { AwsService } from 'src/aws/aws.service';
 
 @Injectable()
 export class UsersService {
-  // create(createUserDto: CreateUserDto) {
-  //   throw new Error('Method not implemented.');
-  // }
-
   constructor(
     @InjectRepository(Users)
     private readonly usersRepository: Repository<Users>,

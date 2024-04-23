@@ -44,20 +44,6 @@ export class AuthController {
   @Render('member/sign-in')
   async moveSignIn() {}
 
-  // @Post('/sign-in')
-  // async signIn(@Body() loginDto: LoginDto, @Res() res) {
-  //   const user = await this.authService.signIn(
-  //     loginDto.email,
-  //     loginDto.password,
-  //     );
-  //   res.cookie('Authentication', user.access_token, {
-  //     domain: 'localhost',
-  //     path: '/',
-  //     httpOnly: true,
-  //   });
-  //   res.end();
-  // }
-
   @Post('/sign-in')
   @Render('main/main')
   async signIn(
