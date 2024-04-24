@@ -1,14 +1,45 @@
 importScripts('https://www.gstatic.com/firebasejs/8.2.0/firebase-app.js');
 importScripts('https://www.gstatic.com/firebasejs/8.2.0/firebase-messaging.js');
-
 firebase.initializeApp({
-  apiKey: 'FIREBASE_API_KEY',
-  authDomain: 'FIREBASE_AUTH_DOMAIN',
-  projectId: 'FIREBASE_PROJECT_ID',
-  storageBucket: 'FIREBASE_STORAGEBUCKET',
-  messagingSenderId: 'FIREBASE_MESSAGING_SENDER_ID',
-  appId: 'FIREBASE_APP_ID',
-  measurementId: 'FIREBASE_MEASUREMENT_ID',
+  apiKey: 'apiKey',
+  authDomain: 'authDomain',
+  projectId: 'projectId',
+  storageBucket: 'storageBucket',
+  messagingSenderId: 'messagingSenderId',
+  appId: 'appId',
+  measurementId: 'measurementId',
 });
 
 const messaging = firebase.messaging();
+
+messaging.onBackgroundMessage(function (payload) {
+  const url = payload.data.url;
+  const message = payload.notification.body;
+  const title = payload.notification.title;
+
+  const options = {
+    body: message + '.',
+    data: { body: message, url: url },
+  };
+
+  self.registration.showNotification(title, options);
+});
+
+self.addEventListener('notificationclick', (event) => {
+  const notificationData = event.notification.data;
+  const url = notificationData.url;
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window' }).then((windowClients) => {
+      for (const client of windowClients) {
+        if (client.url === url && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      if (clients.openWindow) {
+        return clients.openWindow(url);
+      }
+    }),
+  );
+  event.notification.close();
+});
