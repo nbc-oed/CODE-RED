@@ -5,6 +5,7 @@ dmSocket.emit('joinRoom', currentRoom);
 const msgDiv = document.querySelector('.messages');
 let curPage = 1;
 let myId;
+let nickname;
 
 document.addEventListener('DOMContentLoaded', async () => {
   myId = await getMyId();
@@ -22,11 +23,19 @@ document.addEventListener('DOMContentLoaded', async () => {
   loadTargetInfo();
   addEvents();
   await loadHistory();
+  nickname = document.querySelector('.nickname').textContent;
 
   if (msgDiv.scrollHeight === msgDiv.clientHeight) {
     await loadHistory(curPage);
     curPage++;
     scrollToBottom();
+  }
+
+  if (nickname === '탈퇴한 사용자') {
+    document
+      .getElementById('user-message')
+      .setAttribute('placeholder', '메세지를 전송할 수 없습니다.');
+    return;
   }
 });
 
@@ -73,7 +82,10 @@ function addMoreEvent() {
 function addMsgEvent() {
   document.querySelector('#message-form').addEventListener('submit', (e) => {
     e.preventDefault();
-    const nickname = document.querySelector('.nickname').textContent;
+    if (nickname === '탈퇴한 사용자') {
+      return;
+    }
+
     const message = document.querySelector('#user-message').value;
     if (message === '') {
       return;

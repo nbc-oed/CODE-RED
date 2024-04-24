@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, OneToMany, OneToOne } from 'typeorm';
+import { Column, Entity, OneToMany, OneToOne } from 'typeorm';
 import { BaseModel } from './base-model.entity';
 import { Roles } from '../types/user-role.type';
 import { Posts } from './posts.entity';
@@ -7,7 +7,6 @@ import { Scores } from './scores.entity';
 import { MaydayRecords } from '../../mayday/entities/mayday-records.entity';
 import { NotificationMessages } from './notification-messages.entity';
 import { Location } from '../../mayday/entities/location.entity';
-import { DirectMessages } from './direct-messages.entity';
 
 @Entity({ name: 'users' })
 export class Users extends BaseModel {
@@ -34,9 +33,6 @@ export class Users extends BaseModel {
 
   @OneToMany(() => Posts, (post) => post.user, { onDelete: 'CASCADE' })
   posts: Posts[];
-
-  // @OneToMany(() => DirectMessages, (dm) => dm.user, { onDelete: 'NO ACTION' })
-  // dms: DirectMessages[];
 
   @OneToMany(() => Follows, (follower) => follower.follow_user, {
     onDelete: 'CASCADE',
