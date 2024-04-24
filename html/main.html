@@ -337,6 +337,7 @@
           }
         } else // 사건 사고가 있다면 건수에 따른 점수 부여하고 점수 합산
         { // 서울이 아닐시
+          accidentScore = 0
           if (!populationData) {
           let accidentEa = document.getElementById('incident')
           accidentEa.innerHTML = '서울 지역만 조회 가능합니다.'
@@ -358,7 +359,7 @@
           }
 
           totalScore = congestScore + accidentScore
-          
+
           // 사건 사고는 있지만 재난 상황 발생시
           if (totalScore >= 1 && totalScore <= 6) {
             const containsEmergencyKeyword = filteredDisasterData.some(data => keywords.some(keyword => data.message.includes(keyword)));

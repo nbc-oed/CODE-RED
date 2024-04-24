@@ -356,6 +356,7 @@
                 }
               } else // 사건 사고가 있다면 건수에 따른 점수 부여하고 점수 합산
               {
+                accidentScore = 0
                 let accidentEa = document.getElementById('incident')
                 let accidentStandard = document.getElementById('incidentStandard')
                 accidentEa.innerHTML = `${newsData.length}건`
