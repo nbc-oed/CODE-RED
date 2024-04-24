@@ -11,4 +11,7 @@ export class AppController {
     const news = await this.newsService.findAccidentNews();
     return { news: news };
   }
+  @Get('test')
+  @Render('test/test')
+  async test() {}
 }

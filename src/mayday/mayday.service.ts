@@ -9,6 +9,8 @@ import { Scores } from 'src/common/entities/scores.entity';
 import { RescueCompleteDto } from './dto/rescueCompleteDto.dto';
 import { SendRescueMessageDto } from './dto/sendRescueMessage.dto';
 import { Users } from 'src/common/entities/users.entity';
+import { FcmService } from 'src/notifications/messaging-services/firebase/fcm.service';
+import { HelperPositionDto } from './dto/helperPosition.dto';
 
 @Injectable()
 export class MaydayService {
@@ -22,6 +24,7 @@ export class MaydayService {
     @InjectRepository(Users)
     private readonly userRepository: Repository<Users>,
     private readonly dataSource: DataSource,
+    private readonly fcmService: FcmService,
   ) {}
 
   // 내위치 정보 저장
@@ -157,7 +160,20 @@ export class MaydayService {
       latitude,
       longitude,
     );
-    // await this.fcmService.sendPushNotification(title = "구조요청", message = context, userId = helpers.user_id);
+    console.log('알림보냄');
+    console.log(helpers);
+
+    // for (let i = 0; i < helpers.length; i++) {
+    //   console.log(`헬퍼 아이디 => ${helpers[i].user_id}`);
+
+    await this.fcmService.sendPushNotification(
+      '구조요청',
+      message,
+      2,
+      undefined,
+      { userName: name, distance: distance + '' },
+    );
+    // }
   }
 
   // 요청 수락했는지  확인하기
@@ -184,8 +200,8 @@ export class MaydayService {
   }
 
   // 알림 받은 유저 정보 저장 및 거리 계산
-  async acceptRescue(helperId: number, locationDto: LocationDto) {
-    const { latitude, longitude, userName } = locationDto;
+  async acceptRescue(helperId: number, helperPositionDto: HelperPositionDto) {
+    const { latitude, longitude, userName } = helperPositionDto;
 
     const user = await this.userRepository
       .createQueryBuilder('users')
@@ -297,6 +313,7 @@ export class MaydayService {
       .orderBy('distance_meters');
 
     const helpersArray = await queryBuilder.getRawMany();
+    console.log('helpersArray => ', helpersArray);
 
     const helpers = helpersArray.filter((helper) => helper.distance_meters > 0);
     return helpers;

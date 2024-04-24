@@ -15,6 +15,7 @@ import { Users } from 'src/common/entities/users.entity';
 import { LocationDto } from './dto/location.dto';
 import { RescueCompleteDto } from './dto/rescueCompleteDto.dto';
 import { SendRescueMessageDto } from './dto/sendRescueMessage.dto';
+import { HelperPositionDto } from './dto/helperPosition.dto';
 
 @Controller('mayday')
 @UseGuards(AuthGuard('jwt'))
@@ -68,11 +69,11 @@ export class MaydayController {
   @Post('accept-rescue')
   async acceptRescue(
     @UserInfo() helper: Users,
-    @Body() locationDto: LocationDto,
+    @Body() helperPositionDto: HelperPositionDto,
   ) {
     const result = await this.maydayService.acceptRescue(
       helper.id,
-      locationDto,
+      helperPositionDto,
     );
 
     return {

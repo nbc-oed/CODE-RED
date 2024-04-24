@@ -1,17 +1,16 @@
 import {
-    CreateDateColumn,
-    PrimaryGeneratedColumn,
-    UpdateDateColumn,
-  } from "typeorm";
-  
-  export abstract class BaseModel {
-    @PrimaryGeneratedColumn()
-    id: number;
-  
-    @CreateDateColumn()
-    created_at: Date;
+  CreateDateColumn,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
-    @UpdateDateColumn()
-    updated_at: Date;
+export abstract class BaseModel {
+  @PrimaryGeneratedColumn()
+  id: number;
 
-  }
+  @CreateDateColumn()
+  created_at: Date;
+
+  @UpdateDateColumn()
+  updated_at: Date;
+}

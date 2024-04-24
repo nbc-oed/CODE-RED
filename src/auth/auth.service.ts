@@ -16,6 +16,7 @@ import { ConfigService } from '@nestjs/config';
 import { AwsService } from 'src/aws/aws.service';
 import { HttpService } from '@nestjs/axios';
 import { UtilsService } from 'src/utils/utils.service';
+import { Clients } from 'src/common/entities/clients.entity';
 
 @Injectable()
 export class AuthService {
@@ -28,6 +29,9 @@ export class AuthService {
     private readonly configService: ConfigService,
     private readonly awsService: AwsService,
     private readonly httpService: HttpService,
+
+    @InjectRepository(Clients)
+    private readonly clientsRepository: Repository<Clients>,
   ) {}
 
   async signUp(file: Express.Multer.File, createUserDto: CreateUserDto) {
@@ -76,11 +80,17 @@ export class AuthService {
     }
     // client_id 조회 후 반환
     const payload = { email, id: user.id };
-    const newClientId = this.utilsService.getUUID();
-    const clientsInfo = await this.usersService.updateClientsInfo({
-      user_id: user.id,
-      client_id: newClientId,
+    const client = await this.clientsRepository.findOne({
+      where: { client_id: client_id },
     });
+    if (!client) {
+      throw new NotFoundException('비회원정보가 존재하지 않습니다.');
+    }
+    const clientsInfo = await this.usersService.saveClientsInfo({
+      user_id: user.id,
+      client_id: client.client_id,
+    });
+
     return {
       access_token: this.jwtService.sign(payload),
       clientsInfo,

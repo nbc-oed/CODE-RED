@@ -13,6 +13,7 @@ import { ConfigModule } from '@nestjs/config';
 import { JwtAuthGuard } from './guard/client-custom.guard';
 import { UtilsModule } from 'src/utils/utils.module';
 import { NotificationsModule } from 'src/notifications/notifications.module';
+import { Clients } from 'src/common/entities/clients.entity';
 
 @Module({
   imports: [
@@ -27,12 +28,12 @@ import { NotificationsModule } from 'src/notifications/notifications.module';
     }),
     forwardRef(() => UsersModule),
     forwardRef(() => NotificationsModule),
-    TypeOrmModule.forFeature([Users]),
+    TypeOrmModule.forFeature([Users, Clients]),
     AwsModule,
     UtilsModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, KakaoLogin, JwtAuthGuard, JwtService],
-  exports: [JwtAuthGuard, JwtService],
+  providers: [AuthService, KakaoLogin, JwtAuthGuard],
+  exports: [JwtAuthGuard],
 })
 export class AuthModule {}

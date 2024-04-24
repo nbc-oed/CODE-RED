@@ -15,11 +15,7 @@ export class GeoLocationService {
     private redisService: RedisService,
   ) {}
 
-  /**
-   * Producer - 사용자 위치정보 모니터링 (지속적으로 데이터 수집 -> User-Locations-Streams 적재)
-   */
-
-  // 1-1. KAKAO API에서 역지오코딩으로 사용자 위치의 지역명 추출하는 로직
+  // 역 지오코딩 - 사용자 위치 추출
   async getAreaFromCoordinates(
     latitude: number,
     longitude: number,
@@ -56,7 +52,7 @@ export class GeoLocationService {
     }
   }
 
-  // 1-2. 사용자 위치 정보를 해당 지역 스트림에 추가
+  // 위치기반 사용자 지역스트림 추가
   async addUserToLocationStream(
     area: string,
     user_id?: number,

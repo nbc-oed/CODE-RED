@@ -25,22 +25,8 @@ export class DisasterService {
     this.lastFetchedTime = new Date();
   }
 
-  /**
-   * Producer - 공공데이터 재난 문자 모니터링 (지속적으로 데이터 수집 -> Disaster-Streams 적재)
-   * TODO: 왜 DB에 저장해야하는지?
-   *    : 주기적으로 DB에 저장하는 것으로 장기적인 데이터 보관 및 통계분석 작업이 가능해진다?
-   * - 다른 대체 저장 수단은 없는지?
-   *    : AWS S3를 백업 저장소처럼 사용?
-   * 
-   * Redis Stream 기본 명령어
-      XADD: 스트림에 새 메시지 추가
-      XREAD / XREADGROUP: 스트림에서 메시지 읽기
-      XREADGROUP: 컨슈머 그룹을 사용하여 메시지를 처리
-      XACK: 메시지 처리를 확인
-      XGROUP: 컨슈머 그룹을 생성하거나 관리
-   */
-
-  @Cron(CronExpression.EVERY_30_SECONDS) //EVERY_30_SECONDS EVERY_10_MINUTES
+  // 스케줄러를 통한 재난 데이터 수집 자동화
+  @Cron(CronExpression.EVERY_30_SECONDS)
   public async handleCron() {
     this.logger.log(`지역 재난 데이터 수집 시작`);
     const disasterDataList = await this.fetchDisasterData();
@@ -51,7 +37,7 @@ export class DisasterService {
     this.lastFetchedTime = new Date();
   }
 
-  // 1-1. 공공 데이터 API로부터 재난 문자 데이터를 가져오는 로직
+  // 재난 문자 데이터 가져오기 및 필터링.
   private async fetchDisasterData(): Promise<DisasterData[]> {
     const apiKey = this.configService.get<string>('DISASTER_API_KEY');
     try {
@@ -77,7 +63,6 @@ export class DisasterService {
         resultInRow = [resultInRow];
       }
 
-      // 데이터 필터링 - 날짜/키워드/지역명
       const currentDate = new Date();
       const currentDateString = currentDate
         .toISOString()
@@ -101,7 +86,6 @@ export class DisasterService {
             messageDate === currentDateString
           );
         });
-      console.log('result', result);
       this.logger.log('재난 문자 발송현황 데이터 수집 성공');
       return result;
     } catch (error) {
@@ -110,7 +94,7 @@ export class DisasterService {
     }
   }
 
-  // 1-2. 재난 문자 데이터를 Redis Stream에서 관리
+  // 지역에 따른 재난 문자 데이터를 Redis Stream에서 관리
   private async sendDisasterInfoToStreams(disasterData: DisasterData) {
     this.logger.log(`재난 데이터 스트림 가동...`);
     for (const area of disasterData.locationName) {
@@ -142,7 +126,7 @@ export class DisasterService {
     }
   }
 
-  // 스트림이 존재한다면, 저장된 마지막 스탬프를 확인/업데이트하고 최신 데이터인지 검증하면서 추가
+  // 재난 문자 스트림 최신화.
   async addLatestDataToExistingStream(
     disasterData: DisasterData,
     area: string,
@@ -172,7 +156,7 @@ export class DisasterService {
     }
   }
 
-  // 1-3. fetchDisasterData를 통해 가져온 데이터들을 백업하기 위해 DB에 저장
+  // 재난 문자 데이터 DB 백업
   private async saveDisasterDataBatch(disasterDataList: DisasterData[]) {
     for (const disasterData of disasterDataList) {
       const existingData = await this.disasterRepository.findOne({

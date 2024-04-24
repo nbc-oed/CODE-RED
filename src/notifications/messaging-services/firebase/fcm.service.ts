@@ -6,6 +6,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { NotificationMessages } from 'src/common/entities/notification-messages.entity';
 import { Repository } from 'typeorm';
 import { NotificationStatus } from 'src/common/types/notification-status.type';
+import { url } from 'inspector';
 
 @Injectable()
 export class FcmService {
@@ -38,36 +39,33 @@ export class FcmService {
       this.logger.error('Firebase 초기화 실패, initialization failed:', error);
     }
   }
-  /** FCM 알림 전송 로직
-   * 1. 회원/비회원 푸시 토큰 조회
-   * 2. 알림 전송
-   * 3. 전송 성공/실패한 알림 DB 저장
-   * 4. 재시도 3번 수행 후 결과에 따라 DB 발송 상태 업데이트
-   */
 
   async sendPushNotification(
     title: string,
     message: string,
     userId?: number,
     clientId?: string,
+    customData?: { userName?: string; distance?: string },
   ) {
-    // 1-1. 회원(userId), 비회원(clientId)로 해당 사용자의 푸시 토큰 조회해서 payload에 전달
     const token = await this.usersService.getTokenByIdentifiers(
       userId,
       clientId,
     );
 
-    // 1-2. 알림 전송
     const payload = {
-      token,
+      token: token,
       notification: {
         title: title,
         body: message,
       },
+      data: {
+        click_action: 'https://google.com',
+        url: `http://localhost:3000/mayday/help-request?username=${customData.userName}&distance=${customData.distance}&message=${message}`,
+      },
     };
 
     try {
-      // 1-3. 전송 성공한 알림 DB 저장
+      // 전송 성공한 알림 DB 저장
       const response = await admin.messaging().send(payload);
       await this.saveSendingResult(
         title,
@@ -80,7 +78,7 @@ export class FcmService {
         `알림 전송 성공, Notification sent successfully: ${response}`,
       );
     } catch (error) {
-      const failedMessage = await this.saveSendingResult(
+      await this.saveSendingResult(
         title,
         message,
         NotificationStatus.Failed,
@@ -97,7 +95,7 @@ export class FcmService {
     }
   }
 
-  // 1-4. 전송 성공/실패한 알림 DB 저장
+  // 전송 성공/실패한 알림 DB 저장
   private async saveSendingResult(
     title: string,
     message: string,

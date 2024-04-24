@@ -24,8 +24,7 @@ export class NotificationsController {
     private fcmService: FcmService,
   ) {}
 
-  // 1. FCM 발송된 알림 목록 조회 API
-  // TODO: (비회원) 클라이언트에서 서버로 로컬스토리지에 저장된 client_id 전송해줘야함.
+  // FCM 발송된 알림 목록 조회 API
   @UseGuards(JwtAuthGuard)
   @Get()
   async getAllNotifications(
@@ -39,7 +38,7 @@ export class NotificationsController {
     return messageLists;
   }
 
-  // 2. 알림 목록 중 특정 알림 메세지 상세 조회 및 Read 상태 업데이트 API
+  // 알림 목록 중 특정 알림 메세지 상세 조회 및 Read 상태 업데이트 API
   @UseGuards(JwtAuthGuard)
   @Get('/:messageId')
   async getNotificationByIdAndUpdateStatus(
@@ -52,7 +51,18 @@ export class NotificationsController {
     return readMessage;
   }
 
-  /**
+  @Post('send-push')
+  async sendTestNotification(@Body() body: { title: string; message: string }) {
+    console.log(`알림 전송 성공, message:${body.message} `);
+    const area = '전라남도 화순군';
+    await this.realtimeNotificationsService.realTimeMonitoringStartAndProcessPushMessages(
+      area,
+    );
+    return this.fcmService.sendPushNotification(body.title, body.message);
+  }
+}
+
+/**
    * 특정 사용자 위치에 따른 알림 목록 조회
    *   @UseGuards(AuthGuard('jwt'))
   @Get()
@@ -70,14 +80,3 @@ export class NotificationsController {
   }
 
    */
-
-  @Post('send-push')
-  async sendTestNotification(@Body() body: { title: string; message: string }) {
-    console.log(`알림 전송 성공, message:${body.message} `);
-    const area = '전라남도 화순군';
-    await this.realtimeNotificationsService.realTimeMonitoringStartAndProcessPushMessages(
-      area,
-    );
-    return this.fcmService.sendPushNotification(body.title, body.message);
-  }
-}

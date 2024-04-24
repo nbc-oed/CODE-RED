@@ -18,8 +18,7 @@ export class NotificationsService {
     private cacheManager: Cache,
   ) {}
 
-  // 1. FCM 발송된 알림 목록 조회 API
-
+  //  FCM 발송된 알림 목록 조회 API
   async getAllNotifications(userId?: number, clientId?: string) {
     const messageLists = await this.notificationMessagesRepository.find({
       where: [
@@ -38,7 +37,7 @@ export class NotificationsService {
     return messageLists;
   }
 
-  // 2. 알림 목록 중 특정 알림 메세지 상세 조회 및 Read 상태 업데이트 API
+  // 알림 목록 중 특정 알림 메세지 상세 조회 및 Read 상태 업데이트 API
   async getNotificationByIdAndUpdateStatus(messageId: number) {
     const readMessage = await this.notificationMessagesRepository.findOneBy({
       id: messageId,
