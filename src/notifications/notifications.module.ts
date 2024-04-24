@@ -16,6 +16,7 @@ import { BullModule } from '@nestjs/bull';
 import { UsersModule } from 'src/users/users.module';
 import { QueueModule } from './queue/queue.module';
 import { AuthModule } from 'src/auth/auth.module';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { AuthModule } from 'src/auth/auth.module';
     UtilsModule,
     forwardRef(() => UsersModule),
     forwardRef(() => AuthModule),
+    JwtModule,
   ],
   controllers: [NotificationsController],
   providers: [
@@ -44,6 +46,12 @@ import { AuthModule } from 'src/auth/auth.module';
     FcmService,
     QueueModule,
   ],
-  exports: [RedisService, GeoLocationService, FcmService, NotificationsService, RealtimeNotificationService],
+  exports: [
+    RedisService,
+    GeoLocationService,
+    FcmService,
+    NotificationsService,
+    RealtimeNotificationService,
+  ],
 })
 export class NotificationsModule {}
