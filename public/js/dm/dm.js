@@ -20,10 +20,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     scrollToBottom();
   });
 
-  loadTargetInfo();
+  await loadTargetInfo();
   addEvents();
   await loadHistory();
-  nickname = document.querySelector('.nickname').innerText;
 
   if (msgDiv.scrollHeight === msgDiv.clientHeight) {
     await loadHistory(curPage);
@@ -48,8 +47,8 @@ async function getMyId() {
   return +data;
 }
 
-function loadTargetInfo() {
-  fetch(`/dm/userinfo/${currentRoom}`, {
+async function loadTargetInfo() {
+  await fetch(`/dm/userinfo/${currentRoom}`, {
     method: 'GET',
     credentials: 'include',
   })
@@ -60,6 +59,7 @@ function loadTargetInfo() {
             <img src="${data.profile_image}">
             <p class="nickname">${data.nickname}</p>
           `;
+      nickname = data.nickname;
     });
 }
 
