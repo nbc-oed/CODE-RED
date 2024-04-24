@@ -12,7 +12,7 @@ import { AwsService } from 'src/aws/aws.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { Posts } from 'src/common/entities/posts.entity';
 import { Users } from 'src/common/entities/users.entity';
-import { FcmService } from 'src/notifications/messaging-services/firebase/fcm.service';
+import { UtilsService } from 'src/utils/utils.service';
 
 @Injectable()
 export class PostsService {
@@ -20,10 +20,9 @@ export class PostsService {
     @InjectRepository(Posts) private readonly postsRepo: Repository<Posts>,
     @InjectRepository(Users) private readonly usersRepo: Repository<Users>,
     private readonly awsService: AwsService,
-    private fcmService: FcmService,
+    private readonly utilsService: UtilsService,
   ) {}
 
-  // TODO? 한 유저가 몇초 이내엔 글 연달아 못 쓰도록 제어
   async createPost(
     userId: number,
     file: Express.Multer.File,
@@ -40,7 +39,7 @@ export class PostsService {
     return createdPost;
   }
 
-  async findAllPosts(page: number, pageSize: number, search: string) {
+  async getAllPosts(page: number, search?: string) {
     const queryBuilder = this.postsRepo
       .createQueryBuilder('posts')
       .select([
@@ -51,10 +50,10 @@ export class PostsService {
         'posts.updated_at',
       ])
       .orderBy('updated_at', 'DESC')
-      .skip((page - 1) * pageSize)
-      .take(pageSize);
+      .skip((page - 1) * 6)
+      .take(6);
 
-    if (search) {
+    if (search && search !== '') {
       queryBuilder.andWhere('posts.title LIKE :search', {
         search: `%${search}%`,
       });
@@ -62,16 +61,18 @@ export class PostsService {
 
     const posts = (await queryBuilder.getMany()).map((post) => ({
       ...post,
-      updated_at: new Date(post.updated_at).toLocaleString(),
+      title:
+        post.title.length > 20 ? post.title.slice(0, 20) + '...' : post.title,
+      post_image: post.post_image || '/img/no-image.png',
+      updated_at: this.utilsService.getPastTime(new Date(post.updated_at)),
     }));
-    return { posts };
+
+    return posts;
   }
 
-  async findPost(postId: number) {
+  async getPostWithUserInfo(postId: number) {
     const post = await this.postsRepo.findOneBy({ id: postId });
-    if (_.isNil(post)) {
-      throw new NotFoundException('존재하지 않는 게시글입니다.');
-    }
+    if (_.isNil(post)) throw new NotFoundException();
 
     const user = await this.usersRepo.findOneBy({ id: post.user_id });
 
@@ -80,9 +81,14 @@ export class PostsService {
     return {
       ...post,
       isUpdated,
+      created_at: new Date(post.created_at).toLocaleString(),
       updated_at: new Date(post.updated_at).toLocaleString(),
       user: { ...user },
     };
+  }
+
+  async getPost(postId: number) {
+    return await this.postsRepo.findOneBy({ id: postId });
   }
 
   async updatePost(
@@ -92,9 +98,8 @@ export class PostsService {
     updatePostDto: Partial<CreatePostDto>,
   ) {
     const post = await this.postsRepo.findOneBy({ id: postId });
-    if (userId !== post.user_id) {
-      throw new UnauthorizedException('권한이 없습니다.');
-    }
+    if (userId !== post.user_id) throw new UnauthorizedException();
+    if (_.isNil(post)) throw new NotFoundException();
 
     const uploadedFile = file && (await this.awsService.uploadImage(file));
 
@@ -108,15 +113,7 @@ export class PostsService {
 
   async removePost(userId: number, postId: number) {
     const post = await this.postsRepo.findOneBy({ id: postId });
-    console.log(post);
-    if (userId !== post.user_id) {
-      throw new UnauthorizedException('권한이 없습니다.');
-    }
-
-    // FCM 푸시 알림 보내기
-    const title = '수정 완료';
-    const message = '수정완료되었습니다.';
-    await this.fcmService.sendPushNotification(title, message, userId);
+    if (userId !== post.user_id) throw new UnauthorizedException();
 
     return await this.postsRepo.remove(post);
   }

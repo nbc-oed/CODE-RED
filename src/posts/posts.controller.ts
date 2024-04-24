@@ -16,7 +16,6 @@ import { FileInterceptor } from '@nestjs/platform-express';
 
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
-import { FindPostQueryDto } from './dto/find-post-query.dto';
 
 import { AuthGuard } from '@nestjs/passport';
 import { UserInfo } from 'src/common/decorator/user.decorator';
@@ -37,20 +36,39 @@ export class PostsController {
     return await this.postsService.createPost(user.id, file, createPostDto);
   }
 
-  @Get()
-  @Render('main/posts/post-list')
-  async findAllPosts(@Query() query: FindPostQueryDto) {
-    return await this.postsService.findAllPosts(
-      +query.page,
-      +query.pageSize,
+  @Get('/api')
+  async findAllPostsApi(@Query() query: { page: string; search: string }) {
+    const posts = await this.postsService.getAllPosts(
+      +query.page || 1,
       query.search,
     );
+
+    return posts;
+  }
+
+  @Get()
+  @Render('posts/post-list')
+  async servePostList() {
+    const posts = await this.postsService.getAllPosts(1);
+
+    return {
+      posts,
+    };
+  }
+
+  @Get('newpost')
+  @Render('posts/create-post')
+  servePostPage() {}
+
+  @Get('api/:postId')
+  async getPostDetail(@Param('postId') postId: string) {
+    return await this.postsService.getPost(+postId);
   }
 
   @Get(':postId')
-  @Render('main/posts/post-detail')
-  async findPost(@Param('postId') postId: string) {
-    return await this.postsService.findPost(+postId);
+  @Render('posts/post-detail')
+  async servePost(@Param('postId') postId: string) {
+    return await this.postsService.getPostWithUserInfo(+postId);
   }
 
   @Patch(':postId')
