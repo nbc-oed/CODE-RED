@@ -8,6 +8,8 @@ import {
   UseInterceptors,
   Header,
   Query,
+  Render,
+  Session,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
@@ -33,8 +35,21 @@ export class AuthController {
     return await this.authService.signUp(file, createUserDto);
   }
 
+  @Get('/sign-up')
+  @Render('member/sign-up')
+  async moveSignUp() {}
+
+  @Get('/sign-in')
+  @Render('member/sign-in')
+  async moveSignIn() {}
+
   @Post('/sign-in')
-  async signIn(@Body() loginDto: LoginDto, @Res() res) {
+  @Render('main/main')
+  async signIn(
+    @Body() loginDto: LoginDto,
+    @Res() res,
+    @Session() session: Record<string, any>,
+  ) {
     const user = await this.authService.signIn(
       loginDto.email,
       loginDto.password,
@@ -44,11 +59,13 @@ export class AuthController {
       path: '/',
       httpOnly: true,
     });
-    res.end();
+
+    session.isLogin = true;
+    return { isLogin: session.isLogin };
   }
 
   // kakaoLogin 으로 접속하면 보이는 로그인 화면 구성
-  @Get('kakaoLogin')
+  @Get('/kakaoLogin')
   @Header('Content-Type', 'text/html')
   getKakaoLoginPage(): string {
     return `

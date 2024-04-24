@@ -28,6 +28,8 @@ export class AwsService {
     const ext = file.originalname.split('.').pop();
     const fileName = `${this.utilsService.getUUID()}.${ext}`;
 
+    console.log('fileName=>', fileName);
+
     const bucket = this.configService.get('AWS_S3_BUCKET_NAME');
     const command = new PutObjectCommand({
       Bucket: bucket,

@@ -63,7 +63,6 @@ export class AuthService {
 
   async signIn(email: string, password: string, client_id?: string) {
     const user = await this.usersRepository.findOne({
-      select: ['id', 'email', 'password'],
       where: { email },
     });
 
@@ -74,6 +73,7 @@ export class AuthService {
     if (!(await bcrypt.compare(password, user.password))) {
       throw new UnauthorizedException('비밀번호를 확인해주세요.');
     }
+
     // client_id 조회 후 반환
     const payload = { email, id: user.id };
     const newClientId = this.utilsService.getUUID();
@@ -81,6 +81,7 @@ export class AuthService {
       user_id: user.id,
       client_id: newClientId,
     });
+
     return {
       access_token: this.jwtService.sign(payload),
       clientsInfo,

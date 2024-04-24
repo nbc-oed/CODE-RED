@@ -39,6 +39,8 @@ import { NewsModule } from './news/news.module';
 import { HttpModule } from '@nestjs/axios';
 import { Destination } from './common/entities/destination.entity';
 import { DisasterModule } from './notifications/streams/disaster-streams/disaster.module';
+import { SessionModule } from 'nestjs-session';
+import * as session from 'express-session';
 
 const typeOrmModuleOptions = {
   useFactory: async (
@@ -65,7 +67,7 @@ const typeOrmModuleOptions = {
       Location,
       Clients,
       DirectMessages,
-      Destination
+      Destination,
     ],
     logging: true, // 데이터베이스 쿼리를 로깅할지 여부를 제어, 이 옵션을 true로 설정하면 TypeORM이 실행된 쿼리를 콘솔에 로그로 출력
   }),
@@ -116,12 +118,22 @@ const typeOrmModuleOptions = {
     DestinationRiskModule,
     QueueModule,
     DmModule,
-    DmModule,
     NewsModule,
     HttpModule,
-    DisasterModule
+    DisasterModule,
+    SessionModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: async (configService: ConfigService) => ({
+        session: {
+          secret: configService.get('SESSION_SECRET'), // 세션 시크릿 키
+          resave: false,
+          saveUninitialized: false,
+        },
+      }),
+    }),
   ],
-  controllers: [],
+  controllers: [AppController],
   providers: [],
 })
 export class AppModule {}

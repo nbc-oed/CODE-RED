@@ -1,0 +1,22 @@
+<div class='container'>
+  <img
+    src='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2FoFvs6%2FbtsGHblHYxt%2F1kXhsa7cOG2FcjC2UzUIF1%2Fimg.png'
+    alt='프로필 사진'
+    id='profileImage'
+  />
+  <h1>CODE:RED</h1>
+
+  <form action='/auth/sign-in' method='post'>
+    <label for='email'>이메일</label>
+    <input type='text' id='email' name='email' /><br />
+
+    <label for='password'>비밀번호</label>
+    <input type='password' id='password' name='password' /><br />
+
+    <button class='submitButton' type='submit'>로그인</button>
+  </form>
+
+  <form action='/auth/kakaoLoginLogic' method='GET' id='kakao-login'>
+    <button class='submitButton' type='submit'>카카오로그인</button>
+  </form>
+</div>

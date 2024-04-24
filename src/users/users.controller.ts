@@ -9,14 +9,12 @@ import {
   UseGuards,
   UseInterceptors,
   UploadedFile,
-  Req,
-  Put,
+  Render,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Users } from 'src/common/entities/users.entity';
 import { AuthGuard } from '@nestjs/passport';
-import { LocationDto } from './dto/user-location.dto';
 import { UserInfo } from 'src/common/decorator/user.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UtilsService } from 'src/utils/utils.service';
@@ -44,13 +42,15 @@ export class UsersController {
   }
 
   // 유저 상세 조회
-  @Get(':id')
-  async getOneUsers(@Param('id') id: number) {
-    return await this.usersService.findOne(id);
+  @Get('/myinfo')
+  @UseGuards(AuthGuard('jwt'))
+  @Render('member/myinfo')
+  async getOneUsers(@UserInfo() user: Users) {
+    return await this.usersService.findOne(user.id);
   }
 
   // 유저 수정
-  @Patch(':id')
+  @Patch('/myinfo')
   @UseGuards(AuthGuard('jwt'))
   @UseInterceptors(FileInterceptor('image'))
   async update(
@@ -63,7 +63,7 @@ export class UsersController {
   }
 
   //유저 삭제
-  @Delete(':id')
+  @Delete('/myinfo')
   @UseGuards(AuthGuard('jwt'))
   async remove(@Param('id') id: number, @UserInfo() user: Users) {
     return await this.usersService.remove(id, user);
