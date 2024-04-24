@@ -37,6 +37,12 @@ export class UsersController {
     return this.usersService.getAllUsers();
   }
 
+  @Get('/api/myId')
+  @UseGuards(AuthGuard('jwt'))
+  getMyUserId(@UserInfo() user: Users) {
+    return user.id;
+  }
+
   // 유저 상세 조회
   @Get(':id')
   async getOneUsers(@Param('id') id: number) {

@@ -1,0 +1,91 @@
+.dm {
+  border: 1px solid #ccc;
+  background-color: #f9f9f9;
+  margin: 5px 0 5px 0;
+  border-radius: 5px;
+  padding: 10px;
+}
+
+.moreBtn {
+  background-color: white;
+  border: 1.5px solid red;
+  border-radius: 5px;
+  padding: 8px 16px;
+  margin-bottom: 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.messages {
+  margin-bottom: 10px;
+  height: 600px;
+  overflow-y: auto;
+}
+
+.message-right,
+.message-left {
+  margin-bottom: 5px;
+}
+
+.targetInfo {
+  display: flex;
+  align-items: center;
+  padding: 5px;
+  border-bottom: 1px solid red;
+  padding-bottom: 15px;
+  margin-bottom: 20px;
+}
+
+.targetInfo img {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  margin-left: 10px;
+}
+
+.nickname {
+  font-weight: bold;
+  font-size: 20px;
+  margin-left: 10px;
+}
+
+.msg-body {
+  border: 1.5px solid red;
+  background-color: white;
+  max-width: 65%;
+  min-width: 5%;
+  width: fit-content;
+  padding: 8px;
+  border-radius: 10px;
+  display: inline-block;
+}
+
+.msg-date {
+  font-size: 14px;
+}
+
+.message-right {
+  text-align: right;
+}
+
+.message-left {
+  text-align: left;
+}
+
+#user-message {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  box-sizing: border-box;
+}
+
+#user-message:focus {
+  outline: none;
+  border-color: red;
+  box-shadow: 0 0 0 0.2rem rgba(255, 0, 0, 0.25);
+}
+
+#user-message::placeholder {
+  color: #aaa;
+}

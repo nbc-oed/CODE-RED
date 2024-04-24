@@ -1,10 +1,7 @@
-import { Users } from 'src/common/entities/users.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
-  JoinColumn,
-  ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
@@ -14,7 +11,7 @@ export class DirectMessages {
   id: number;
 
   @Column({ type: 'varchar', nullable: false })
-  roomName: string;
+  room_name: string;
 
   @Column({ type: 'varchar', nullable: false })
   message: string;
@@ -24,10 +21,4 @@ export class DirectMessages {
 
   @CreateDateColumn()
   created_at: Date;
-
-  // @ManyToOne(() => Users, (user) => user.dms, {
-  //   onDelete: 'NO ACTION',
-  // })
-  // @JoinColumn({ name: 'user_id', referencedColumnName: 'id' })
-  // user: Users;
 }

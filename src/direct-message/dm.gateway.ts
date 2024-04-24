@@ -1,4 +1,3 @@
-import { InjectRepository } from '@nestjs/typeorm';
 import {
   SubscribeMessage,
   WebSocketGateway,
@@ -6,47 +5,55 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { DirectMessages } from '../common/entities/direct-messages.entity';
-import { Repository } from 'typeorm';
+import { RedisService } from 'src/notifications/redis/redis.service';
+import { FcmService } from 'src/notifications/messaging-services/firebase/fcm.service';
 
 @WebSocketGateway({ namespace: '/dm' })
 export class DmGateway {
   @WebSocketServer() server: Server;
 
   constructor(
-    @InjectRepository(DirectMessages)
-    private readonly dmRepo: Repository<DirectMessages>,
+    private redisService: RedisService,
+    private fcmService: FcmService,
   ) {}
 
   @SubscribeMessage('message')
-  async handleMessage(socket: Socket, data: DirectMessages): Promise<void> {
-    this.dmRepo.save({ ...data });
-
+  async handleMessage(socket: Socket, data: IncomingMsgDto): Promise<void> {
+    const newMsg: Omit<DirectMessages, 'id'> = {
+      user_id: data.userId,
+      message: data.message,
+      room_name: data.roomName,
+      created_at: data.createdAt,
+    };
     const targetUserId = +data.roomName
       .split('_')
-      .filter((id) => data.user_id !== +id)[0];
-    const allSockets = await this.server.fetchSockets();
+      .filter((id) => +id !== +data.userId)[0];
 
-    let targetSocket;
-    allSockets.forEach((soc) => {
-      if (soc.handshake.auth.userId === targetUserId) {
-        targetSocket = soc;
-      }
-    });
+    this.redisService.client.rpush(
+      `dm:${data.roomName}`,
+      JSON.stringify(newMsg),
+    );
 
-    if (targetSocket && [...targetSocket.rooms][1] !== data.roomName) {
-      this.server.to('' + targetSocket.id).emit('notification', data.user_id);
-    }
+    this.fcmService.sendPushNotification(
+      data.nickname,
+      newMsg.message,
+      targetUserId,
+    );
 
-    this.server.in(data.roomName).emit('message', data);
+    this.server
+      .in([`${data.userId}_list`, `${targetUserId}_list`])
+      .emit('listEvent', newMsg);
+
+    this.server.in(data.roomName).emit('message', newMsg);
   }
 
   @SubscribeMessage('joinRoom')
   async handleJoinRoom(socket: Socket, roomName: string): Promise<void> {
-    socket.leave([...socket.rooms][1]);
     socket.join(roomName);
+  }
 
-    const history = await this.dmRepo.findBy({ roomName });
-    socket.emit('joinRoom', { roomName, history });
+  handleConnection(socket: Socket): void {
+    console.log(socket.id + 'is connected');
   }
 
   handleDisconnect(socket: Socket): void {
@@ -54,6 +61,14 @@ export class DmGateway {
   }
 
   afterInit(): void {
-    console.log('init');
+    console.log('/dm socket init');
   }
+}
+
+interface IncomingMsgDto {
+  userId: number;
+  message: string;
+  nickname: string;
+  roomName: string;
+  createdAt: Date;
 }

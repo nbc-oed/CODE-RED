@@ -1,27 +1,58 @@
-import { Controller, Get, Res, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  Query,
+  Render,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Response } from 'express';
-import path from 'path';
 
 import { UserInfo } from 'src/common/decorator/user.decorator';
 import { Users } from 'src/common/entities/users.entity';
+import { DmService } from './dm.service';
 
-// ! 인가 관련 부분은 로그인 프론트 만들어지면 주석 해제 (현재 client-prompt로 userId 받아 사용)
+@UseGuards(AuthGuard('jwt'))
 @Controller('/dm')
 export class DmController {
-  // @UseGuards(AuthGuard('jwt'))
-  @Get()
-  serveDMPage(@Res() res: Response, @UserInfo() user: Users) {
-    const filePath = path.resolve(
-      __dirname,
-      '..',
-      '..',
-      'public',
-      'dm',
-      'direct-message.html',
-    );
+  constructor(private readonly dmService: DmService) {}
 
-    // res.cookie('userId', user.id);
-    return res.sendFile(filePath);
+  @Get()
+  @Render('dm/dm-list')
+  async serveDmList(@Res() res: Response, @UserInfo() user: Users) {
+    const dmList = await this.dmService.getDmList(user.id);
+
+    return { data: dmList };
+  }
+
+  @Get('/:roomName')
+  @Render('dm/dm')
+  async serveDmPage() {
+    return {
+      title: 'Direct Messages',
+    };
+  }
+
+  @Get('/history/:roomName')
+  async getDmHistory(
+    @Param('roomName') roomName: string,
+    @Query('page') page: string,
+    @UserInfo() user: Users,
+  ) {
+    return await this.dmService.getDmHistory(
+      roomName,
+      user.id,
+      page ? +page : 0,
+    );
+  }
+
+  @Get('/userinfo/:roomName')
+  async getUserInfoByRoomName(
+    @Param('roomName') roomName: string,
+    @UserInfo() user: Users,
+  ) {
+    return await this.dmService.getTargetInfo(roomName, +user.id);
   }
 }
