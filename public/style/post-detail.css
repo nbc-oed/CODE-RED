@@ -55,8 +55,14 @@
   font-weight: bold;
 }
 
-.dmBtn {
+.dmBtn,
+.updateBtn,
+.deleteBtn {
   margin-left: auto;
   height: 30px;
   width: 80px;
+}
+
+.deleteBtn {
+  margin-left: 10px;
 }
