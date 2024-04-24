@@ -52,7 +52,7 @@ export class DisasterService {
   }
 
   // 1-1. 공공 데이터 API로부터 재난 문자 데이터를 가져오는 로직
-  private async fetchDisasterData(): Promise<DisasterData[]> {
+  public async fetchDisasterData(): Promise<DisasterData[]> {
     const apiKey = this.configService.get<string>('DISASTER_API_KEY');
     try {
       const response = await axios.get(

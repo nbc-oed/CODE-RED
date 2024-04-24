@@ -1,0 +1,93 @@
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CODE:RED 회원가입</title>
+    <style>
+      * {
+        width: 440px;
+        margin: 0 auto;
+        padding: 5px;
+      }
+
+      .container {
+        padding: 20px;
+        border: 1px solid #ccc;
+      }
+
+      h1 {
+        text-align: center;
+        margin-bottom: 20px;
+        color: red;
+      }
+      label {
+        display: block;
+        margin-bottom: 5px;
+      }
+      input,
+      textarea {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ccc;
+      }
+      button {
+        background-color: rgb(213, 35, 29);
+        color: white;
+        margin-top: 20px;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      #profile-image {
+        width: 170px;
+        height: 150px;
+        margin-bottom: 20px;
+        display: flex;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <img
+        src="https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2FoFvs6%2FbtsGHblHYxt%2F1kXhsa7cOG2FcjC2UzUIF1%2Fimg.png"
+        alt="프로필 사진"
+        id="profile-image"
+      />
+      <h1>CODE:RED</h1>
+
+      <form action="/signup" method="post">
+        <label for="id">아이디</label>
+        <input type="text" id="id" name="id" required />
+
+        <label for="password">비밀번호</label>
+        <input type="password" id="password" name="password" required />
+
+        <label for="password_confirmation">비밀번호 확인</label>
+        <input
+          type="password"
+          id="password_confirmation"
+          name="password_confirmation"
+          required
+        />
+
+        <label for="name">이름</label>
+        <input type="text" id="name" name="name" required />
+
+        <label for="gender">성별</label>
+        <select id="gender" name="gender" required>
+          <option value="male">남성</option>
+          <option value="female">여성</option>
+        </select>
+
+        <label for="birthday">생년월일</label>
+        <input type="date" id="birthday" name="birthday" required />
+
+        <label for="phone_number">전화번호</label>
+        <input type="tel" id="phone_number" name="phone_number" required />
+
+        <button type="submit">회원가입</button>
+      </form>
+    </div>
+  </body>
+</html>

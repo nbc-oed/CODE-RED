@@ -30,14 +30,15 @@ import { DirectMessages } from './common/entities/direct-messages.entity';
 import { validationSchema } from './common/config/env.config';
 import { NotificationsModule } from './notifications/notifications.module';
 import * as redisStore from 'cache-manager-redis-store';
-import { DestinationRiskController } from './destination-risk/destination-risk.controller';
-import { DestinationRiskService } from './destination-risk/destination-risk.service';
 import { DestinationRiskModule } from './destination-risk/destination-risk.module';
 import { BullModule } from '@nestjs/bull';
 import { QueueModule } from './notifications/queue/queue.module';
 import { Clients } from './common/entities/clients.entity';
 import { AppController } from './app.controller';
 import { NewsModule } from './news/news.module';
+import { HttpModule } from '@nestjs/axios';
+import { Destination } from './common/entities/destination.entity';
+import { DisasterModule } from './notifications/streams/disaster-streams/disaster.module';
 
 const typeOrmModuleOptions = {
   useFactory: async (
@@ -64,6 +65,7 @@ const typeOrmModuleOptions = {
       Location,
       Clients,
       DirectMessages,
+      Destination
     ],
     logging: true, // 데이터베이스 쿼리를 로깅할지 여부를 제어, 이 옵션을 true로 설정하면 TypeORM이 실행된 쿼리를 콘솔에 로그로 출력
   }),
@@ -116,8 +118,10 @@ const typeOrmModuleOptions = {
     DmModule,
     DmModule,
     NewsModule,
+    HttpModule,
+    DisasterModule
   ],
-  controllers: [DestinationRiskController, AppController],
-  providers: [DestinationRiskService],
+  controllers: [],
+  providers: [],
 })
 export class AppModule {}

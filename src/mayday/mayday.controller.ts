@@ -9,12 +9,13 @@ import {
   Patch,
 } from '@nestjs/common';
 import { MaydayService } from './mayday.service';
-import { AuthGuard } from '@nestjs/passport';
+
 import { UserInfo } from 'src/common/decorator/user.decorator';
 import { Users } from 'src/common/entities/users.entity';
 import { LocationDto } from './dto/location.dto';
 import { RescueCompleteDto } from './dto/rescueCompleteDto.dto';
 import { SendRescueMessageDto } from './dto/sendRescueMessage.dto';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('mayday')
 @UseGuards(AuthGuard('jwt'))
@@ -25,6 +26,7 @@ export class MaydayController {
   @Post()
   async saveMyLocation(
     @UserInfo() user: Users,
+    //@Query('id') id : string,
     @Body() locationDto: LocationDto,
   ) {
     await this.maydayService.saveMyLocation(locationDto, user.id);

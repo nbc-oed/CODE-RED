@@ -1,4 +1,4 @@
 export enum NewsLevel {
-  Common = 'Common',
-  Danger = 'Danger',
+    Common = 'Common',
+    Danger = 'Danger',
 }

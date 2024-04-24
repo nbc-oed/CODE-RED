@@ -44,6 +44,6 @@ import { AuthModule } from 'src/auth/auth.module';
     FcmService,
     QueueModule,
   ],
-  exports: [RedisService, GeoLocationService, FcmService, NotificationsService],
+  exports: [RedisService, GeoLocationService, FcmService, NotificationsService, RealtimeNotificationService],
 })
 export class NotificationsModule {}

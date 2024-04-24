@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Cron } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import axios from 'axios';
 import { Shelters } from 'src/common/entities/shelters.entity';
@@ -13,6 +14,12 @@ export class SheltersService {
     @InjectRepository(Shelters)
     private sheltersRepository: Repository<Shelters>,
   ) {}
+
+  // 서울 기준 매일 아침 10시에 getShelters가 실행되도록 설정
+  @Cron('0 0 10 * * *', { timeZone : 'Asia/seoul'})
+  async handleCron () {
+    await this.getShelters()
+  }
 
   async getShelters() {
     const seoulShelter = await this.configService.get('SHELTER_API');
@@ -31,75 +38,85 @@ export class SheltersService {
       spaces: 4,
     });
 
-    // json 문자열을 자바스크립트 객체로 변환
-    let shelterDataJsonVer = JSON.parse(xmlToJsonData);
-
-    // 객체의 속성 안으로 접근 만약 shelterRows가 배열이 아니라면 배열로 만들어줌
-    let shelterRows = shelterDataJsonVer['TbEqkShelter']['row'];
-    if (!Array.isArray(shelterRows)) {
-      shelterRows = [shelterRows];
-    }
-    totalData.push(...shelterRows);
-
-    response = await axios.get(
-      `http://openapi.seoul.go.kr:8088/${seoulShelter}/xml/TbEqkShelter/1001/1551/`, // 1/1000 , 1001/1551 등 데이터 숫자에 따라 변동 가능. 한번에 1000개까지만 가능.
-    );
-    xmlData = response.data;
-    xmlToJsonData = convert.xml2json(xmlData, {
-      compact: true,
-      spaces: 4,
-    });
-    shelterDataJsonVer = JSON.parse(xmlToJsonData);
-    shelterRows = shelterDataJsonVer['TbEqkShelter']['row'];
-    if (!Array.isArray(shelterRows)) {
-      shelterRows = [shelterRows];
-    }
-    totalData.push(...shelterRows);
-
-    const shelterInfo = totalData.map((element) => {
-      return {
-        // ._text를 안 쓸 경우, shelterId : { _text:'1'} 이런식으로 표시됨
-        id: parseInt(element.SHELTER_ID._text),
-        shelter_id: parseInt(element.SHELTER_ID._text),
-        address: element.DTL_ADRES._text,
-        facility_name: element.VT_ACMDFCLTY_NM._text,
-        facility_area: element.FCLTY_AR._text,
-        longitude: parseFloat(element.LON._text),
-        latitude: parseFloat(element.LAT._text),
-        department_number: element.MNGPS_NM._text,
-      };
-    });
-    const dbShelters = await this.sheltersRepository.find();
-    // 현재 데이터베이스에 존재하는 모든 shelter_id를 가져옴. db속 대피소들을 모아서 그 안에 shelter_id만 추출한 후 객체 생성
-    const existingShelterIds = new Set(
-      dbShelters.map((shelter) => shelter.shelter_id),
-    );
-
-    // 배열을 풀어줌으로서 여러개의 객체들에 접근 가능하게 하기 위해 for문 사용
-    // 대피소 정보 업데이트 또는 추가
-    // .has : Set 객체 내에서 받은 인자값의 존재 여부를 판단해주는 메서드
-    for (const shelter of shelterInfo) {
-      if (existingShelterIds.has(shelter.shelter_id)) {
-        await this.updateShelter(shelter.shelter_id, shelter);
-      } else {
-        await this.sheltersRepository.save(shelter);
+      // json 문자열을 자바스크립트 객체로 변환
+      let shelterDataJsonVer = JSON.parse(xmlToJsonData);
+     
+      // 객체의 속성 안으로 접근 만약 shelterRows가 배열이 아니라면 배열로 만들어줌
+      let shelterRows = shelterDataJsonVer['TbEqkShelter']['row'];
+      if (!Array.isArray(shelterRows)) {
+        shelterRows = [shelterRows];
       }
-    }
+      totalData.push(...shelterRows);
 
-    // 기존 데이터의 개수와 받아오는 데이터의 개수를 비교
-    // 받아온 데이터 중 shelter_id만 뽑아서 Set 객체 형성 후 기존 데이터들과 비교
-    // 받아온 데이터 안에 기존 데이터가 해당 안될 경우 그 데이터들은 삭제
-    if (dbShelters.length > shelterInfo.length) {
-      const apiShelterIds = new Set(
-        shelterInfo.map((shelter) => shelter.shelter_id),
+      response = await axios.get(
+        `http://openapi.seoul.go.kr:8088/${seoulShelter}/xml/TbEqkShelter/1001/1551/`, // 1/1000 , 1001/1551 등 데이터 숫자에 따라 변동 가능. 한번에 1000개까지만 가능.
       );
-      for (const dbShelter of dbShelters) {
-        if (!apiShelterIds.has(dbShelter.shelter_id)) {
-          await this.sheltersRepository.delete(dbShelter.shelter_id);
+      xmlData = response.data;
+      xmlToJsonData = convert.xml2json(xmlData, {
+        compact: true,
+        spaces: 4,
+      });
+      shelterDataJsonVer = JSON.parse(xmlToJsonData);
+      shelterRows = shelterDataJsonVer['TbEqkShelter']['row'];
+      if (!Array.isArray(shelterRows)) {
+        shelterRows = [shelterRows];
+      }
+      totalData.push(...shelterRows);
+      const shelterInfo = totalData.map((element) => {
+        return {
+          // ._text를 안 쓸 경우, shelterId : { _text:'1'} 이런식으로 표시됨
+          id: parseInt(element.SHELTER_ID._text),
+          shelter_id: parseInt(element.SHELTER_ID._text),
+          address: element.DTL_ADRES._text,
+          facility_name: element.VT_ACMDFCLTY_NM._text,
+          facility_area: element.FCLTY_AR._text,
+          longitude: parseFloat(element.LON._text),
+          latitude: parseFloat(element.LAT._text),
+          department_number: element.MNGPS_NM._text,
+        };
+      });
+      const dbShelters = await this.sheltersRepository.find();
+      
+      // 현재 데이터베이스에 존재하는 모든 shelter_id를 가져옴. db속 대피소들을 모아서 그 안에 shelter_id만 추출한 후 객체 생성
+      const existingShelterIds = new Set(dbShelters.map(shelter => shelter.shelter_id));
+
+      // 배열을 풀어줌으로서 여러개의 객체들에 접근 가능하게 하기 위해 for문 사용
+      // 대피소 정보 업데이트 또는 추가
+      // .has : Set 객체 내에서 받은 인자값의 존재 여부를 판단해주는 메서드
+      for (const shelter of shelterInfo) {
+        if (existingShelterIds.has(shelter.shelter_id)) {
+          await this.updateShelter(shelter.shelter_id, shelter)
+        } else {
+          await this.sheltersRepository
+          .createQueryBuilder()
+          .insert()
+          .into('shelters')
+          .values({
+            id : shelter.id,
+            shelter_id: shelter.shelter_id,
+            address: shelter.address,
+            facility_name: shelter.facility_name,
+            facility_area: shelter.facility_area,
+            longitude: shelter.longitude,
+            latitude: shelter.latitude,
+            department_number: shelter.department_number
+           })
+          .execute()
+        }
+      }
+      
+      // 기존 데이터의 개수와 받아오는 데이터의 개수를 비교
+      // 받아온 데이터 중 shelter_id만 뽑아서 Set 객체 형성 후 기존 데이터들과 비교
+      // 받아온 데이터 안에 기존 데이터가 해당 안될 경우 그 데이터들은 삭제
+      if (dbShelters.length > shelterInfo.length) {
+        const apiShelterIds = new Set(shelterInfo.map(shelter => shelter.shelter_id))
+        for (const dbShelter of dbShelters) {
+          if (!apiShelterIds.has(dbShelter.shelter_id)) {
+            await this.sheltersRepository.delete(dbShelter.shelter_id)
+          }
         }
       }
     }
-  }
 
   async updateShelter(shelterId: number, shelterData: any) {
     const findShelterData = await this.sheltersRepository.findOne({
@@ -140,6 +157,7 @@ export class SheltersService {
     console.log(updatesNeeded);
   }
 
+  // 검색칸의 값이 포함된 대피소 불러오기
   async getSheltersMap(search: string) {
     const findShelterData = await this.sheltersRepository.find({
       where: [
@@ -159,4 +177,75 @@ export class SheltersService {
     });
     return findShelterData;
   }
-}
+
+  // 사용자 위치로 부터 가장 가까운 대피소 조회 (메인화면 표시용), 남양주에서 테스트를 위해 1000->20000(20km)로 변경
+  async closeToShelter(longitude : number, latitude : number) {
+    try {
+      const distanceThreshold = 1000;
+      const closeToShelter = await this.sheltersRepository
+        .createQueryBuilder('shelters')
+        .select('shelters.facility_name', 'facility_name')
+        .addSelect(`ST_Distance(
+          ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)::geography,
+          ST_SetSRID(ST_MakePoint(shelters.longitude, shelters.latitude), 4326)::geography
+          )`, 'distance_meters')
+        .setParameter('longitude', longitude)
+        .setParameter('latitude', latitude)
+        .where(
+          `ST_DWithin(
+            ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)::geography,
+            ST_SetSRID(ST_MakePoint(shelters.longitude, shelters.latitude), 4326)::geography,
+            :distanceThreshold
+          )`,
+          { distanceThreshold }
+        )
+        .orderBy('distance_meters', 'ASC')
+        .limit(1)
+        .getRawOne();
+      if (closeToShelter) {
+        return closeToShelter;
+      } else {
+        console.log('1000m 이내의 대피소가 없습니다.');
+        return null
+      }
+    } catch (err) {
+      console.error('An error occurred while finding shelters:', err);
+      return 'Failed';
+    }
+  }
+
+  // 사용자 위치로 부터 1km내 대피소 모두 조회 (주변 대피소 찾기 시작화면용), 남양주에서 테스트를 위해 1000->16000(1.6km)로 변경
+  async myLocationShelterAround (longitude : number, latitude : number) {
+    try {
+      const distanceThreshold = 16000;
+      const closeToShelter = await this.sheltersRepository
+        .createQueryBuilder('shelters')
+        .select('shelters.*' )
+        .addSelect(`ST_Distance(
+          ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)::geography,
+          ST_SetSRID(ST_MakePoint(shelters.longitude, shelters.latitude), 4326)::geography
+          )`, 'distance_meters')
+        .setParameter('longitude', longitude)
+        .setParameter('latitude', latitude)
+        .where(
+          `ST_DWithin(
+            ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)::geography,
+            ST_SetSRID(ST_MakePoint(shelters.longitude, shelters.latitude), 4326)::geography,
+            :distanceThreshold
+          )`,
+          { distanceThreshold }
+        )
+        .orderBy('distance_meters', 'ASC')
+        .getRawMany();
+      if (closeToShelter.length > 0) {
+        return closeToShelter;
+      } else {
+        console.log('1000m 이내의 대피소가 없습니다.');
+        return null
+      }
+    } catch (err) {
+      console.error('An error occurred while finding shelters:', err);
+      return 'Failed';
+    }
+  }
+  }
