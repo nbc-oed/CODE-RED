@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   loadTargetInfo();
   addEvents();
   await loadHistory();
-  nickname = document.querySelector('.nickname').textContent;
+  nickname = document.querySelector('.nickname').innerText;
 
   if (msgDiv.scrollHeight === msgDiv.clientHeight) {
     await loadHistory(curPage);
