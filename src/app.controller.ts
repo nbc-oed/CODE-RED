@@ -14,4 +14,7 @@ export class AppController {
     // session.isLogin = session.isLogin === true ? true : false;
     // return { title: '서버 돌아감.' };
   }
+  @Get('test')
+  @Render('test/test')
+  async test() {}
 }

@@ -9,13 +9,13 @@ import {
   Patch,
 } from '@nestjs/common';
 import { MaydayService } from './mayday.service';
-
 import { UserInfo } from 'src/common/decorator/user.decorator';
 import { Users } from 'src/common/entities/users.entity';
 import { LocationDto } from './dto/location.dto';
 import { RescueCompleteDto } from './dto/rescueCompleteDto.dto';
 import { SendRescueMessageDto } from './dto/sendRescueMessage.dto';
 import { AuthGuard } from '@nestjs/passport';
+import { HelperPositionDto } from './dto/helperPosition.dto';
 
 @Controller('mayday')
 @UseGuards(AuthGuard('jwt'))
@@ -70,11 +70,11 @@ export class MaydayController {
   @Post('accept-rescue')
   async acceptRescue(
     @UserInfo() helper: Users,
-    @Body() locationDto: LocationDto,
+    @Body() helperPositionDto: HelperPositionDto,
   ) {
     const result = await this.maydayService.acceptRescue(
       helper.id,
-      locationDto,
+      helperPositionDto,
     );
 
     return {
@@ -96,7 +96,9 @@ export class MaydayController {
   @Render('rescue/matchHelper')
   async matchUserPage(@UserInfo() user: Users) {
     const matchInfo = await this.maydayService.matchInfo(user.id);
+
     return {
+      type: matchInfo.userType,
       distance: matchInfo.distance,
       helperName: matchInfo.helperName,
       message: matchInfo.message,

@@ -20,33 +20,11 @@ export class RealtimeNotificationService {
     private fcmService: FcmService,
   ) {}
 
-  /** 실시간 모니터링 - 가상 시나리오
-   * <disasterServie에서>
-   * 1. 30초 주기로 Cron 작업을 수행하여, 재난 데이터 스트림에 추가하고 DB에 백업을 한다.
-   * 2. 데이터가 스트림에 추가됐다면, 해당 지역에 새로운 메세지가 발행되었는지 확인하기 위해 RealtimeNotificationService를 호출한다.
-   *
-   * <RealtimeNotificationService에서>
-   * 1. XGROUP 명령어로 지역명을 기반으로 스트림과 컨슈머 그룹 존재여부 확인
-   * 2. 모니터링 시작 - XREADGROUP 명령어로 재난 데이터 스트림 Scan
-   * 3. 새 메세지 수신 성공시
-   *  - 3-1. 이미 XACK 처리된 메세지인지 조회
-   *  - 3-2. 메세지 파싱
-   *  - 3-3. 알림 전송 처리
-   *  - 3-4. 메세지 확인 처리
-   *  - 3-5. XACK 중복 방지 및 만료 처리
-   * 4. 수신할 메세지가 없다면 모니터링 종료
-   * 5. 스트림 및 메세지 정리 로직
-   *  - 5-1. 오래된 메세지 정리 로직
-   *  - 5-2. 스트림 메세지 자동 정리
-   *
-   */
-
   async realTimeMonitoringStartAndProcessPushMessages(area: string) {
     const disasterStreamKey = RedisKeys.disasterStream(area);
-    // 1. 스트림과 컨슈머 그룹 존재여부 확인
+
     await this.ensureStreamAndConsumerGroupExist(disasterStreamKey);
 
-    // 2. 모니터링 시작
     this.logger.log(
       '1. 모니터링 시작, Starting message monitoring service...' + area,
     );
@@ -62,7 +40,7 @@ export class RealtimeNotificationService {
         'notificationGroup',
         'realtimeService',
         'BLOCK',
-        15000, // 15초 동안 Pending 상태
+        15000,
         'STREAMS',
         disasterStreamKey,
         '>',
@@ -70,14 +48,13 @@ export class RealtimeNotificationService {
 
       console.log('messages', messages);
 
-      // 3. 새 메세지 수신 성공 -> 파싱 -> 알림 전송
+      // 메세지가 있을시 메세지 전송
       if (messages && messages.length > 0) {
         this.logger.log(
           `3. 메세지 수신 성공: Received ${messages.length} messages from stream.`,
         );
         await this.NewStreamMessageParsingAndProcessing(messages, area);
       } else {
-        // 4. 수신한 메세지 없으면 모니터링 종료
         this.logger.log(
           '모니터링 종료-- 수신 메세지 없음❎ : No new messages in the stream.',
         );
@@ -87,7 +64,7 @@ export class RealtimeNotificationService {
     }
   }
 
-  // 1. 지역명을 기반으로 스트림과 컨슈머 그룹 존재여부 확인
+  // 지역명을 기반 스트림-컨슈머 그룹 생성
   private async ensureStreamAndConsumerGroupExist(disasterStreamKey: string) {
     try {
       await this.redisService.client.xgroup(
@@ -104,12 +81,12 @@ export class RealtimeNotificationService {
     }
   }
 
-  // 3. 새 메세지 수신 성공 -> 파싱 -> 알림 전송
+  // 새 메세지 수신 성공 -> 파싱 -> 알림 전송
   async NewStreamMessageParsingAndProcessing(
     messages: RedisStreamResult[],
     area: string,
   ) {
-    // 3-1. 이미 XACK 처리된 메세지인지 조회
+    // 읽은 알림인지 확인
     for (const [stream, streamMessages] of messages) {
       for (const [messageId, messageFields] of streamMessages) {
         const isProcessed = await this.isMessageProcessed(messageId);
@@ -118,22 +95,22 @@ export class RealtimeNotificationService {
             `메시지 처리 중... Processing message ID ${messageId} from stream ${stream}.`,
           );
 
-          // 3-2. Stream 메세지를 DisasterMessage 인터페이스에 맞게 파싱 작업
+          // Stream 메세지를 DisasterMessage 인터페이스에 맞게 파싱
           const parsedMessage =
             this.parserService.parseDisasterMessage(messageFields);
           console.log('parsedMessage:', parsedMessage);
 
-          // 3-3. 푸시 알림 전송 처리
+          //  푸시 알림 전송 처리
           await this.processPushNotificationMessage(area, parsedMessage);
 
-          // 3-4. 메세지 확인 처리
+          // 메세지 확인 처리
           await this.redisService.client.xack(
             stream,
             'notificationGroup',
             messageId,
           );
 
-          // 3-5. XACK 중복 처리 방지
+          // XACK 중복 처리 방지
           await this.checkingMessageAsProcessed(messageId);
 
           this.logger.log(
@@ -148,7 +125,7 @@ export class RealtimeNotificationService {
     }
   }
 
-  // 3-1. 새 메세지 XACK 처리 이전에 해당 메세지 ID가 집합에 있는지 확인(존재하면 0, 아니면 1 반환)
+  // 메세지 ID가 집합에 있는지 확인(존재하면 0, 아니면 1 반환)
   private async isMessageProcessed(messageId: string): Promise<boolean> {
     const processed = await this.redisService.client.sismember(
       'processedMessages',
@@ -157,7 +134,7 @@ export class RealtimeNotificationService {
     return processed === 1;
   }
 
-  // 3-3. 알림 전송 처리
+  // 알림 전송 처리
   private async processPushNotificationMessage(
     area: string,
     disasterData: DisasterMessage,
@@ -207,15 +184,14 @@ export class RealtimeNotificationService {
     });
   }
 
-  // 3-5. XACK 중복처리 방지하기 위해 Set 형태로 저장하고, 만료시간을 두어 자동 정리
+  // XACK 중복처리 방지하기 위해 Set 형태로 저장하고, 만료시간을 두어 자동 정리
   private async checkingMessageAsProcessed(messageId: string): Promise<void> {
-    console.log('XACK 처리 확인 messageId', messageId);
     await this.redisService.client.sadd('processedMessages', messageId);
     await this.redisService.client.expire(messageId, 3600); // 1시간 만료
   }
 
-  // 5-1. 오래된 메세지 정리 로직 : 실시간 모니터링으로 읽고 Set으로 관리되는 메세지를 24시간 마다 정리
-  @Interval(86400000) // 24시간
+  // 오래된 메세지 정리 : 실시간 모니터링으로 읽고 Set으로 관리되는 메세지를 24시간 마다 정리
+  @Interval(86400000)
   async cleanupOldProcessedMessages() {
     const allMessageIds =
       await this.redisService.client.smembers('processedMessages');
@@ -226,12 +202,11 @@ export class RealtimeNotificationService {
     }
   }
 
-  // 5-2. 재난 데이터 스트림 메세지 자동 정리
-  @Interval(86400000) // 24시간
+  // 재난 데이터 스트림 메세지 자동 정리
+  @Interval(86400000)
   async trimDisasterStreams() {
     let cursor = '0';
     do {
-      // SCAN 명령을 사용하여 키를 검색
       const reply = await this.redisService.client.scan(
         cursor,
         'MATCH',
@@ -239,8 +214,8 @@ export class RealtimeNotificationService {
         'COUNT',
         100,
       );
-      cursor = reply[0]; // 새 커서 위치
-      const keys = reply[1]; // 발견된 키 목록
+      cursor = reply[0];
+      const keys = reply[1];
 
       for (const streamKey of keys) {
         await this.redisService.client.xtrim(streamKey, 'MAXLEN', '~', 1000); // 스트림 크기 조정

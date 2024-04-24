@@ -53,6 +53,7 @@ export class AuthController {
     const user = await this.authService.signIn(
       loginDto.email,
       loginDto.password,
+      loginDto.client_id,
     );
     res.cookie('Authentication', user.access_token, {
       domain: 'localhost',

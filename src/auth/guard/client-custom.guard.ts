@@ -18,8 +18,6 @@ export class JwtAuthGuard implements CanActivate {
   async canActivate(context: ExecutionContext) {
     const request = context.switchToHttp().getRequest();
     const accessToken = request.cookies.Authentication;
-    console.log('request.cookies', request.cookies.Authentication);
-    console.log('request.headers', request.headers.authentication);
     if (!accessToken) {
       return true;
     }
@@ -29,7 +27,7 @@ export class JwtAuthGuard implements CanActivate {
       console.log(accessToken);
       const payload = await this.jwtService.verify(accessToken, secretOrKey);
       console.log('Payload:', payload);
-      request.user = payload; // Payload 정보를 request.user에 저장
+      request.user = payload;
       return true;
     } catch (error) {
       console.error('JWT 검증 오류:', error.message);

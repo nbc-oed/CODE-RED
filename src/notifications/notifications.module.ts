@@ -35,6 +35,7 @@ import { JwtModule } from '@nestjs/jwt';
     forwardRef(() => UsersModule),
     forwardRef(() => AuthModule),
     JwtModule,
+    AuthModule,
   ],
   controllers: [NotificationsController],
   providers: [
