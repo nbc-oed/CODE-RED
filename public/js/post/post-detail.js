@@ -2,7 +2,7 @@ let myId;
 fetch('/users/api/myId', { method: 'GET', credentials: 'include' })
   .then((res) => res.json())
   .then((id) => {
-    myId = id;
+    myId = +id;
     updateUI();
   });
 

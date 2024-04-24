@@ -6,6 +6,9 @@
   <div class='post-container'>
     <p class='status'>{{status}}</p>
     <p class='time'>{{updated_at}} {{#if isUpdated}}(수정됨){{/if}}</p>
+    {{#if isUpdated}}
+    <p class="time">{{created_at}}</p>
+    {{/if}}
     <p class='content'>{{content}}</p>
   </div>
   <div class='user' id='{{user.id}}'>

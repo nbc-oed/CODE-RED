@@ -9,14 +9,19 @@
   <div class='posts'>
     {{#each posts}}
     <div class='post' id='{{id}}'>
-      <img src='{{post_image}}' />
-      <h3><a href='/posts/{{id}}'>{{title}}</a></h3>
-      <p>{{status}}</p>
-      <p>{{updated_at}}</p>
+      <a href='/posts/{{id}}'>
+        <img src='{{post_image}}' />
+        <h3>{{title}}</h3>
+        <p>{{status}}</p>
+        <p>{{updated_at}}</p>
+      </a>
     </div>
     {{/each}}
   </div>
 
+  <a href='/dm'>
+    <div class='dmBtn'><img class="dmImg" src='/img/dm.png'></div>
+  </a>
   <div class='writeBtn'><img class="writeImg" src='/img/pencil.png'></div>
 </div>
 

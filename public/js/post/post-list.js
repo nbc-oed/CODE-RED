@@ -1,6 +1,4 @@
-// ! 시간 표시 문제
-
-const params = new URLSearchParams(window.location.href);
+const params = new URLSearchParams(window.location.search);
 let curPage = +params.get('page') || 1;
 let curSearch = '';
 
@@ -79,10 +77,12 @@ function addPost(posts) {
     postElement.id = post.id;
 
     postElement.innerHTML = `
+        <a href='/posts/${post.id}'>
         <img src='${post.post_image}' />
-        <h3><a href='/posts/${post.id}'>${post.title}</a></h3>
+        <h3>${post.title}</h3>
         <p>${post.status}</p>
         <p>${post.updated_at}</p>
+        </a>
       `;
 
     postsContainer.appendChild(postElement);

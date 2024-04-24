@@ -4,6 +4,7 @@
   margin: 5px 0 5px 0;
   border-radius: 5px;
   padding: 10px;
+  height: 600px;
 }
 
 label {
@@ -19,6 +20,10 @@ textarea {
   margin-bottom: 15px;
   border: 1px solid #ccc;
   border-radius: 5px;
+}
+
+#content {
+  height: 400px;
 }
 
 input[type='file'] + label {

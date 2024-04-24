@@ -14,8 +14,6 @@ a {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 20px;
-  /* border: 1px solid #ccc; */
-  /* padding: 3px; */
   scrollbar-width: 1px;
   margin: 20px;
   height: 600px;
@@ -70,7 +68,8 @@ a {
   height: 30px;
 }
 
-.writeBtn {
+.writeBtn,
+.dmBtn {
   width: 60px;
   height: 60px;
   background-color: white;
@@ -85,6 +84,14 @@ a {
   align-items: center;
   color: red;
   font-size: 15px;
+}
+
+.dmBtn {
+  bottom: 120px;
+}
+
+.dmImg {
+  width: 50px;
 }
 
 .writeImg {
