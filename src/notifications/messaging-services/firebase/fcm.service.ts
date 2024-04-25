@@ -45,7 +45,7 @@ export class FcmService {
     message: string,
     userId?: number,
     clientId?: string,
-    customData?: { userName?: string; distance?: string },
+    url?: string,
   ) {
     const token = await this.usersService.getTokenByIdentifiers(
       userId,
@@ -59,8 +59,7 @@ export class FcmService {
         body: message,
       },
       data: {
-        click_action: 'https://google.com',
-        url: `http://localhost:3000/mayday/help-request?username=${customData.userName}&distance=${customData.distance}&message=${message}`,
+        url: url,
       },
     };
 
