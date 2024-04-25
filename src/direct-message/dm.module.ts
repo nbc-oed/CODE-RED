@@ -8,6 +8,7 @@ import { Users } from 'src/common/entities/users.entity';
 import { NotificationsModule } from 'src/notifications/notifications.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { UtilsModule } from 'src/utils/utils.module';
+import { DmRedisService } from './dm-redis.service';
 
 @Module({
   imports: [
@@ -17,6 +18,6 @@ import { UtilsModule } from 'src/utils/utils.module';
     UtilsModule,
   ],
   controllers: [DmController],
-  providers: [DmGateway, DmService],
+  providers: [DmGateway, DmService, DmRedisService],
 })
 export class DmModule {}

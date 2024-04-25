@@ -5,15 +5,15 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { DirectMessages } from '../common/entities/direct-messages.entity';
-import { RedisService } from 'src/notifications/redis/redis.service';
 import { FcmService } from 'src/notifications/messaging-services/firebase/fcm.service';
+import { DmRedisService } from './dm-redis.service';
 
 @WebSocketGateway({ namespace: '/dm' })
 export class DmGateway {
   @WebSocketServer() server: Server;
 
   constructor(
-    private redisService: RedisService,
+    private redisService: DmRedisService,
     private fcmService: FcmService,
   ) {}
 

@@ -4,14 +4,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 import _ from 'lodash';
 import { DirectMessages } from 'src/common/entities/direct-messages.entity';
 import { Users } from 'src/common/entities/users.entity';
-import { RedisService } from 'src/notifications/redis/redis.service';
 import { UtilsService } from 'src/utils/utils.service';
 import { Repository } from 'typeorm';
+import { DmRedisService } from './dm-redis.service';
 
 @Injectable()
 export class DmService {
   constructor(
-    private readonly redisService: RedisService,
+    private readonly redisService: DmRedisService,
     @InjectRepository(DirectMessages)
     private readonly dmRepo: Repository<DirectMessages>,
     @InjectRepository(Users) private readonly usersRepo: Repository<Users>,
