@@ -7,10 +7,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Destination } from 'src/common/entities/destination.entity';
 
 @Module({
-    imports : [
-        TypeOrmModule.forFeature([Destination]),HttpModule
-    ],
-    providers : [DestinationRiskService, RedisService],
-    controllers : [DestinationRiskController]
+  imports: [TypeOrmModule.forFeature([Destination]), HttpModule],
+  providers: [DestinationRiskService, RedisService],
+  controllers: [DestinationRiskController],
+  exports: [DestinationRiskService],
 })
 export class DestinationRiskModule {}
