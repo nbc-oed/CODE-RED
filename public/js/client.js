@@ -1,13 +1,13 @@
 document.addEventListener('DOMContentLoaded', function () {
   // FCM 연동을 위한 서비스 계정 정보
   const firebaseConfig = {
-    apiKey: 'apiKey',
-    authDomain: 'authDomain',
-    projectId: 'projectId',
-    storageBucket: 'storageBucket',
-    messagingSenderId: 'messagingSenderId',
-    appId: 'appId',
-    measurementId: 'measurementId',
+    apiKey: 'AIzaSyBWKGEzLjBA-e4PKfp5F9-SyTGgJ1-rGBw',
+    authDomain: 'codered-9bb03.firebaseapp.com',
+    projectId: 'codered-9bb03',
+    storageBucket: 'codered-9bb03.appspot.com',
+    messagingSenderId: '377609042128',
+    appId: '1:377609042128:web:985550c7edd8ee16c686d5',
+    measurementId: 'G-RS03446VPC',
   };
 
   // Firebase 초기화
@@ -21,7 +21,8 @@ document.addEventListener('DOMContentLoaded', function () {
       if (permission === 'granted') {
         messaging
           .getToken({
-            vapidKey: 'vapidKey',
+            vapidKey:
+              'BPYh1J2rMBGtHK6vXHrmh8xxmt56noVci18l3NTzyTzFggYfmGXvFV9jEM6SUdnpPuRl1e9NAPRs6ahMMMRYG6A',
           })
           .then((currentToken) => {
             if (currentToken) {

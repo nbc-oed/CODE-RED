@@ -38,7 +38,7 @@ export class DisasterService {
   }
 
   // 재난 문자 데이터 가져오기 및 필터링.
-  private async fetchDisasterData(): Promise<DisasterData[]> {
+  async fetchDisasterData(): Promise<DisasterData[]> {
     const apiKey = this.configService.get<string>('DISASTER_API_KEY');
     try {
       const response = await axios.get(
