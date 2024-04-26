@@ -6,7 +6,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { NotificationMessages } from 'src/common/entities/notification-messages.entity';
 import { Repository } from 'typeorm';
 import { NotificationStatus } from 'src/common/types/notification-status.type';
-import { url } from 'inspector';
 
 @Injectable()
 export class FcmService {
@@ -69,6 +68,7 @@ export class FcmService {
       await this.saveSendingResult(
         title,
         message,
+        url,
         NotificationStatus.UnRead,
         userId,
         clientId,
@@ -80,6 +80,7 @@ export class FcmService {
       await this.saveSendingResult(
         title,
         message,
+        url,
         NotificationStatus.Failed,
         userId,
         clientId,
@@ -98,6 +99,7 @@ export class FcmService {
   private async saveSendingResult(
     title: string,
     message: string,
+    url: string,
     status: NotificationStatus,
     userId?: number,
     clientId?: string,
@@ -107,6 +109,7 @@ export class FcmService {
       client_id: clientId,
       title,
       message,
+      url,
       status,
     });
     await this.notificationMessagesRepository.save(sendingResult);
@@ -132,6 +135,7 @@ export class FcmService {
           await this.saveSendingResult(
             payload.notification.title,
             payload.notification.body,
+            payload.data.url,
             NotificationStatus.UnRead,
             userId,
             clientId,

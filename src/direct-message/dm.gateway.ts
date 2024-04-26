@@ -7,6 +7,7 @@ import { Server, Socket } from 'socket.io';
 import { DirectMessages } from '../common/entities/direct-messages.entity';
 import { FcmService } from 'src/notifications/messaging-services/firebase/fcm.service';
 import { DmRedisService } from './dm-redis.service';
+import { ConfigService } from '@nestjs/config';
 
 @WebSocketGateway({ namespace: '/dm' })
 export class DmGateway {
@@ -14,6 +15,7 @@ export class DmGateway {
 
   constructor(
     private redisService: DmRedisService,
+    private configService: ConfigService,
     private fcmService: FcmService,
   ) {}
 
@@ -34,10 +36,14 @@ export class DmGateway {
       JSON.stringify(newMsg),
     );
 
+    const basicUrl = this.configService.get<string>('BASIC_URL');
+    const url = basicUrl + `/dm/${data.roomName}`;
     this.fcmService.sendPushNotification(
-      data.nickname,
-      newMsg.message,
+      '새 다이렉트 메세지',
+      `${data.nickname}: ${newMsg.message}`,
       targetUserId,
+      null,
+      url,
     );
 
     this.server
