@@ -4,7 +4,7 @@ import { RedisService } from '../../redis/redis.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { DisasterData } from 'src/common/entities/disaster-data.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { MoreThanOrEqual, Repository } from 'typeorm';
 import axios from 'axios';
 import convert from 'xml-js';
 import { RedisKeys } from 'src/notifications/redis/redis.keys';
@@ -172,5 +172,14 @@ export class DisasterService {
       }
     }
     this.logger.log(`DisasterData 백업 완료...`);
+  }
+
+  async findTodayDisaster() {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const disaster = await this.disasterRepository.find({
+      where: { created_at: MoreThanOrEqual(today) },
+    });
+    return disaster;
   }
 }

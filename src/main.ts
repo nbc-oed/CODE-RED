@@ -47,6 +47,8 @@ async function bootstrap() {
     eq: (val1, val2) => val1 === val2,
     lengthOfList: (list = []) => list.length,
     dateString: (isoString) => new Date(isoString).toLocaleDateString(),
+    lte: (val1, val2) => val1 <= val2,
+    gt: (val1, val2) => val1 >= val2,
   };
 
   const hbsInstance = exphbs.create({

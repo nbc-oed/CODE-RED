@@ -1,29 +1,51 @@
 <script src="https://www.gstatic.com/firebasejs/8.2.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.2.0/firebase-messaging.js"></script>
-<input type='hidden' id='isLogin' value='{{isLogin}}' />
-<div id='user-location'>가까운 대피소 : 종로중학교</div>
-<main>
-  <div id='user-location'>나의 현재 위치 : 종로구</div>
+<main id="mainContainer">
+  <div id="mainPositionContainer">
+    {{title}}
+    <div id='user-location'>가까운 대피소 : {{shelter}}</div>
+    <div id='user-location'>나의 현재 위치 : {{location}}</div>
 
-  <h2>매우 안전</h2>
+    {{#if (gt lengthOfList responseDisaster 1)}}
+    <h2>매우 위험</h2>
+    <h2>재난 발생 : {{responseDisaster.message}}</h2>
+    <img src='/img/redCorong.png' alt='위험' id='corongImage_red' />
 
-  <img src='/img/greenCorong.png' alt='안전' id='corongImage_green' />
+    {{else if (lte score 2)}}
+    <h2>매우 안전</h2>
+    <img src='/img/greenCorong.png' alt='안전' id='corongImage_green' />
 
-  <table class='real_time_data'>
-    <tr>
-      <th>인구 밀집</th>
-      <td>매우 낮음</td>
-      <th>인구 추이</th>
-      <td>약 2천명</td>
-    </tr>
+    {{else if (lte score 4)}}
+    <h2>주의</h2>
+    <img src='/img/yellowCorong.png' alt='주의' id='corongImage_yellow' />
 
-    <tr>
-      <th>재난 현황</th>
-      <td>0건</td>
-      <th>사건 / 사고</th>
-      <td>{{lengthOfList news }}건</td>
-    </tr>
-  </table>
-  <div style='color: gray'>위험도 측정 기준 : 2024-03-27 15:34:52 기준</div>
+    {{else if (lte score 6)}}
+    <h2>위험</h2>
+    <img src='/img/redCorong.png' alt='위험' id='corongImage_red' />
+    {{/if}}
+
+    {{!-- 이거 데이터를 어떻게 가져오는지 모름.. --}}
+    {{#with realTimeData}}
+    <table class='real_time_data'>
+      <tr>
+        <th>인구 밀집</th>
+        <td>{{realTimeCongestion}}</td>
+        <th>인구 추이</th>
+        <td>약 {{expectedPopulation}}명</td>
+      </tr>
+      {{/with}}
+      <tr>
+        <th>재난 현황</th>
+        <td>{{lengthOfList responseDisaster}}건</td>
+        <th>사건 / 사고</th>
+        <td>{{lengthOfList news }}건</td>
+      </tr>
+    </table>
+    <div style='color: gray'>위험도 측정 기준 : 2024-03-27 15:34:52 기준</div>
+  </div>
 </main>
+<form action="" id="inputButton" style="position: relative; margin-top: 20px;">
+  <input type="text" id="searchInput" placeholder="이동할 목적지를 입력해주세요." />
+  <button style="position: absolute; top: 0; right: 0;height: 32px;" id="searchButton" type="submit">검색</button>
+</form>
 <script src="/js/client.js"></script>

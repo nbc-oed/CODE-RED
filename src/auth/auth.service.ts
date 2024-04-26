@@ -80,9 +80,7 @@ export class AuthService {
 
     // client_id 조회 후 반환
     const payload = { email, id: user.id };
-    const client = await this.clientsRepository.findOne({
-      where: { client_id: client_id },
-    });
+    const client = await this.findClientByClientId(client_id);
 
     if (!client) {
       throw new NotFoundException('비회원정보가 존재하지 않습니다.');
@@ -132,6 +130,13 @@ export class AuthService {
   verifyToken(token: string) {
     const JWT_SECRET_KEY = this.configService.get<string>('JWT_SECRET_KEY'); // .env에서 JWT_SECRET_KEY 가져오기
     return this.jwtService.verify(token, { secret: JWT_SECRET_KEY });
+  }
+
+  async findClientByClientId(client_id: string) {
+    const client = await this.clientsRepository.findOne({
+      where: { client_id: client_id },
+    });
+    return client;
   }
 }
 

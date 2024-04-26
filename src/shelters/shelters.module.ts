@@ -5,10 +5,9 @@ import { SheltersService } from './shelters.service';
 import { SheltersController } from './shelters.controller';
 
 @Module({
-    imports: [
-        TypeOrmModule.forFeature([Shelters])
-    ],
-    providers : [SheltersService],
-    controllers : [SheltersController]
+  imports: [TypeOrmModule.forFeature([Shelters])],
+  providers: [SheltersService],
+  controllers: [SheltersController],
+  exports: [SheltersService],
 })
 export class SheltersModule {}

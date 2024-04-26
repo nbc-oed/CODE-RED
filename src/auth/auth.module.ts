@@ -34,6 +34,6 @@ import { Clients } from 'src/common/entities/clients.entity';
   ],
   controllers: [AuthController],
   providers: [AuthService, KakaoLogin, JwtAuthGuard],
-  exports: [JwtAuthGuard],
+  exports: [JwtAuthGuard, AuthService],
 })
 export class AuthModule {}
