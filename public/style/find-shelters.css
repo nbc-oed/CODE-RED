@@ -1,7 +1,7 @@
       * {
         width: 440px;
         margin: 0 auto;
-        padding: 5px;
+        /* padding: 5px; */
       }
 
       #divide {
@@ -19,7 +19,8 @@
 
       h2 {
         font-size: 24px;
-        margin-bottom: 20px;
+        margin-top: 30px;
+        margin-bottom: 30px;
       }
 
       header {
@@ -27,8 +28,8 @@
         padding: 20px;
         text-align: center;
         display: flex;
-        padding-bottom: 0px;
         padding-left: 10px;
+        max-width: 410px;
       }
 
       #sos {
@@ -41,7 +42,8 @@
         margin-top: 5px;
       }
 
-      .header-image {
+      .header_image {
+        margin-top: 5px;
         width: 30px;
         height: 30px;
       }
@@ -73,7 +75,9 @@
 
       #message-form {
         display: flex;
-        min-width: 450px;
+        margin-top: 5px;
+        margin-bottom: 5px
+        /* min-width: 450px; */
       }
       #searchInput {
         flex-grow: 1;
@@ -85,9 +89,9 @@
       }
 
       #map {
-        width: 438.4px;
+        width: 428.4px;
         height: 300px;
-        left: 5px;
+        /* left: 5px; */
         border: solid 1px black;
       }
 
