@@ -1,0 +1,26 @@
+<head>
+<link rel='stylesheet' href='/style/find-shelters.css' />
+<script
+type="text/javascript"
+src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=45e973ac009f5ac6bf6e02707d6f4e30&libraries=services"
+></script>
+</head>
+
+<main>
+    <h2>대피소 찾기</h2>
+    <p id="divide"></p>
+</main>
+
+<form id="message-form">
+    <input
+    type="text"
+    id="searchInput"
+    placeholder="지역명을 입력해주세요."
+    />
+    <button id="searchButton" type="button">검색</button>
+</form>
+
+<div id="map"></div>
+<div id="searchResultList"></div>
+
+<script src='/js/find-shelters.js'></script>
