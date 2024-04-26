@@ -53,8 +53,8 @@ export class DestinationRiskController {
 
     // 서울시 주요 115곳 장소 데이터 저장
     @Post('save')
-    async savedDestination (@Query('destination') destination : string) {
-        await this.destinationRiskService.savedDestination(destination)
+    async savedDestination () {
+        await this.destinationRiskService.savedDestination()
     }
 
     // 서울시 115곳 장소 데이터 업데이트
