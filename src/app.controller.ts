@@ -29,7 +29,7 @@ export class AppController {
 
   @Get('main')
   @Render('main/main')
-  async main(@Query('client_id') client_id: string) {
+  async main(@Query('client_id') client_id?: string) {
     let latitude: number;
     let longitude: number;
     let score: number = 0;
