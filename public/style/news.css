@@ -1,0 +1,39 @@
+.news {
+  border: 1px solid #ccc;
+  background-color: #f9f9f9;
+  margin: 5px 0 5px 0;
+  border-radius: 5px;
+  padding: 10px;
+  overflow: auto;
+  height: 500px;
+}
+
+.newsTable {
+  width: 100%;
+  text-align: center;
+}
+
+.newsTable tr :nth-child(1) {
+  max-width: 267px;
+  text-align: left;
+}
+
+.newsTable tr :nth-child(2) {
+  max-width: 81px;
+}
+.newsTable tr :nth-child(3) {
+  max-width: 91px;
+}
+
+.news table td,
+.news table th {
+  padding: 8px;
+  border: 1px solid #ddd;
+}
+
+.newsInfo td {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 5px;
+}

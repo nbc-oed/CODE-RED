@@ -1,22 +1,21 @@
+<link rel="stylesheet" href="/style/news.css">
+
 <main>
   <h2>News</h2>
-
-  <table id="newsTable">
-    <tr>
-      <th>제목</th>
-      <th>발행날짜</th>
-    </tr>
-    {{#each news}}
-    <tr class="newsInfo">
-      <td><a href="{{url}}">{{title}}</a></td>
-      <td>{{dateString created_at}}</td>
-    </tr>
-    {{/each}}
-  </table>
-  <a href="/news?pagenum=1">1</a>
-  <a href="/news?pagenum=2">2</a>
-  <a href="/news?pagenum=3">3</a>
-  <a href="/news?pagenum=4">4</a>
-  <a href="/news?pagenum=5">5</a>
-
+  <div class="news">
+    <table class="newsTable">
+      <tr>
+        <th>제목</th>
+        <th>발행날짜</th>
+      </tr>
+      {{#each news}}
+      <tr class="newsInfo">
+        <td><a href="{{url}}">{{title}}</a></td>
+        <td>{{created_at}}</td>
+      </tr>
+      {{/each}}
+    </table>
+  </div>
 </main>
+
+<script src="/js/news.js"></script>

@@ -10,8 +10,8 @@ export class NewsService {
     @InjectRepository(News) private readonly newsRepository: Repository<News>,
   ) {}
 
-  async findAllNews(pagenum: number) {
-    return await this.pagenationNews(pagenum);
+  async findAllNews(page: number) {
+    return await this.pagenationNews(page);
   }
 
   async findAccidentNews() {
@@ -26,14 +26,14 @@ export class NewsService {
     });
   }
 
-  async pagenationNews(pageNum: number) {
-    const pageSize = 5;
-    if (isNaN(pageNum)) {
-      pageNum = 0;
+  async pagenationNews(page: number) {
+    const pageSize = 15;
+    if (isNaN(page)) {
+      page = 0;
     } else {
-      pageNum = pageNum - 1;
+      page = page - 1;
     }
-    const curruntpage = pageSize * pageNum;
+    const curruntpage = pageSize * page;
 
     const news = await this.newsRepository
       .createQueryBuilder('news')
@@ -42,8 +42,9 @@ export class NewsService {
       .limit(pageSize)
       .getMany();
 
-    console.log(news);
-
-    return news;
+    return news.map((news) => ({
+      ...news,
+      created_at: new Date(news.created_at).toLocaleDateString(),
+    }));
   }
 }
