@@ -21,10 +21,9 @@ export class DestinationRiskService {
   // 위험도 조회 (from checkDestinationRisk)
   async findRisk(destination: string) {
     try {
-      const realtimeCityData =
-        await this.seoulCityDataXmlToJson(destination)['SeoulRtd.citydata'][
-          'CITYDATA'
-        ];
+      const realtimeCityData = (await this.seoulCityDataXmlToJson(destination))[
+        'SeoulRtd.citydata'
+      ]['CITYDATA'];
 
       const areaName = realtimeCityData['AREA_NM']['_text'];
       const areaCongestLvlMsg =
