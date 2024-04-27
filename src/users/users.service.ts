@@ -46,6 +46,20 @@ export class UsersService {
     return this.usersRepository.find();
   }
 
+  async getUserInfoByEmail(email: string) {
+    const userInfo = await this.usersRepository.findOne({
+      where: { email },
+      select: [
+        'id',
+        'email',
+        'name',
+        'nickname',
+        'profile_image',
+        'phone_number',
+      ],
+    });
+    return userInfo;
+  }
   // 유저 상세 찾기
 
   async findOne(id: number) {
@@ -196,6 +210,40 @@ export class UsersService {
       .execute();
 
     this.logger.log('Cleanup job completed');
+  }
+
+  //@@@@@@@@@@@@
+  async getUserIdByEmail(email: string): Promise<number> {
+    try {
+      // 이메일을 사용하여 사용자의 아이디를 조회
+      const user = await this.usersRepository.findOne({ where: { email } });
+      if (!user) {
+        throw new Error('사용자를 찾을 수 없음');
+      }
+
+      return user.id;
+    } catch (error) {
+      console.error('사용자 아이디 조회 실패:', error);
+      throw error;
+    }
+  }
+
+  async updateClientUserId(clientId: string, userId: number) {
+    try {
+      // 클라이언트의 user_id 업데이트
+      const client = await this.clientsRepository.findOne({
+        where: { client_id: clientId },
+      });
+      if (!client) {
+        throw new Error('클라이언트를 찾을 수 없음');
+      }
+
+      client.user_id = userId;
+      await this.clientsRepository.save(client);
+    } catch (error) {
+      console.error('클라이언트 user_id 업데이트 실패:', error);
+      throw error;
+    }
   }
 }
 

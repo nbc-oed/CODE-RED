@@ -1,6 +1,5 @@
 import { Controller, Get, Query, Render } from '@nestjs/common';
 import { AppService } from './app.service';
-import _ from 'lodash';
 
 @Controller('/')
 export class AppController {
