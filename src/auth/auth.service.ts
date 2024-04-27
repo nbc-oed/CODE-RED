@@ -65,11 +65,13 @@ export class AuthService {
     return this.usersRepository.save(newUser);
   }
 
+  // 로그인
   async signIn(email: string, password: string, client_id?: string) {
+    console.log('나는 service');
     const user = await this.usersRepository.findOne({
       where: { email },
     });
-
+    console.log('서비스 유저@@2', user);
     if (!user) {
       throw new NotFoundException('유저가 존재하지 않습니다.');
     }
@@ -78,24 +80,24 @@ export class AuthService {
       throw new UnauthorizedException('비밀번호를 확인해주세요.');
     }
 
-    // client_id 조회 후 반환
-    const payload = { email, id: user.id };
+    // 클라이언트 정보 저장
     const client = await this.clientsRepository.findOne({
       where: { client_id: client_id },
     });
 
     if (!client) {
-      throw new NotFoundException('비회원정보가 존재하지 않습니다.');
+      throw new NotFoundException('비회원 정보가 존재하지 않습니다.');
     }
+
     const clientsInfo = await this.usersService.saveClientsInfo({
       user_id: user.id,
       client_id: client.client_id,
     });
+    // JWT 토큰 생성
+    const payload = { email, id: user.id };
+    const access_token = this.jwtService.sign(payload);
 
-    return {
-      access_token: this.jwtService.sign(payload),
-      clientsInfo,
-    };
+    return { access_token, clientsInfo };
   }
 
   async authentication(user: Pick<Users, 'email' | 'password'>) {

@@ -1,9 +1,7 @@
 <div class='container'>
   <img
     src='https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2FoFvs6%2FbtsGHblHYxt%2F1kXhsa7cOG2FcjC2UzUIF1%2Fimg.png'
-    alt='프로필 사진'
-    id='profileImage'
-  />
+    alt='프로필 사진' id='profileImage' />
   <h1>CODE:RED</h1>
 
   <form action='/auth/sign-in' method='post'>
@@ -16,7 +14,54 @@
     <button class='submitButton' type='submit'>로그인</button>
   </form>
 
+  <form action='/auth/sign-up' method='GET' id='sign-up'>
+    <button class='submitButton' type='submit'>회원가입</button>
+  </form>
+
   <form action='/auth/kakaoLoginLogic' method='GET' id='kakao-login'>
     <button class='submitButton' type='submit'>카카오로그인</button>
   </form>
 </div>
+
+<script>
+  // 로그인 버튼 클릭 시 이벤트 핸들러
+  document.querySelector('.submitButton').addEventListener('click', async function (e) {
+
+    // 폼 제출 이벤트 막기
+    e.preventDefault();
+
+    // 클라이언트의 client_id를 로컬 스토리지에서 가져옴
+    const clientId = localStorage.getItem('clientId');
+
+    // 이메일과 비밀번호 입력값 가져오기
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+
+    // 로그인 요청 보내기
+    try {
+      const response = await fetch('/auth/sign-in', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email,
+          password: password,
+          client_id: clientId
+        })
+      });
+
+      if (response.ok) {
+        console.log('로그인 성공', response)
+        window.location.href = '/main'
+      } else {
+        const errorMessage = await response.text();
+        throw new Error(`로그인 요청 실패:${errorMessage}`);
+
+      }
+
+    } catch (error) {
+      console.error('로그인 에러:', error.message);
+    }
+  });
+</script>

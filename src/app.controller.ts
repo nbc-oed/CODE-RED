@@ -1,4 +1,4 @@
-import { Controller, Get, Render, Session } from '@nestjs/common';
+import { Controller, Get, Render, Req, Res, Session } from '@nestjs/common';
 import { NewsService } from './news/news.service';
 
 @Controller('/main')
