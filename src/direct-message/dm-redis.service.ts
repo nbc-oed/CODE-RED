@@ -7,7 +7,7 @@ export class DmRedisService implements OnModuleInit, OnModuleDestroy {
 
   constructor() {
     this.redisClient = new Redis({
-      host: process.env.REDIS_HOST,
+      host: process.env.REDIS_DM_HOST,
       port: +process.env.REDIS_DM_PORT,
       password: process.env.REDIS_PASSWORD,
     });
