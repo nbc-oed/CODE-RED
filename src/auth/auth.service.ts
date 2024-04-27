@@ -82,12 +82,10 @@ export class AuthService {
     const payload = { email, id: user.id };
     const client = await this.findClientByClientId(client_id);
 
-    if (!client) {
-      throw new NotFoundException('비회원정보가 존재하지 않습니다.');
-    }
+    const clientId = client ? client.client_id : this.utilsService.getUUID();
     const clientsInfo = await this.usersService.saveClientsInfo({
       user_id: user.id,
-      client_id: client.client_id,
+      client_id: clientId,
     });
 
     return {
