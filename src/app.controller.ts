@@ -134,12 +134,13 @@ export class AppController {
       longitude,
       latitude,
     );
-
-    if (!shelterInfo.facility_name) {
-      shelterInfo.facility_name =
+    let shelter = '';
+    if (!_.isNil(shelterInfo) && !_.isNil(shelterInfo.facility_name)) {
+      shelter = shelterInfo.facility_name;
+    } else {
+      shelter =
         '가까운 대피소정보가 없습니다. 빠른 시일내에 업데이트 하겠습니다.';
     }
-    const shelter = shelterInfo.facility_name;
 
     // 사건 사고
     const news = await this.newsService.findAccidentNews();
