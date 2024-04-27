@@ -7,9 +7,14 @@ export class NewsController {
 
   @Get()
   @Render('news/news')
-  async findAllNews(@Query('pagenum') pagenum: number) {
-    const news = await this.newsService.findAllNews(pagenum);
-    return { news: news };
+  async serveNews() {
+    return { news: await this.newsService.findAllNews(1) };
+  }
+
+  @Get('api')
+  async findAllNews(@Query('page') page: number) {
+    const news = await this.newsService.findAllNews(page);
+    return news;
   }
 
   @Get('accident')

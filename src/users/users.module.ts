@@ -11,6 +11,7 @@ import { AwsModule } from 'src/aws/aws.module';
 import { Clients } from 'src/common/entities/clients.entity';
 import { UtilsModule } from 'src/utils/utils.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { MaydayModule } from 'src/mayday/mayday.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     forwardRef(() => NotificationsModule),
     UtilsModule,
     ScheduleModule,
+    MaydayModule,
   ],
   exports: [UsersService, JwtStrategy],
   controllers: [UsersController],

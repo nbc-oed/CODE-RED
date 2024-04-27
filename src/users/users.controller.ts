@@ -20,12 +20,14 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { UtilsService } from 'src/utils/utils.service';
 import { JwtAuthGuard } from 'src/auth/guard/client-custom.guard';
 import { ClientsDto } from './dto/clients.dto';
+import { MaydayService } from 'src/mayday/mayday.service';
 
 @Controller('users')
 export class UsersController {
   constructor(
     private readonly usersService: UsersService,
     private readonly utilsService: UtilsService,
+    private readonly maydayService: MaydayService,
   ) {}
 
   // 모든 유저 조회
@@ -76,6 +78,13 @@ export class UsersController {
     @Body() body: ClientsDto,
   ) {
     const userId = user ? user.id : null;
+    if (userId) {
+      const location = {
+        latitude: body.latitude,
+        longitude: body.longitude,
+      };
+      await this.maydayService.saveMyLocation(location, userId);
+    }
     //uuid로 clientId 생성하는 함수
     let client_id = body.client_id;
     console.log('body => ', body);

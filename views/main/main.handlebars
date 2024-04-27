@@ -3,9 +3,19 @@
 <main id="mainContainer">
   <div id="mainPositionContainer">
     {{title}}
-    <div id='user-location'>가까운 대피소 : {{shelter}}</div>
+    <div id='user-location'>가까운 대피소 :
+      {{#if isNotSeoul}}
+      준비중입니다.
+      {{else}}
+      {{shelter}}
+      {{/if}}
+    </div>
     <div id='user-location'>나의 현재 위치 : {{location}}</div>
 
+    {{#if isNotSeoul}}
+    <h2>Sorry!</h2>
+    <img src='/img/blueCorong.png' alt='sorry' id='corongImage_blue' />
+    {{else}}
     {{#if (gt lengthOfList responseDisaster 1)}}
     <h2>매우 위험</h2>
     <h2>재난 발생 : {{responseDisaster.message}}</h2>
@@ -23,29 +33,47 @@
     <h2>위험</h2>
     <img src='/img/redCorong.png' alt='위험' id='corongImage_red' />
     {{/if}}
+    {{/if}}
 
-    {{!-- 이거 데이터를 어떻게 가져오는지 모름.. --}}
     {{#with realTimeData}}
     <table class='real_time_data'>
       <tr>
         <th>인구 밀집</th>
+        {{#if isNotSeoul}}
+        <td>준비중입니다.</td>
+        {{else}}
         <td>{{realTimeCongestion}}</td>
+        {{/if}}
         <th>인구 추이</th>
-        <td>약 {{expectedPopulation}}명</td>
+        {{#if isNotSeoul}}
+        <td>준비중입니다.</td>
+        {{else}}
+        <td>{{expectedPopulation}}</td>
+        {{/if}}
       </tr>
       {{/with}}
       <tr>
         <th>재난 현황</th>
         <td>{{lengthOfList responseDisaster}}건</td>
         <th>사건 / 사고</th>
+        {{#if isNotSeoul}}
+        <td>준비중입니다.</td>
+        {{else}}
         <td>{{lengthOfList news }}건</td>
+        {{/if}}
       </tr>
     </table>
-    <div style='color: gray'>위험도 측정 기준 : 2024-03-27 15:34:52 기준</div>
+    {{#if isNotSeoul}}
+    <div style='color: gray'>죄송합니다. 서울 외의 지역은 재난 현황만 제공하고 있습니다.</div>
+    {{else}}
+    <div style='color: gray'>인구 추이 측정 기준 : {{realTimeData.standardTime}}</div>
+    {{/if}}
   </div>
 </main>
+
 <form action="" id="inputButton" style="position: relative; margin-top: 20px;">
   <input type="text" id="searchInput" placeholder="이동할 목적지를 입력해주세요." />
   <button style="position: absolute; top: 0; right: 0;height: 32px;" id="searchButton" type="submit">검색</button>
 </form>
+
 <script src="/js/client.js"></script>

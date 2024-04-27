@@ -12,7 +12,7 @@ const dmSocket = io('/dm');
 document.querySelectorAll('.room').forEach((room) => {
   room.addEventListener('click', async () => {
     const roomName = room.getAttribute('id');
-    window.location.href += roomName;
+    window.location.href = `/dm/${roomName}`;
   });
 });
 

@@ -1,0 +1,15 @@
+<link rel="stylesheet" href="/style/notifications.css">
+
+<div class="notifications">
+    {{#each messageLists}}
+    <a href="{{url}}">
+        <div class="msg-container" status="{{status}}" id="{{id}}">
+            <h3 class='title'>{{title}}</h3>
+            <p class='message'>{{message}}</p>
+            <p class='createdAt'>{{created_at}}</p>
+        </div>
+    </a>
+    {{/each}}
+</div>
+
+<script src="/js/notifications.js"></script>
