@@ -1,3 +1,9 @@
+const clientId = localStorage.getItem('clientId');
+const params = new URLSearchParams(window.location.search);
+if (clientId && !params.get('client_id')) {
+  window.location.href = `/main?client_id=${clientId}`;
+}
+
 document.addEventListener('DOMContentLoaded', function () {
   // FCM 연동을 위한 서비스 계정 정보
   const firebaseConfig = {
@@ -38,7 +44,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // clientId & pushToken 서버 전송
   async function sendTokenToServer(token) {
-    const clientId = localStorage.getItem('clientId') || null;
     try {
       const response = await fetch('/users/register-token', {
         method: 'POST',
@@ -50,10 +55,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
       if (response.ok) {
         const responseData = await response.json();
-        if (
-          responseData.clientsInfo.client_id ||
-          !localStorage.getItem('clientId')
-        ) {
+        if (responseData.clientsInfo.client_id || !clientId) {
           localStorage.setItem('clientId', responseData.clientsInfo.client_id);
         }
       }
@@ -82,7 +84,6 @@ document.addEventListener('DOMContentLoaded', function () {
     let longitude = position.coords.longitude;
 
     console.log(latitude, '||', longitude);
-    const clientId = localStorage.getItem('clientId') || null;
 
     try {
       const response = await fetch('/users/register-location', {
@@ -100,7 +101,7 @@ document.addEventListener('DOMContentLoaded', function () {
       if (response.ok) {
         const data = await response.json();
 
-        if (data.clientsInfo.client_id || !localStorage.getItem('clientId')) {
+        if (data.clientsInfo.client_id || !clientId) {
           localStorage.setItem('clientId', data.clientsInfo.client_id);
         }
       } else {
