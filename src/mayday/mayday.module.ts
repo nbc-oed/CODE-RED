@@ -16,5 +16,6 @@ import { NotificationsModule } from 'src/notifications/notifications.module';
   ],
   controllers: [MaydayController],
   providers: [MaydayService, JwtService],
+  exports: [MaydayService],
 })
 export class MaydayModule {}

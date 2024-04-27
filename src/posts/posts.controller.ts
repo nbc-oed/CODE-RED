@@ -47,7 +47,7 @@ export class PostsController {
   }
 
   @Get()
-  @Render('posts/post-list')
+  @Render('post/post-list')
   async servePostList() {
     const posts = await this.postsService.getAllPosts(1);
 
@@ -57,7 +57,7 @@ export class PostsController {
   }
 
   @Get('newpost')
-  @Render('posts/create-post')
+  @Render('post/create-post')
   servePostPage() {}
 
   @Get('api/:postId')
@@ -66,7 +66,7 @@ export class PostsController {
   }
 
   @Get(':postId')
-  @Render('posts/post-detail')
+  @Render('post/post-detail')
   async servePost(@Param('postId') postId: string) {
     return await this.postsService.getPostWithUserInfo(+postId);
   }

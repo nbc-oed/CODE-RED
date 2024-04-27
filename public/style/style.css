@@ -14,8 +14,11 @@ body {
   color: black;
   text-align: center;
   width: 440px;
-  margin: 0 auto 30px auto;
+  margin: 10 auto 10px auto;
   padding: 5px;
+  border: 2px solid black;
+  border-radius: 5px;
+  box-shadow: 5px 5px 10px 0px rgba(0, 0, 0, 0.5);
 }
 
 a {
@@ -30,7 +33,6 @@ a {
 /*header*/
 
 header {
-  background-color: aquamarine;
   color: red;
   padding: 20px;
   text-align: center;
@@ -74,7 +76,9 @@ header {
   position: absolute;
   top: 76px;
 }
-#corongImage_green {
+#corongImage_green,
+#corongImage_yellow,
+#corongImage_red {
   width: 300px;
   padding: 10px 0 20px 0;
   display: flex;
@@ -100,17 +104,15 @@ button {
 }
 
 nav {
-  background-color: brown;
   margin-top: 10px;
   display: flex;
   justify-content: space-evenly;
   height: 30px;
   padding: 10px;
   position: fixed;
-  bottom: 0;
+  bottom: 18px;
   width: 420px;
-  /* overflow 설정. */
-  /* width: 420px + padding 10px x2 = 440px*/
+  border-top: 3px solid red;
 }
 
 .navImg {
@@ -495,44 +497,3 @@ h2 {
 }
 
 /* 매칭 끝 */
-
-/* 뉴스 */
-
-#newsTable {
-  width: 440px;
-  text-align: center;
-}
-
-#newsTable tr :nth-child(1) {
-  max-width: 267px;
-  text-align: left;
-}
-
-#newsTable tr :nth-child(2) {
-  max-width: 81px;
-}
-#newsTable tr :nth-child(3) {
-  max-width: 91px;
-}
-
-.newsInfo td {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  border-bottom: 1px solid rgba(100, 100, 100, 0.73);
-  padding: 5px 0 5px 0;
-}
-
-/* 뉴스 끝 */
-
-/* footer */
-/* footer {
-  background-color: thistle;
-  text-align: left;
-  font-size: 10px;
-  width: 440px;
-}
-footer p {
-  padding: 5px 0 0 0;
-  margin: 10px;
-} */

@@ -17,6 +17,7 @@ import { UsersModule } from 'src/users/users.module';
 import { QueueModule } from './queue/queue.module';
 import { AuthModule } from 'src/auth/auth.module';
 import { JwtModule } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
@@ -30,12 +31,16 @@ import { JwtModule } from '@nestjs/jwt';
         name: 'chatServiceQueue',
       },
     ),
+    JwtModule.registerAsync({
+      useFactory: (config: ConfigService) => ({
+        secret: config.get<string>('JWT_SECRET_KEY'),
+      }),
+      inject: [ConfigService],
+    }),
     HttpModule,
     UtilsModule,
     forwardRef(() => UsersModule),
     forwardRef(() => AuthModule),
-    JwtModule,
-    AuthModule,
   ],
   controllers: [NotificationsController],
   providers: [

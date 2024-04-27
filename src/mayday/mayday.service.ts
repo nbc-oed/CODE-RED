@@ -11,6 +11,8 @@ import { SendRescueMessageDto } from './dto/sendRescueMessage.dto';
 import { Users } from 'src/common/entities/users.entity';
 import { FcmService } from 'src/notifications/messaging-services/firebase/fcm.service';
 import { HelperPositionDto } from './dto/helperPosition.dto';
+import { url } from 'inspector';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class MaydayService {
@@ -25,6 +27,7 @@ export class MaydayService {
     private readonly userRepository: Repository<Users>,
     private readonly dataSource: DataSource,
     private readonly fcmService: FcmService,
+    private configService: ConfigService,
   ) {}
 
   // 내위치 정보 저장
@@ -163,17 +166,18 @@ export class MaydayService {
     console.log('알림보냄');
     console.log(helpers);
 
-    // for (let i = 0; i < helpers.length; i++) {
-    //   console.log(`헬퍼 아이디 => ${helpers[i].user_id}`);
-
-    await this.fcmService.sendPushNotification(
-      '구조요청',
-      message,
-      2,
-      undefined,
-      { userName: name, distance: distance + '' },
-    );
-    // }
+    const basicUrl = this.configService.get<string>('BASIC_URL');
+    const dynamicUrl = `/mayday/help-request?username=${name}&distance=${distance}&message=${message}`;
+    const url = basicUrl + dynamicUrl;
+    for (let i = 0; i < helpers.length; i++) {
+      await this.fcmService.sendPushNotification(
+        '구조요청',
+        message,
+        helpers[i].user_id,
+        undefined,
+        url,
+      );
+    }
   }
 
   // 요청 수락했는지  확인하기

@@ -1,0 +1,12 @@
+<script>
+  window.onload = function () {
+
+    const clientId = localStorage.getItem('clientId');
+
+    if (clientId !== null && clientId !== undefined) {
+      window.location.href = `/main?client_id=${clientId}`
+    } else {
+      window.location.href = `/main`
+    }
+  };
+</script>

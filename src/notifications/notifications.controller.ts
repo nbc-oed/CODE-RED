@@ -6,6 +6,7 @@ import {
   Post,
   Body,
   Param,
+  Render,
 } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 import { AuthGuard } from '@nestjs/passport';
@@ -27,6 +28,7 @@ export class NotificationsController {
   // FCM 발송된 알림 목록 조회 API
   @UseGuards(JwtAuthGuard)
   @Get()
+  @Render('main/notification')
   async getAllNotifications(
     @UserInfo() user: Users,
     @Body() body: { client_id: string },
@@ -35,18 +37,18 @@ export class NotificationsController {
       user.id,
       body.client_id,
     );
-    return messageLists;
+    return { messageLists };
   }
 
-  // 알림 목록 중 특정 알림 메세지 상세 조회 및 Read 상태 업데이트 API
+  // Read 상태 업데이트 API
   @UseGuards(JwtAuthGuard)
-  @Get('/:messageId')
+  @Post('/:messageId')
   async getNotificationByIdAndUpdateStatus(
     @Param('messageId') messageId: number,
   ) {
     const readMessage =
       await this.notificationsService.getNotificationByIdAndUpdateStatus(
-        messageId,
+        +messageId,
       );
     return readMessage;
   }
@@ -61,22 +63,3 @@ export class NotificationsController {
     return this.fcmService.sendPushNotification(body.title, body.message);
   }
 }
-
-/**
-   * 특정 사용자 위치에 따른 알림 목록 조회
-   *   @UseGuards(AuthGuard('jwt'))
-  @Get()
-  async getUserNotifications(@UserInfo() user: Users) {
-    const startTime = Date.now();
-
-    const notificationsLists =
-      await this.notificationsService.getUserNotifications(user.id);
-
-    const endTime = Date.now();
-    const executionTime = endTime - startTime;
-    this.logger.log(`getUserNotifications execution time: ${executionTime} ms`);
-
-    return notificationsLists;
-  }
-
-   */

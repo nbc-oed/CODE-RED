@@ -17,6 +17,9 @@ export class NotificationMessages extends BaseModel {
   @Column({ type: 'varchar', nullable: false })
   message: string;
 
+  @Column({ type: 'varchar', nullable: true })
+  url: string;
+
   @Column({
     type: 'enum',
     enum: NotificationStatus,
