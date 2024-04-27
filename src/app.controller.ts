@@ -12,6 +12,7 @@ import { AuthService } from './auth/auth.service';
 import { DestinationRiskService } from './destination-risk/destination-risk.service';
 import { SheltersService } from './shelters/shelters.service';
 import { DisasterService } from './notifications/streams/disaster-streams/disaster.service';
+import _ from 'lodash';
 
 @Controller('/')
 export class AppController {
@@ -76,13 +77,7 @@ export class AppController {
     ];
 
     // 위도 경도 뽑아내기(없다면 서울 시청 기준)(클라이언트 테이블 조회)
-    console.log('클라이언트 아이디 : ', client_id);
-
-    if (
-      client_id !== undefined &&
-      client_id !== null &&
-      Object.keys(client_id).length !== 0
-    ) {
+    if (!_.isNil(client_id) && Object.keys(client_id).length !== 0) {
       const client = await this.authService.findClientByClientId(client_id);
 
       latitude = client.latitude;
@@ -103,9 +98,31 @@ export class AppController {
       latitude,
     );
 
-    //인구 밀집,인구 추이, 기준 시간
+    // 재난 현황(오늘 날짜)
+    const disaster = await this.disasterService.findTodayDisaster();
+    const responseDisaster = disaster.filter((data) => {
+      const myRegion = data.locationName.includes(regionName);
+      const containsKeyword = keywords.some((keyword) =>
+        data.message.includes(keyword),
+      );
+      return myRegion && containsKeyword;
+    });
+
+    // 서울이 아닌 경우 재난 현황만 제공
+    if (!location.includes('서울')) {
+      return {
+        isNotSeoul: true,
+        location,
+        responseDisaster,
+      };
+    }
+
     const realTimeDestinationRisk =
-      await this.destinationRiskService.checkDestinationRisk(location);
+      await this.destinationRiskService.checkDestinationRisk({
+        longitude,
+        latitude,
+      });
+
     const realTimeData = {
       realTimeCongestion: realTimeDestinationRisk['실시간 장소 혼잡도'],
       expectedPopulation: realTimeDestinationRisk['예상 인구'],
@@ -117,24 +134,8 @@ export class AppController {
       longitude,
       latitude,
     );
-    console.log(shelterInfo);
 
-    if (shelterInfo === null) {
-      throw new NotFoundException(
-        '해당 지역에는 대피소가 없습니다. 빠른시일내에 업데이트 하겠습니다.',
-      );
-    }
     const shelter = shelterInfo.facility_name;
-
-    // 재난 현황(하늘 날자인것만 가져옴.)
-    const disaster = await this.disasterService.findTodayDisaster();
-    const responseDisaster = disaster.filter((data) => {
-      const myRegion = data.locationName.includes(regionName);
-      const containsKeyword = keywords.some((keyword) =>
-        data.message.includes(keyword),
-      );
-      return myRegion && containsKeyword;
-    });
 
     // 사건 사고
     const news = await this.newsService.findAccidentNews();
@@ -164,12 +165,12 @@ export class AppController {
     }
 
     return {
-      location: location,
-      realTimeData: realTimeData,
-      news: news,
-      shelter: shelter,
-      responseDisaster: responseDisaster,
-      score: 4,
+      location,
+      realTimeData,
+      news,
+      shelter,
+      responseDisaster,
+      score,
     };
   }
 }
