@@ -135,6 +135,10 @@ export class AppController {
       latitude,
     );
 
+    if (!shelterInfo.facility_name) {
+      shelterInfo.facility_name =
+        '가까운 대피소정보가 없습니다. 빠른 시일내에 업데이트 하겠습니다.';
+    }
     const shelter = shelterInfo.facility_name;
 
     // 사건 사고
