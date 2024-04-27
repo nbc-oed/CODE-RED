@@ -14,16 +14,6 @@ export class DestinationRiskController {
     return findRisk;
   }
 
-  // 상세 조회 (목적지 위험도 조회 상세 페이지)
-  @Get('detail')
-  async detailCheck(@Query('destination') destination: string) {
-    const detailCheck =
-      await this.destinationRiskService.destinationRiskDetailedInquiry(
-        destination,
-      );
-    return detailCheck;
-  }
-
   // 목적지(와 가장 가까운 곳의) 위험도 조회 (메인화면 : 인구 밀집도, 인구 추이)
   @Get('check')
   async checkDestinationRisk(@Query('destination') destination: string) {
@@ -66,12 +56,6 @@ export class DestinationRiskController {
   // 서울시 주요 115곳 장소 데이터 저장
   @Post('save')
   async savedDestination() {
-    await this.destinationRiskService.savedDestination();
-  }
-
-  // 서울시 115곳 장소 데이터 업데이트
-  @Patch()
-  async updatedDestination(@Query('destination') destination: string) {
-    await this.destinationRiskService.updatedDestination(destination);
+    await this.destinationRiskService.saveDestination();
   }
 }
