@@ -14,44 +14,42 @@
 
     {{#if isNotSeoul}}
     <h2>Sorry!</h2>
-    <img src='/img/blueCorong.png' alt='sorry' id='corongImage_blue' />
+    <img src='/img/blueCorong.png' alt='sorry' class="corongImage" />
     {{else}}
     {{#if (gt lengthOfList responseDisaster 1)}}
     <h2>매우 위험</h2>
     <h2>재난 발생 : {{responseDisaster.message}}</h2>
-    <img src='/img/redCorong.png' alt='위험' id='corongImage_red' />
+    <img src='/img/redCorong.png' alt='위험' id='_red' />
 
     {{else if (lte score 2)}}
     <h2>매우 안전</h2>
-    <img src='/img/greenCorong.png' alt='안전' id='corongImage_green' />
+    <img src='/img/greenCorong.png' alt='안전' class="corongImage" />
 
     {{else if (lte score 4)}}
     <h2>주의</h2>
-    <img src='/img/yellowCorong.png' alt='주의' id='corongImage_yellow' />
+    <img src='/img/yellowCorong.png' alt='주의' class="corongImage" />
 
     {{else if (lte score 6)}}
     <h2>위험</h2>
-    <img src='/img/redCorong.png' alt='위험' id='corongImage_red' />
+    <img src='/img/redCorong.png' alt='위험' class="corongImage" />
     {{/if}}
     {{/if}}
 
-    {{#with realTimeData}}
     <table class='real_time_data'>
       <tr>
         <th>인구 밀집</th>
         {{#if isNotSeoul}}
         <td>준비중입니다.</td>
         {{else}}
-        <td>{{realTimeCongestion}}</td>
+        <td>{{realTimeData.realTimeCongestion}}</td>
         {{/if}}
         <th>인구 추이</th>
         {{#if isNotSeoul}}
         <td>준비중입니다.</td>
         {{else}}
-        <td>{{expectedPopulation}}</td>
+        <td>{{realTimeData.expectedPopulation}}</td>
         {{/if}}
       </tr>
-      {{/with}}
       <tr>
         <th>재난 현황</th>
         <td>{{lengthOfList responseDisaster}}건</td>
@@ -64,7 +62,9 @@
       </tr>
     </table>
     {{#if isNotSeoul}}
-    <div style='color: gray'>죄송합니다. 서울 외의 지역은 재난 현황만 제공하고 있습니다.</div>
+    <div style='color: gray; margin-top: 10px'>
+      <p>죄송합니다. 서울 외의 지역은 재난 현황만 제공하고 있습니다.</p>
+    </div>
     {{else}}
     <div style='color: gray'>인구 추이 측정 기준 : {{realTimeData.standardTime}}</div>
     {{/if}}
