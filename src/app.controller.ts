@@ -5,6 +5,7 @@ import {
   NotFoundException,
   Query,
   Render,
+  Res,
   Session,
 } from '@nestjs/common';
 import { NewsService } from './news/news.service';
@@ -13,6 +14,7 @@ import { DestinationRiskService } from './destination-risk/destination-risk.serv
 import { SheltersService } from './shelters/shelters.service';
 import { DisasterService } from './notifications/streams/disaster-streams/disaster.service';
 import _ from 'lodash';
+import { Response } from 'express';
 
 @Controller('/')
 export class AppController {
@@ -23,6 +25,11 @@ export class AppController {
     private readonly sheltersService: SheltersService,
     private readonly disasterService: DisasterService,
   ) {}
+
+  @Get('aws')
+  aws(@Res() res: Response) {
+    return res.status(200);
+  }
 
   @Get()
   @Render('main/basicPage')
