@@ -46,6 +46,7 @@ export class DestinationRiskService {
         '예상 인구': `약 ${predictedPopulation}명, (${areaName})`,
         '기준 시간': `${populationTrends.FCST_TIME._text}`,
       };
+
       return realTimeDestinationRiskData;
     } catch (error) {
       console.error('해당 데이터를 찾지 못했습니다.', error);
@@ -65,11 +66,10 @@ export class DestinationRiskService {
   ) {
     let longitude: number;
     let latitude: number;
-
     if (typeof destination === 'string') {
       const coordinate = await this.getCoordinate(destination);
-      longitude = +coordinate.longitude;
-      latitude = +coordinate.latitude;
+      longitude = coordinate.longitude;
+      latitude = coordinate.latitude;
     } else {
       longitude = destination.longitude;
       latitude = destination.latitude;
@@ -183,7 +183,7 @@ export class DestinationRiskService {
   // 키워드 검색을 통해 최대한 유사한 장소를 검색하고 그 안에서 x,y(경도,위도)를 추출 후 값을 반환
   async getCoordinate(
     destination: string,
-  ): Promise<{ longitude: string; latitude: string }> {
+  ): Promise<{ longitude: number; latitude: number }> {
     try {
       const apiKey = this.configService.get('KAKAO_REST_API_KEY');
       const response = await axios.get(
@@ -200,7 +200,7 @@ export class DestinationRiskService {
         throw new Error('주소에 해당하는 좌표를 찾을 수 없습니다.');
       }
       const { x, y } = documents[0];
-      return { longitude: x, latitude: y };
+      return { longitude: +x, latitude: +y };
     } catch (error) {
       console.error('데이터를 찾지 못했습니다.:', error);
       throw error;
@@ -292,11 +292,13 @@ export class DestinationRiskService {
         `http://openapi.seoul.go.kr:8088/${seoulRealTimeData}/xml/citydata/1/1/${encodeURIComponent(destination)}`,
       );
       const xmlData = response.data;
+
       const xmlToJsonData = convert.xml2json(xmlData, {
         compact: true,
         spaces: 4,
       });
       const realtimeCityData = JSON.parse(xmlToJsonData);
+
       return realtimeCityData;
     } catch (error) {
       console.error('해당 데이터를 찾지 못했습니다.', error);
