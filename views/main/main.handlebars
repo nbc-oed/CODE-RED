@@ -3,14 +3,24 @@
 <main id="mainContainer">
   <div id="mainPositionContainer">
     {{title}}
-    <div id='user-location'>가까운 대피소 :
+    <div id='user-location'>
+      {{#if isSearch}}
+      목적지에서
+      {{/if}}
+      가까운 대피소 :
       {{#if isNotSeoul}}
       준비중입니다.
       {{else}}
       {{shelter}}
       {{/if}}
     </div>
-    <div id='user-location'>나의 현재 위치 : {{location}}</div>
+    <div id='user-location'>
+      {{#if isSearch}}
+      목적지 위치 :
+      {{else}}
+      나의 현재 위치 :
+      {{/if}}
+      {{location}}</div>
 
     {{#if isNotSeoul}}
     <h2>Sorry!</h2>
@@ -71,9 +81,10 @@
   </div>
 </main>
 
-<form action="" id="inputButton" style="position: relative; margin-top: 20px;">
-  <input type="text" id="searchInput" placeholder="이동할 목적지를 입력해주세요." />
-  <button style="position: absolute; top: 0; right: 0;height: 32px;" id="searchButton" type="submit">검색</button>
+<form class="searchForm" style="position: relative; margin-top: 20px;">
+  <input type="text" class="searchInput" placeholder="이동할 목적지를 입력해주세요." />
+  <button style="position: absolute; top: 0; right: 0;height: 32px;" class="searchButton" type="submit">검색</button>
 </form>
 
-<script src="/js/client.js"></script>
+<script src="/js/main/main.js"></script>
+<script src="/js/main/client.js"></script>

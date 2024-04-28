@@ -20,8 +20,6 @@ export class AppService {
   async serveMain(clientId: string) {
     let latitude: number;
     let longitude: number;
-    let score: number = 0;
-    const keywords = disasterKeywords;
 
     if (_.isNil(clientId)) return;
 
@@ -34,6 +32,21 @@ export class AppService {
       latitude = 37.566779160550716;
       longitude = 126.97869471811414;
     }
+
+    return await this.getSummary(longitude, latitude);
+  }
+
+  async serveSearch(destination: string) {
+    const { longitude, latitude } =
+      await this.destinationRiskService.getCoordinate(destination);
+
+    return { ...(await this.getSummary(longitude, latitude)), isSearch: true };
+  }
+
+  private async getSummary(longitude: number, latitude: number) {
+    let score = 0;
+    const keywords = disasterKeywords;
+
     // 나의 현재 위치명 받기
     const location = await this.destinationRiskService.getAreaCoordinates(
       longitude,
@@ -82,7 +95,6 @@ export class AppService {
       longitude,
       latitude,
     );
-
     const shelter = shelterInfo.facility_name;
 
     // 사건 사고
