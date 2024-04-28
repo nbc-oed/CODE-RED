@@ -62,12 +62,12 @@ export class AppService {
     // 재난 현황(오늘 날짜)
     const disaster = await this.disasterService.findTodayDisaster();
     const responseDisaster = disaster.filter((data) => {
-      const myRegion = data.locationName.includes(regionName);
-      const containsKeyword = keywords.some((keyword) =>
-        data.message.includes(keyword),
-      );
-      return myRegion && containsKeyword;
+      const isMyRegion = data.locationName.includes(regionName);
+      if (isMyRegion) {
+        return keywords.some((keyword) => data.message.includes(keyword));
+      }
     });
+    console.log(responseDisaster);
 
     // 서울이 아닌 경우 재난 현황만 제공
     if (!location.includes('서울')) {

@@ -26,10 +26,13 @@
     <h2>Sorry!</h2>
     <img src='/img/blueCorong.png' alt='sorry' class="corongImage" />
     {{else}}
-    {{#if (gt lengthOfList responseDisaster 1)}}
+    {{#if (gt (lengthOfList responseDisaster) 1)}}
     <h2>매우 위험</h2>
-    <h2>재난 발생 : {{responseDisaster.message}}</h2>
-    <img src='/img/redCorong.png' alt='위험' id='_red' />
+    <p class="isDisaster" style="color: red; font-size: 30px; font-weight: bold">재난 발생</p>
+    {{#each responseDisaster}}
+    <p class="disaster-message" style="font-weight: bold;">{{message}}</p>
+    {{/each}}
+    <img src='/img/redCorong.png' alt='위험' class='corongImage' />
 
     {{else if (lte score 2)}}
     <h2>매우 안전</h2>
