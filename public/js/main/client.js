@@ -1,9 +1,3 @@
-const clientId = localStorage.getItem('clientId');
-const params = new URLSearchParams(window.location.search);
-if (clientId && !params.get('client_id')) {
-  window.location.href = `/main?client_id=${clientId}`;
-}
-
 document.addEventListener('DOMContentLoaded', function () {
   // FCM 연동을 위한 서비스 계정 정보
   const firebaseConfig = {

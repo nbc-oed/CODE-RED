@@ -28,7 +28,6 @@ export class AuthService {
     private utilsService: UtilsService,
     private readonly configService: ConfigService,
     private readonly awsService: AwsService,
-    private readonly httpService: HttpService,
 
     @InjectRepository(Clients)
     private readonly clientsRepository: Repository<Clients>,
@@ -65,11 +64,13 @@ export class AuthService {
     return this.usersRepository.save(newUser);
   }
 
+  // 로그인
   async signIn(email: string, password: string, client_id?: string) {
+    console.log('나는 service');
     const user = await this.usersRepository.findOne({
       where: { email },
     });
-
+    console.log('서비스 유저@@2', user);
     if (!user) {
       throw new NotFoundException('유저가 존재하지 않습니다.');
     }
@@ -79,7 +80,6 @@ export class AuthService {
     }
 
     // client_id 조회 후 반환
-    const payload = { email, id: user.id };
     const client = await this.findClientByClientId(client_id);
 
     const clientId = client ? client.client_id : this.utilsService.getUUID();
@@ -88,10 +88,11 @@ export class AuthService {
       client_id: clientId,
     });
 
-    return {
-      access_token: this.jwtService.sign(payload),
-      clientsInfo,
-    };
+    // JWT 토큰 생성
+    const payload = { email, id: user.id };
+    const access_token = this.jwtService.sign(payload);
+
+    return { access_token, clientsInfo };
   }
 
   async authentication(user: Pick<Users, 'email' | 'password'>) {

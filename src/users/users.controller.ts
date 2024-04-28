@@ -10,6 +10,8 @@ import {
   UseInterceptors,
   UploadedFile,
   Render,
+  Req,
+  Res,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -21,6 +23,7 @@ import { UtilsService } from 'src/utils/utils.service';
 import { JwtAuthGuard } from 'src/auth/guard/client-custom.guard';
 import { ClientsDto } from './dto/clients.dto';
 import { MaydayService } from 'src/mayday/mayday.service';
+import { loginJwtAuthGuard } from 'src/auth/guard/login-custom.guard';
 
 @Controller('users')
 export class UsersController {
@@ -43,12 +46,20 @@ export class UsersController {
     return user.id;
   }
 
-  // 유저 상세 조회
   @Get('/myinfo')
-  @UseGuards(AuthGuard('jwt'))
-  @Render('member/myinfo')
-  async getOneUsers(@UserInfo() user: Users) {
-    return await this.usersService.findOne(user.id);
+  @UseGuards(loginJwtAuthGuard) // 커스텀 loginJwtAuthGuard 사용
+  async getUserInfo(@Req() req, @Res() res, @UserInfo() user: Users) {
+    // 인증 여부 확인
+    const cookies = req.cookies;
+
+    if (cookies && cookies.Authentication) {
+      // 사용자가 인증된 경우
+      const userInfo = await this.usersService.findUserById(user.id);
+      return res.render('member/myinfo', userInfo); // 사용자 정보 페이지로 이동 handlebars
+    } else {
+      // 사용자가 인증되지 않은 경우
+      return res.redirect('/auth/sign-in'); // 로그인 페이지로 리다이렉트 url
+    }
   }
 
   // 유저 수정
@@ -87,8 +98,6 @@ export class UsersController {
     }
     //uuid로 clientId 생성하는 함수
     let client_id = body.client_id;
-    console.log('body => ', body);
-    console.log('client_id => ', client_id);
     if (!client_id) {
       client_id = this.utilsService.getUUID();
     }
@@ -117,8 +126,6 @@ export class UsersController {
       user_id: userId,
       client_id: client_id,
     };
-
-    console.log('clientsDto => ####################', clientsDto);
 
     const result = await this.usersService.saveClientsInfo(clientsDto);
     return result;

@@ -10,6 +10,8 @@ import {
   Query,
   Render,
   Session,
+  Redirect,
+  Req,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
@@ -17,6 +19,7 @@ import { LoginDto } from 'src/users/dto/login.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { KakaoLogin } from './auth.service';
 import { ConfigService } from '@nestjs/config';
+import { string } from 'joi';
 
 @Controller('auth')
 export class AuthController {
@@ -27,6 +30,7 @@ export class AuthController {
   ) {}
 
   @Post('/sign-up')
+  @Render('member/sign-in')
   @UseInterceptors(FileInterceptor('image'))
   async signUp(
     @Body() createUserDto: CreateUserDto,

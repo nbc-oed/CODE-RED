@@ -3,10 +3,10 @@
 
     const clientId = localStorage.getItem('clientId');
 
-    if (clientId !== null && clientId !== undefined) {
+    if (clientId) {
       window.location.href = `/main?client_id=${clientId}`
     } else {
-      window.location.href = `/main`
+      window.location.href = `/main?client_id=none`
     }
   };
 </script>
