@@ -17,14 +17,16 @@ export class AppService {
     private readonly disasterService: DisasterService,
   ) {}
 
-  async serveMain(clientId?: string) {
+  async serveMain(clientId: string) {
     let latitude: number;
     let longitude: number;
     let score: number = 0;
     const keywords = disasterKeywords;
 
+    if (_.isNil(clientId)) return;
+
     // 위도 경도 뽑아내기(없다면 서울 시청 기준)(클라이언트 테이블 조회)
-    if (!_.isNil(clientId) && Object.keys(clientId).length !== 0) {
+    if (clientId !== 'none') {
       const client = await this.authService.findClientByClientId(clientId);
       latitude = client.latitude;
       longitude = client.longitude;

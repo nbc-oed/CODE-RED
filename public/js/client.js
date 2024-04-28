@@ -1,7 +1,11 @@
 const clientId = localStorage.getItem('clientId');
 const params = new URLSearchParams(window.location.search);
-if (clientId && !params.get('client_id')) {
+const clientIdParam = params.get('client_id');
+
+if (clientId && (clientIdParam === 'none' || !clientIdParam)) {
   window.location.href = `/main?client_id=${clientId}`;
+} else if (!clientId && !clientIdParam) {
+  window.location.href = '/main?client_id=none';
 }
 
 document.addEventListener('DOMContentLoaded', function () {

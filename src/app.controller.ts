@@ -10,7 +10,7 @@ export class AppController {
 
   @Get('main')
   @Render('main/main')
-  async main(@Query('client_id') clientId?: string) {
+  async main(@Query('client_id') clientId: string) {
     return await this.appService.serveMain(clientId);
   }
 }
