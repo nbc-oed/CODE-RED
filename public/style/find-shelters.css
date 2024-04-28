@@ -1,7 +1,6 @@
       * {
         width: 440px;
         margin: 0 auto;
-        /* padding: 5px; */
       }
 
       #divide {
@@ -26,12 +25,17 @@
       header {
         color: red;
         padding: 20px;
-        text-align: center;
+        text-align: start;
         display: flex;
         padding-left: 10px;
         max-width: 410px;
       }
-
+      a {
+        text-decoration: none;
+        color: red;
+        max-width: 250px;
+        text-shadow: -1px 0px black, 0px 1px black, 1px 0px black, 0px -1px black;
+      }
       #sos {
         height: 30px;
         background-color: red;
@@ -156,13 +160,16 @@
         max-width: 430px;
         margin-left: 2px;
         border-radius: 7px;
-        margin-bottom: 4px 
+        margin-bottom: 4px;
+        padding-left: 3px;
       }
       .list-facility-name {
         font-weight: bold;
-        font-size: 17px;
+        font-size: 19px;
         color: red;
         text-shadow: 0 0 black;
+        padding-top: 3px;
+        padding-bottom: 5px;
       }
       .list-department-number {
         font-weight: bold;
