@@ -41,6 +41,7 @@ import { Destination } from './common/entities/destination.entity';
 import { DisasterModule } from './notifications/streams/disaster-streams/disaster.module';
 import { SessionModule } from 'nestjs-session';
 import * as session from 'express-session';
+import { AppService } from './app.service';
 
 const typeOrmModuleOptions = {
   useFactory: async (
@@ -134,6 +135,6 @@ const typeOrmModuleOptions = {
     }),
   ],
   controllers: [AppController],
-  providers: [],
+  providers: [AppService],
 })
 export class AppModule {}
