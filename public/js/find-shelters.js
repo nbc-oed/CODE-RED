@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         let longitude = 127.300616,
         latitude = 37.657918
-        const url = `http://localhost:3000/shelters/mix?x=${longitude}&y=${latitude}`;
+        const url = `/shelters/mix?x=${longitude}&y=${latitude}`;
         fetch(url)
             .then(response => {
             return response.json();
