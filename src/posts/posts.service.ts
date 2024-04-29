@@ -34,6 +34,8 @@ export class PostsService {
       user_id: userId,
       post_image: uploadedFile,
       ...createPostDto,
+      created_at: new Date(),
+      updated_at: new Date(),
     });
 
     return createdPost;
@@ -106,6 +108,7 @@ export class PostsService {
     const updatedPost = Object.assign(post, {
       post_image: uploadedFile,
       ...updatePostDto,
+      updated_at: new Date(),
     });
 
     return await this.postsRepo.save(updatedPost);

@@ -65,12 +65,10 @@ export class AuthService {
   }
 
   // 로그인
-  async signIn(email: string, password: string, client_id?: string) {
-    console.log('나는 service');
+  async signIn(email: string, password: string, clientId?: string) {
     const user = await this.usersRepository.findOne({
       where: { email },
     });
-    console.log('서비스 유저@@2', user);
     if (!user) {
       throw new NotFoundException('유저가 존재하지 않습니다.');
     }
@@ -79,20 +77,21 @@ export class AuthService {
       throw new UnauthorizedException('비밀번호를 확인해주세요.');
     }
 
-    // client_id 조회 후 반환
-    const client = await this.findClientByClientId(client_id);
-
-    const clientId = client ? client.client_id : this.utilsService.getUUID();
-    const clientsInfo = await this.usersService.saveClientsInfo({
-      user_id: user.id,
-      client_id: clientId,
-    });
+    if (clientId) {
+      const client = await this.findClientByClientId(clientId);
+      if (client) {
+        await this.usersService.saveClientsInfo({
+          user_id: user.id,
+          client_id: clientId,
+        });
+      }
+    }
 
     // JWT 토큰 생성
     const payload = { email, id: user.id };
     const access_token = this.jwtService.sign(payload);
 
-    return { access_token, clientsInfo };
+    return { access_token };
   }
 
   async authentication(user: Pick<Users, 'email' | 'password'>) {
@@ -131,9 +130,9 @@ export class AuthService {
     return this.jwtService.verify(token, { secret: JWT_SECRET_KEY });
   }
 
-  async findClientByClientId(client_id: string) {
+  async findClientByClientId(clientId: string) {
     const client = await this.clientsRepository.findOne({
-      where: { client_id: client_id },
+      where: { client_id: clientId },
     });
     return client;
   }

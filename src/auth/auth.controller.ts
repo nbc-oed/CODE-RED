@@ -59,8 +59,10 @@ export class AuthController {
       loginDto.password,
       loginDto.client_id,
     );
+
+    const host = this.configService.get('HOST');
     res.cookie('Authentication', user.access_token, {
-      domain: 'localhost',
+      domain: host,
       path: '/',
       httpOnly: true,
     });
