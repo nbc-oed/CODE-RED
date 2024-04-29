@@ -41,6 +41,7 @@ import { Destination } from './common/entities/destination.entity';
 import { DisasterModule } from './notifications/streams/disaster-streams/disaster.module';
 import { SessionModule } from 'nestjs-session';
 import * as session from 'express-session';
+import * as fs from 'fs';
 import { AppService } from './app.service';
 
 const typeOrmModuleOptions = {
@@ -55,6 +56,10 @@ const typeOrmModuleOptions = {
     port: configService.get('DB_PORT'),
     database: configService.get('DB_NAME'),
     synchronize: configService.get('DB_SYNC'), // 데이터베이스 스키마와 애플리케이션의 엔티티 클래스 간의 동기화를 제어, 일반적으로 false로 설정하여 동기화를 방지
+    ssl: {
+      ca: fs.readFileSync('./config/global-bundle.pem'),
+    },
+    extra: { ssl: { rejectUnauthorized: false } },
     entities: [
       Users,
       Posts,
