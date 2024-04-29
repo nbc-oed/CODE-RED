@@ -101,7 +101,7 @@ export class AuthController {
     ); // .env에서 JWT_SECRET_KEY 가져오기
     const _restApiKey = KAKAO_LOGIN_REST_API_KEY;
     // 카카오 로그인 RedirectURI 등록
-    const _redirectUrl = 'http://127.0.0.1:3000/auth/kakaoLoginLogicRedirect';
+    const _redirectUrl = 'https://coderedbox.com/auth/kakaoLoginLogicRedirect';
     const url = `${_hostName}/oauth/authorize?client_id=${_restApiKey}&redirect_uri=${_redirectUrl}&response_type=code`;
     return res.redirect(url);
   }
@@ -116,7 +116,7 @@ export class AuthController {
       'KAKAO_LOGIN_REST_API_KEY',
     ); // .env에서 JWT_SECRET_KEY 가져오기
     const _restApiKey = KAKAO_LOGIN_REST_API_KEY;
-    const _redirect_uri = 'http://127.0.0.1:3000/auth/kakaoLoginLogicRedirect';
+    const _redirect_uri = 'https://coderedbox.com/auth/kakaoLoginLogicRedirect';
     const _hostName = `https://kauth.kakao.com/oauth/token?grant_type=authorization_code&client_id=${_restApiKey}&redirect_uri=${_redirect_uri}&code=${qs.code}`;
     const _headers = {
       headers: {
@@ -163,20 +163,4 @@ export class AuthController {
         return res.send('LogOUT ERROR');
       });
   }
-
-  //@ApiOperation({ summary: '닉네임 변경', description: '업데이트' })
-  // @UseGuards(JwtOpAuthGuard)
-  // @Patch('')
-  // async userUpdate(@Body() updateDto: UpdateDto, @Req() req: IGuestRequest) {
-  //   const id = req.id;
-  //   const userUpdate = await this.usersService.userUpdate(
-  //     id,
-  //     updateDto.nickName,
-  //   );
-  //   return {
-  //     statusCode: HttpStatus.OK,
-  //     message: '닉네임 변경에 성공하였습니다.',
-  //     userUpdate,
-  //   };
-  // }
 }
