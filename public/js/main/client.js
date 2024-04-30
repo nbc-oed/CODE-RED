@@ -66,7 +66,7 @@ document.addEventListener('DOMContentLoaded', function () {
       maximumAge: 5000,
     };
     if (navigator.geolocation) {
-      navigator.geolocation.watchPosition(saveUserLocation, showError, options);
+      navigator.geolocation.getCurrentPosition(saveUserLocation, showError);
     } else {
       console.error('Geolocation is not supported by this browser.');
     }
