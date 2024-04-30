@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Location } from './entities/location.entity';
 import { DataSource, Repository } from 'typeorm';
@@ -65,6 +69,7 @@ export class MaydayService {
   // 내 위치 기반 유저 찾기
   async findHelper(userId: number) {
     const user = await this.findUserId(userId);
+    if (_.isNil(user)) throw new NotFoundException();
     const { latitude, longitude } = user;
 
     const distance = 1000;
