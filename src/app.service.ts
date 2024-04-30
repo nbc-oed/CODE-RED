@@ -26,8 +26,8 @@ export class AppService {
     // 위도 경도 뽑아내기(없다면 서울 시청 기준)(클라이언트 테이블 조회)
     if (clientId !== 'none') {
       const client = await this.authService.findClientByClientId(clientId);
-      latitude = client.latitude;
-      longitude = client.longitude;
+      latitude = client.latitude || 37.566779160550716;
+      longitude = client.longitude || 126.97869471811414;
     } else {
       latitude = 37.566779160550716;
       longitude = 126.97869471811414;
