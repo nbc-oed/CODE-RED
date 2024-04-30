@@ -60,15 +60,15 @@ export class AuthController {
       loginDto.client_id,
     );
 
-    const host = this.configService.get('HOST');
-    res.cookie('Authentication', user.access_token, {
+    const host = this.configService.get('BASIC_URL');
+    return res.cookie('Authentication', user.access_token, {
       domain: host,
       path: '/',
-      httpOnly: true,
+      // httpOnly: true,
     });
 
-    session.isLogin = true;
-    return { isLogin: session.isLogin };
+    // session.isLogin = true;
+    // return { isLogin: session.isLogin };
   }
 
   // kakaoLogin 으로 접속하면 보이는 로그인 화면 구성

@@ -34,8 +34,8 @@ export class NotificationsController {
     @Body() body: { client_id: string },
   ) {
     const messageLists = await this.notificationsService.getAllNotifications(
-      user.id,
-      body.client_id,
+      user ? user.id : 0,
+      body.client_id || 'null',
     );
     return { messageLists };
   }

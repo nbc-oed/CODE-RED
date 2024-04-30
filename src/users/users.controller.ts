@@ -56,9 +56,6 @@ export class UsersController {
       // 사용자가 인증된 경우
       const userInfo = await this.usersService.findUserById(user.id);
       return res.render('member/myinfo', userInfo); // 사용자 정보 페이지로 이동 handlebars
-    } else {
-      // 사용자가 인증되지 않은 경우
-      return res.redirect('/auth/sign-in'); // 로그인 페이지로 리다이렉트 url
     }
   }
 
