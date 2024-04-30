@@ -3,6 +3,8 @@
 <main id="mainContainer">
   <div id="mainPositionContainer">
     {{title}}
+    {{#if result}}
+    {{#with result}}
     <div id='user-location'>
       {{#if isSearch}}
       목적지에서
@@ -85,11 +87,95 @@
     {{/if}}
   </div>
 </main>
+{{/with}}
+{{else}}
+<div id='user-location'>
+  {{#if isSearch}}
+  목적지에서
+  {{/if}}
+  가까운 대피소 :
+  {{#if isNotSeoul}}
+  준비중입니다.
+  {{else}}
+  {{shelter}}
+  {{/if}}
+</div>
+<div id='user-location'>
+  {{#if isSearch}}
+  목적지 위치 :
+  {{else}}
+  나의 현재 위치 :
+  {{/if}}
+  {{location}}</div>
 
+{{#if isNotSeoul}}
+<h2>Sorry!</h2>
+<img src='/img/blueCorong.png' alt='sorry' class="corongImage" />
+{{else}}
+{{#if (gt (lengthOfList responseDisaster) 1)}}
+<h2>매우 위험</h2>
+<p class="isDisaster" style="color: red; font-size: 30px; font-weight: bold">재난 발생</p>
+{{#each responseDisaster}}
+<p class="disaster-message" style="font-weight: bold;">{{message}}</p>
+{{/each}}
+<img src='/img/redCorong.png' alt='위험' class='corongImage' />
+
+{{else if (lte score 2)}}
+<h2>매우 안전</h2>
+<img src='/img/greenCorong.png' alt='안전' class="corongImage" />
+
+{{else if (lte score 4)}}
+<h2>주의</h2>
+<img src='/img/yellowCorong.png' alt='주의' class="corongImage" />
+
+{{else if (lte score 6)}}
+<h2>위험</h2>
+<img src='/img/redCorong.png' alt='위험' class="corongImage" />
+{{/if}}
+{{/if}}
+
+<table class='real_time_data'>
+  <tr>
+    <th>인구 밀집</th>
+    {{#if isNotSeoul}}
+    <td>준비중입니다.</td>
+    {{else}}
+    <td>{{realTimeData.realTimeCongestion}}</td>
+    {{/if}}
+    <th>인구 추이</th>
+    {{#if isNotSeoul}}
+    <td>준비중입니다.</td>
+    {{else}}
+    <td>{{realTimeData.expectedPopulation}}</td>
+    {{/if}}
+  </tr>
+  <tr>
+    <th>재난 현황</th>
+    <td>{{lengthOfList responseDisaster}}건</td>
+    <th>사건 / 사고</th>
+    {{#if isNotSeoul}}
+    <td>준비중입니다.</td>
+    {{else}}
+    <td>{{lengthOfList news }}건</td>
+    {{/if}}
+  </tr>
+</table>
+{{#if isNotSeoul}}
+<div style='color: gray; margin-top: 10px'>
+  <p>죄송합니다. 서울 외의 지역은 재난 현황만 제공하고 있습니다.</p>
+</div>
+{{else}}
+<div class='noti-container' style='color: gray'>
+  <p>인구 추이 측정 기준 : {{realTimeData.standardTime}}</p>
+</div>
+{{/if}}
+</div>
+</main>
+{{/if}}
 <form class="searchForm" style="position: relative; margin-top: 20px;">
   <input type="text" class="searchInput" placeholder="이동할 목적지를 입력해주세요." />
   <button style="position: absolute; top: 0; right: 0;height: 32px;" class="searchButton" type="submit">검색</button>
 </form>
-
+<input type="hidden" id="errorvalue" value="{{#if error}}{{error}}{{else}}true{{/if}}">
 <script src="/js/main/main.js"></script>
 <script src="/js/main/client.js"></script>
