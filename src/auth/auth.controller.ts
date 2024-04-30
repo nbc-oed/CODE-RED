@@ -9,9 +9,6 @@ import {
   Header,
   Query,
   Render,
-  Session,
-  Redirect,
-  Req,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
@@ -19,7 +16,7 @@ import { LoginDto } from 'src/users/dto/login.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { KakaoLogin } from './auth.service';
 import { ConfigService } from '@nestjs/config';
-import { string } from 'joi';
+import { Response } from 'express';
 
 @Controller('auth')
 export class AuthController {
@@ -49,26 +46,14 @@ export class AuthController {
 
   @Post('/sign-in')
   @Render('main/main')
-  async signIn(
-    @Body() loginDto: LoginDto,
-    @Res() res,
-    @Session() session: Record<string, any>,
-  ) {
+  async signIn(@Body() loginDto: LoginDto, @Res() res: Response) {
     const user = await this.authService.signIn(
       loginDto.email,
       loginDto.password,
       loginDto.client_id,
     );
 
-    const host = this.configService.get('BASIC_URL');
-    return res.cookie('Authentication', user.access_token, {
-      domain: host,
-      path: '/',
-      // httpOnly: true,
-    });
-
-    // session.isLogin = true;
-    // return { isLogin: session.isLogin };
+    res.cookie('Authentication', user.access_token);
   }
 
   // kakaoLogin 으로 접속하면 보이는 로그인 화면 구성
