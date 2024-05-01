@@ -335,6 +335,7 @@ export class MaydayService {
     lat2: number,
     lon2: number,
   ) {
+    console.log(`헬퍼${lat1},${lon1} || 유저 ${lat2},${lon2} `);
     const distance = await this.locationRepository
       .createQueryBuilder()
       .select(
