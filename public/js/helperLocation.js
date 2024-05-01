@@ -10,8 +10,8 @@ document.querySelector('#acceptBtn').addEventListener('click', async (e) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          latitude: 37.437669048891394,
-          longitude: 127.14049889407856,
+          latitude,
+          longitude,
           userName: username,
         }),
       });
