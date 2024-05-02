@@ -55,9 +55,8 @@
         console.log('로그인 성공', response)
         window.location.href = '/main'
       } else {
-        const errorMessage = await response.text();
-        throw new Error(`로그인 요청 실패:${errorMessage}`);
-
+        const data = await response.json();
+        alert(data.message[0].length !== 1 ? data.message[0] : data.message)
       }
 
     } catch (error) {
