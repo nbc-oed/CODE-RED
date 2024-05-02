@@ -34,7 +34,7 @@ export class DmService {
         dm.message = dm.message.slice(0, 22) + '...';
       }
       dm.pastTime = this.utilsService.getPastTime(new Date(dm.created_at));
-      dm['user'] = await this.getTargetInfo(roomKeys[i], userId);
+      dm['user'] = await this.getUserInfo(roomKeys[i], userId);
 
       dmList.push(dm);
     }
@@ -80,7 +80,7 @@ export class DmService {
     }
   }
 
-  async getTargetInfo(roomName: string, myUserId: number): Promise<UserInfo> {
+  async getUserInfo(roomName: string, myUserId: number): Promise<UserInfo> {
     const targetId = roomName
       .replace('dm:', '')
       .split('_')
@@ -89,6 +89,11 @@ export class DmService {
     const targetInfo = await this.usersRepo.findOne({
       where: { id: +targetId },
       select: ['id', 'nickname', 'profile_image'],
+    });
+
+    const myInfo = await this.usersRepo.findOne({
+      where: { id: +myUserId },
+      select: ['nickname'],
     });
 
     if (!targetInfo) {
@@ -102,6 +107,7 @@ export class DmService {
     return {
       ...targetInfo,
       profile_image: targetInfo.profile_image || '/img/no-image.png',
+      myNickname: myInfo.nickname,
     };
   }
 
@@ -124,7 +130,11 @@ export class DmService {
       if (cursor === '0') break;
     }
 
-    return userId ? keys.filter((key) => key.includes(userId)) : keys;
+    return userId
+      ? keys.filter((key) => {
+          return key.replace('dm:', '').split('_').includes(`${userId}`);
+        })
+      : keys;
   }
 
   @Cron(CronExpression.EVERY_DAY_AT_4AM, { timeZone: 'Asia/Seoul' })
@@ -179,6 +189,7 @@ abstract class UserInfo {
   id: number;
   nickname: string;
   profile_image: string;
+  myNickname?: string;
 }
 
 abstract class MsgHistoryDto {

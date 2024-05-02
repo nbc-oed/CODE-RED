@@ -8,7 +8,6 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { Response } from 'express';
 
 import { UserInfo } from 'src/common/decorator/user.decorator';
 import { Users } from 'src/common/entities/users.entity';
@@ -21,7 +20,7 @@ export class DmController {
 
   @Get()
   @Render('dm/dm-list')
-  async serveDmList(@Res() res: Response, @UserInfo() user: Users) {
+  async serveDmList(@UserInfo() user: Users) {
     const dmList = await this.dmService.getDmList(user.id);
 
     return { data: dmList };
@@ -53,6 +52,6 @@ export class DmController {
     @Param('roomName') roomName: string,
     @UserInfo() user: Users,
   ) {
-    return await this.dmService.getTargetInfo(roomName, +user.id);
+    return await this.dmService.getUserInfo(roomName, +user.id);
   }
 }

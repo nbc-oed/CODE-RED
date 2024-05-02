@@ -5,7 +5,8 @@ dmSocket.emit('joinRoom', currentRoom);
 const msgDiv = document.querySelector('.messages');
 let curPage = 1;
 let myId;
-let nickname;
+let targetNickname;
+let myNickname;
 
 document.addEventListener('DOMContentLoaded', async () => {
   myId = await getMyId();
@@ -30,7 +31,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     scrollToBottom();
   }
 
-  if (nickname === '탈퇴한 사용자') {
+  if (targetNickname === '탈퇴한 사용자') {
     document
       .getElementById('user-message')
       .setAttribute('placeholder', '메세지를 전송할 수 없습니다.');
@@ -59,7 +60,8 @@ async function loadTargetInfo() {
             <img src="${data.profile_image}">
             <p class="nickname">${data.nickname}</p>
           `;
-      nickname = data.nickname;
+      targetNickname = data.nickname;
+      myNickname = data.myNickname;
     });
 }
 
@@ -82,7 +84,7 @@ function addMoreEvent() {
 function addMsgEvent() {
   document.querySelector('#message-form').addEventListener('submit', (e) => {
     e.preventDefault();
-    if (nickname === '탈퇴한 사용자') {
+    if (targetNickname === '탈퇴한 사용자') {
       return;
     }
 
@@ -95,7 +97,7 @@ function addMsgEvent() {
     dmSocket.emit('message', {
       userId: myId,
       message,
-      nickname,
+      nickname: myNickname,
       roomName: currentRoom,
       createdAt: new Date(),
     });
