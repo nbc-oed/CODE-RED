@@ -1,9 +1,9 @@
 # 🚨CODE: RED🚨
   <img src="https://github.com/startcoriny/CODE-RED/assets/127919222/18bc54c9-8f35-4c76-90d9-935659c87542" alt="이미지 설명" width="500">                             
 
+<br>
 
 ## 📌 프로젝트 개요
-<b>여러 재난 상황이나 평소 위험한 상황에 대해서도 대처가 가능한 솔루션을 제공하기 위한 서비스
 <br>
 
 👉🏼 [ Entity Relationship Diagram ](https://drawsql.app/teams/me-662/diagrams/code-red)
@@ -12,8 +12,34 @@
 👉🏼 [ 팀 Notion ](https://teamsparta.notion.site/CODE-RED-ad2da40664474ad988c4365951915031)
 <br>
 
-👉🏼 [ API 명세서 ]()
+👉🏼 [ 배포 URL ](https://coderedbox.com/)
 
+<br>
+
+## 📌 프로젝트 설명
+
+**여러 재난 상황이나 평소 위험한 상황에 대해서도 대처가 가능한 솔루션을 제공하기 위한 서비스**
+
+재난 문자알림을 켜놓으면
+실종신고 같은 재난, 사건사고와는 거리가 먼 알림들이 오게 됩니다.<br />
+내주위 사건사고, 내주위의 재난등을 알고싶은건데? 이러한 정보만 줄 수 있는 곳은 없을까?
+라는 고민에서 시작하여<br />
+시위를 자주하는 광화문을 가야하는데 여기는 안전한가?<br />
+나는 방독마스크가 있는데 통조림 많이 가지고 있는 사람이랑 교환할수는 없나?<br />
+실제 필요한 내용인 내주변 대피소는 어디있는지
+119신고까지는 아니어도, 나를 도와줄 사람이 필요했으면 좋겠다 라는 상황을 가정하고 <br />
+기획을 하게 되었습니다.
+
+**<주요 기능>**
+- 현 위치 및 목적지 위험도 조회
+- 크롤링을 이용한 사건/사고 뉴스 수집
+- 주변 대피소 검색
+- 내 위치 기반 지역별 실시간 채팅
+- 구호 물품 교환 및 1:1 채팅
+- 구조 요청 서비스
+- 재난 상황 실시간 알림
+
+  
 <br>
 
 ### 💻 기술 스택
@@ -53,7 +79,10 @@
 
 <br>
 
-### 📁 Directory Structure: 폴더 구조
+### 📁 폴더 구조 및 환경 변수
+
+<details>
+  <summary><b>Directory Structure</b></summary>
 
 ```bash
 .
@@ -201,5 +230,105 @@
             header.handlebars
 
 ```
+</details>
+<details>
+  <summary><b>Env example</b></summary>
+
+```bash
+
+#Redis
+REDIS_HOST
+REDIS_DM_HOST
+REDIS_PORT
+REDIS_DM_PORT
+REDIS_PASSWORD
+
+# JWT
+JWT_SECRET_KEY
+
+# bcrypt
+PASSWORD_SALT_ROUNDS
+
+# Database_postgreSQL
+DB_HOST
+DB_PORT
+DB_USERNAME
+DB_PASSWORD
+DB_NAME
+DB_SYNC
+
+
+# AWS S3 
+AWS_REGION
+AWS_S3_ACCESS_KEY_ID
+AWS_S3_SECRET_ACCESS_KEY
+AWS_S3_BUCKET_NAME
+
+# API KEY
+SHELTER_API
+REAL_TIME_DATA_API
+
+# 역지오코딩 API KEY
+KAKAO_MAP_REST_API_KEY
+KAKAO_REST_API_KEY
+
+# 공공데이터 재난문자 현황 API
+DISASTER_API_KEY
+API_ENDPOINT
+
+# 카카오로그인
+KAKAO_LOGIN_REST_API_KEY
+
+# 알림 허용 권한 요청시 필요한 키
+# 1. vapidKey
+VAPID_PUBLIC_KEY
+
+# 2. Firebase config
+FIREBASE_API_KEY
+FIREBASE_AUTH_DOMAIN
+FIREBASE_PROJECT_ID
+FIREBASE_STORAGEBUCKET
+FIREBASE_MESSAGING_SENDER_ID
+FIREBASE_APP_ID
+FIREBASE_MEASUREMENT_ID
+
+# Firebase config
+FIREBASE_TYPE
+FIREBASE_PROJECT_ID
+FIREBASE_PRIVATE_KEY_ID
+FIREBASE_PRIVATE_KEY
+FIREBASE_CLIENT_EMAIL
+FIREBASE_CLIENT_ID
+FIREBASE_AUTH_URI
+FIREBASE_TOKEN_URI
+FIREBASE_AUTH_PROVIDER_X509_CERT_URL
+FIREBASE_CLIENT_X509_CERT_URL
+GCM_KEY
+SUBJECT
+VAPID_PRIVATE_KEY
+
+# Notification push and click move url
+BASIC_URL
+HOST
+
+```
+</details>
 
 <br><br>
+
+## 시작 가이드
+
+### installation
+```
+$ git clone https://github.com/startcoriny/CODE-RED.git
+$ cd CODE-RED
+```
+
+### BackEnd
+```
+$ npm ci
+$ npm run start:dev
+```
+
+## 화면 구성
+
