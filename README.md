@@ -31,13 +31,55 @@
 기획을 하게 되었습니다.
 
 **<주요 기능>**
-- 현 위치 및 목적지 위험도 조회
-- 크롤링을 이용한 사건/사고 뉴스 수집
-- 주변 대피소 검색
-- 내 위치 기반 지역별 실시간 채팅
-- 구호 물품 교환 및 1:1 채팅
-- 구조 요청 서비스
-- 재난 상황 실시간 알림
+- **현 위치 및 목적지 위험도 조회**
+  - **위험도 판단 기준** <br>
+    <img src="https://github.com/startcoriny/CODE-RED/assets/127919222/7b79fef7-aeb3-49c8-83b0-65cfcf756b59" alt="이미지 설명" width="500">
+  - ‘매우 위험’의 위험도를 표기하여 사용자로 하여금 혼란을 방지하고 정확한 상황을 인지할 수 있도록 구현
+  - 예외처리
+    - 서울 이외의 지역의 현위치가 측정될 경우,<br> 지원하지 않는 지역임을 사용자에게 알려주지만 재난 상황에 대한 정보와 알림을 받을 수 있도록 구현 <br> 
+      
+- **크롤링을 이용한 사건/사고 뉴스 수집(Python)** - <a href='https://github.com/startcoriny/CODE-RED_Crawling'>CODE-RED_Crawling</a>
+    - Selenium과 BeautifulSoup을 사용하여 뉴스 정보 크롤링(당일 날짜 기준, 사건사고 내용에 대한 뉴스)
+    - 필터링(사건/사고에 해당하는 키워드, 문자열 유사도 알고리즘(Jaro-Winkler similarity)을 활용한 중복 제거)
+    - 나이브 베이즈 분류 모델을 활용한 사건/사고 구분
+   <br>
+
+- **주변 대피소 검색**
+  - 카카오 지도 api와 서울시 지진 대피소 open api를 활용
+  - 키워드 검색시 해당 키워드를 상세주소와 장소명 중 하나라도 포함되어있는 데이터들을 마커를 통해 시각화
+  - 마커 클릭시 면적을 포함한 상세 정보출력
+  <br>
+  
+- **내 위치 기반 지역별 실시간 채팅(서울특별시의 구들로 한정)**
+  - 사용자의 위치 정보를 받아와 해당 위치에 가장 가까운 구로 배치
+  - 비회원일 경우에도 임의의 아이디를 부여 하여 채팅 가능
+  - 욕성 데이터를 사용하여 욕설 필터링
+  - 휘발성이기 때문에 DB사용 x
+  <br>
+  
+- **구호 물품 교환 및 1:1 채팅**
+    - 재난 상황에서, 유저가 우리 서비스에 더 오래 머무르게 할 수 없을까? 라는 고민에서 비롯된 구호 물품 교환 서비스
+    - 교환 과정에서 전화번호나 현재 장소 등 민감한 정보도 공유해야 하는 점을 고려하여 일대일로 대화할 수 있는 DM(Direct Message) 기능 도입
+    - 일회성의 대화가 아닌 점을 감안하여 대화 내역을 DB에 저장
+    - 채팅은 I/O가 매우 잦기 때문에 중간 단계의 저장소로 레디스를 고려하여 List 자료구조로 채팅을 저장, 서빙
+    - 유저 입장에서 오래된 기록들은 볼 일이 드물다고 생각되어 매일 새벽 4시에 오래된 채팅 기록들은 메인DB에 이전하도록 스케쥴러 설정
+  <br>
+  
+- **구조 요청 서비스**
+    - postgis를 사용하여 내 위치를 저장
+    - 저장된 내 위치를 기준으로 주변 유저들 탐색
+    - fcm을 통한 구조 요청 보내기
+    - 수락한 유저와의 최단 거리 계산
+  <br>
+  
+- **재난 상황 실시간 알림**
+    - axios, 역지오코딩을 활용한 실시간 재난 문자 현황 데이터 수집 및 가공
+    - 주기적으로 재난 문자 발송 현황 데이터를 조회 → 파싱 → 정보 추출 → 지역별 재난 문자 발송 현황을 스트림으로 관리
+    - 사용자의 위도/경도를 역지오코딩을 통해 ‘지역명’을 추출하여 지역별 스트림을 생성 → 컨슈머 그룹에 사용자 정보를 할당 → 재난 상황 관련 알림을 수신할 지역별 사용자 그룹을 스트림으로 관리
+    - 서버는 지역별로 새로운 재난 문자가 수신되는지를 모니터링
+    - 새로운 재난 문자 메세지가 추가됐다면, 해당 지역명과 일치하는 컨슈머 그룹(사용자 그룹)을 조회하여 FCM을 통해 웹 푸시 알림을 전송
+  <br>
+  
 
   
 <br>
@@ -64,7 +106,7 @@
 
 <br>
 
-## 팀원
+## 🐥팀원
 
 |                  <img src="https://avatars.githubusercontent.com/u/127919222?v=4" width="150px">                  |                   <img src="https://avatars.githubusercontent.com/u/86586908?v=4" width="150px">                    |               <img src="https://avatars.githubusercontent.com/u/154207883?v=4" width="150px">                |
 | :---------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------------: |
@@ -316,7 +358,7 @@ HOST
 
 <br><br>
 
-## 시작 가이드
+## 🚀시작 가이드
 
 ### installation
 ```
@@ -329,6 +371,14 @@ $ cd CODE-RED
 $ npm ci
 $ npm run start:dev
 ```
-
-## 화면 구성
-
+<br><br>
+## 🖥️화면 구성
+|<img src="https://github.com/startcoriny/CODE-RED/assets/127919222/806003a3-ee40-46a0-ace4-d191306547e5" width="300px"> |<img src="https://github.com/startcoriny/CODE-RED/assets/127919222/d524d26a-e69e-4e6e-be4d-6eba1f7d76cf" width="300px">|
+|:---:|:---:|
+|메인페이지|목적지 위험도 조회|
+|<img src="https://github.com/startcoriny/CODE-RED/assets/127919222/f839da93-e5ff-4faf-b419-15c59dd76663" width="300px" height="482.859px">|<img src="https://github.com/startcoriny/CODE-RED/assets/127919222/776a855e-f1dd-4c02-bd92-40fb185060b8" width="300px" height="482.859px">|
+|크롤링을 이용한 사건/사고 뉴스 수집|주변 대피소 검색|
+|<img src="https://github.com/startcoriny/CODE-RED/assets/127919222/acb28bb5-a960-402f-bd62-4c7550098bc2" width="450px"><br><img src="https://github.com/startcoriny/CODE-RED/assets/127919222/495284ce-d5b9-4ae3-a1f3-7419337e02c6" width="450px">|<img src="https://github.com/startcoriny/CODE-RED/assets/127919222/85eed748-5d76-4659-bad2-8071da11ee3d" width="450px" height="300px"><br><img src="https://github.com/startcoriny/CODE-RED/assets/127919222/be70022c-1ec7-47ab-8d7c-26afac481d7b" width="450px" height="300px">|
+|내 위치 기반 지역별 실시간 채팅|구호 물품 교환 및 1:1 채팅|
+|유저 도움요청 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;   헬퍼 도움 수락<br><img src="https://github.com/startcoriny/CODE-RED/assets/127919222/03d04fed-2c0f-4ab2-9a42-2b72b578d947" width="225px"> <img src="https://github.com/startcoriny/CODE-RED/assets/127919222/e6e481cd-9464-47f3-b5a0-35732cde29c5" width="225px"><br> 유저 헬퍼 평가<br><img src="https://github.com/startcoriny/CODE-RED/assets/127919222/5aa6b813-c660-4c6a-8e78-6b82fdb34c52" width="300px">|<img src="https://github.com/startcoriny/CODE-RED/assets/127919222/1dccaa27-4809-4596-a061-566dd201b2b7" width="500px">|
+|구조 요청 서비스|재난 상황 실시간 알림|
