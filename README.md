@@ -1,3 +1,5 @@
+<img src="https://github.com/startcoriny/CODE-RED/assets/127919222/91379f79-cd16-474f-a3fc-234f47c93228" alt="이미지 설명" width="700">  
+
 # 🚨CODE: RED🚨
   <img src="https://github.com/startcoriny/CODE-RED/assets/127919222/18bc54c9-8f35-4c76-90d9-935659c87542" alt="이미지 설명" width="500">                             
 
