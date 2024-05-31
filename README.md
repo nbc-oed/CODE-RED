@@ -11,7 +11,7 @@
 👉🏼 [ Entity Relationship Diagram ](https://drawsql.app/teams/-863/diagrams/code-red)
 <br>
 
-👉🏼 [ 팀 Notion ](https://teamsparta.notion.site/CODE-RED-ad2da40664474ad988c4365951915031)
+👉🏼 [ 팀 Notion ](https://stirring-lime-622.notion.site/CODE-RED-2b8f05ae50d14d3eb95afd0a70ef389e?pvs=4)
 <br>
 
 👉🏼 [ 배포 URL ](https://coderedbox.com/)
