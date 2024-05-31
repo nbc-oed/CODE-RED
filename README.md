@@ -8,7 +8,7 @@
 ## 📌 프로젝트 개요
 <br>
 
-👉🏼 [ Entity Relationship Diagram ](https://drawsql.app/teams/me-662/diagrams/code-red)
+👉🏼 [ Entity Relationship Diagram ](https://drawsql.app/teams/-863/diagrams/code-red)
 <br>
 
 👉🏼 [ 팀 Notion ](https://teamsparta.notion.site/CODE-RED-ad2da40664474ad988c4365951915031)
